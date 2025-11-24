@@ -276,7 +276,7 @@ app.post('/api/whoop/disconnect', async (req, res) => {
 
 const BRIDGE_CLIENT_ID = 'sandbox_id_ea7a48de3e014f158bc4e1c15ffe9f65';
 const BRIDGE_CLIENT_SECRET = 'sandbox_secret_EcbBoJdxiXOKE2tExmrqNcHIdMdto3r5J514sTt3mHsVdwAYARnBZiCQKYQKjH6v';
-const BRIDGE_API_URL = 'https://api.bridgeapi.io';
+const BRIDGE_API_URL = 'https://api.sandbox.bridgeapi.io';
 
 // Helper: Get Bridge access token
 async function getBridgeAccessToken() {
