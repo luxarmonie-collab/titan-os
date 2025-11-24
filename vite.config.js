@@ -5,10 +5,17 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
-    open: true
+    open: true,
+    host: true
+  },
+  preview: {
+    port: 4173,
+    host: true,
+    allowedHosts: ['titan-os-production.up.railway.app']
   },
   build: {
     outDir: 'dist',
     sourcemap: false
   }
 })
+```
