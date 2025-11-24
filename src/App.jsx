@@ -1469,6 +1469,240 @@ const CloudSyncIndicator = ({ syncing = false }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// WHOOP WIDGET - Données temps réel
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const WhoopWidget = ({ userId }) => {
+    const [whoopData, setWhoopData] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [connected, setConnected] = useState(false);
+    
+    // Check URL params for connection status
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('whoop_connected') === 'true') {
+            // Clear URL params
+            window.history.replaceState({}, document.title, window.location.pathname);
+            fetchWhoopData();
+        }
+        if (params.get('whoop_error')) {
+            setError(params.get('whoop_error'));
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    }, []);
+    
+    // Fetch Whoop data
+    const fetchWhoopData = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await fetch(`/api/whoop/data?user_id=${userId}`);
+            const data = await response.json();
+            
+            if (data.connected) {
+                setConnected(true);
+                setWhoopData(data);
+            } else {
+                setConnected(false);
+            }
+        } catch (e) {
+            console.error('Whoop fetch error:', e);
+            setConnected(false);
+        }
+        setLoading(false);
+    };
+    
+    // Check connection status on mount
+    useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                const response = await fetch(`/api/whoop/status?user_id=${userId}`);
+                const data = await response.json();
+                if (data.connected) {
+                    fetchWhoopData();
+                } else {
+                    setLoading(false);
+                    setConnected(false);
+                }
+            } catch (e) {
+                setLoading(false);
+                setConnected(false);
+            }
+        };
+        checkStatus();
+    }, [userId]);
+    
+    // Connect to Whoop
+    const connectWhoop = () => {
+        window.location.href = `/api/whoop/auth?user_id=${userId}`;
+    };
+    
+    // Disconnect from Whoop
+    const disconnectWhoop = async () => {
+        await fetch(`/api/whoop/disconnect?user_id=${userId}`, { method: 'POST' });
+        setConnected(false);
+        setWhoopData(null);
+    };
+    
+    // Recovery color based on score
+    const getRecoveryColor = (score) => {
+        if (!score) return 'gray';
+        if (score >= 67) return 'green';
+        if (score >= 34) return 'yellow';
+        return 'red';
+    };
+    
+    // Recovery Ring Component
+    const RecoveryRing = ({ score }) => {
+        const color = getRecoveryColor(score);
+        const colors = {
+            green: { ring: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)' },
+            yellow: { ring: '#eab308', bg: 'rgba(234, 179, 8, 0.1)' },
+            red: { ring: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' },
+            gray: { ring: '#6b7280', bg: 'rgba(107, 114, 128, 0.1)' }
+        };
+        const percentage = score || 0;
+        const circumference = 2 * Math.PI * 45;
+        const offset = circumference - (percentage / 100) * circumference;
+        
+        return (
+            <div className="relative w-28 h-28">
+                <svg className="w-full h-full transform -rotate-90">
+                    <circle cx="56" cy="56" r="45" fill="none" stroke={colors[color].bg} strokeWidth="8" />
+                    <circle 
+                        cx="56" cy="56" r="45" fill="none" 
+                        stroke={colors[color].ring} strokeWidth="8"
+                        strokeDasharray={circumference}
+                        strokeDashoffset={offset}
+                        strokeLinecap="round"
+                        className="transition-all duration-1000"
+                    />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-2xl font-black text-white">{score || '--'}%</span>
+                    <span className="text-[10px] text-gray-500 uppercase font-bold">Recovery</span>
+                </div>
+            </div>
+        );
+    };
+    
+    if (loading) {
+        return (
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/5">
+                <div className="flex items-center justify-center gap-2 py-4">
+                    <Loader2 size={20} className="animate-spin text-gray-400" />
+                    <span className="text-sm text-gray-400">Chargement Whoop...</span>
+                </div>
+            </div>
+        );
+    }
+    
+    if (!connected) {
+        return (
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/5">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1DB954] to-[#0d8a3e] flex items-center justify-center">
+                        <Activity size={20} className="text-white" />
+                    </div>
+                    <div>
+                        <div className="font-bold text-white">WHOOP</div>
+                        <div className="text-xs text-gray-500">Non connecté</div>
+                    </div>
+                </div>
+                {error && (
+                    <div className="p-2 mb-3 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+                        Erreur: {error}
+                    </div>
+                )}
+                <button
+                    onClick={connectWhoop}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#1DB954] to-[#0d8a3e] text-white font-bold text-sm hover:opacity-90 transition-opacity"
+                >
+                    Connecter mon Whoop
+                </button>
+            </div>
+        );
+    }
+    
+    // Connected - show data
+    return (
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/5">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1DB954] to-[#0d8a3e] flex items-center justify-center">
+                        <Activity size={16} className="text-white" />
+                    </div>
+                    <div>
+                        <div className="font-bold text-white text-sm">WHOOP</div>
+                        <div className="text-[10px] text-gray-500">
+                            {whoopData?.profile?.firstName || 'Connecté'}
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchWhoopData} className="p-1.5 hover:bg-white/5 rounded-lg">
+                        <RefreshCw size={14} className="text-gray-400" />
+                    </button>
+                    <button onClick={disconnectWhoop} className="p-1.5 hover:bg-white/5 rounded-lg">
+                        <X size={14} className="text-gray-400" />
+                    </button>
+                </div>
+            </div>
+            
+            {/* Main Stats */}
+            <div className="flex items-center gap-4">
+                {/* Recovery Ring */}
+                <RecoveryRing score={whoopData?.recovery?.score} />
+                
+                {/* Side Stats */}
+                <div className="flex-1 space-y-2">
+                    {/* HRV */}
+                    <div className="flex justify-between items-center p-2 rounded-lg bg-white/5">
+                        <span className="text-xs text-gray-400">HRV</span>
+                        <span className="font-bold text-white">{whoopData?.recovery?.hrv || '--'} ms</span>
+                    </div>
+                    
+                    {/* RHR */}
+                    <div className="flex justify-between items-center p-2 rounded-lg bg-white/5">
+                        <span className="text-xs text-gray-400">RHR</span>
+                        <span className="font-bold text-white">{whoopData?.recovery?.rhr || '--'} bpm</span>
+                    </div>
+                    
+                    {/* Strain */}
+                    <div className="flex justify-between items-center p-2 rounded-lg bg-white/5">
+                        <span className="text-xs text-gray-400">Strain</span>
+                        <span className="font-bold text-blue-400">{whoopData?.strain?.score || '--'}</span>
+                    </div>
+                </div>
+            </div>
+            
+            {/* Sleep Stats */}
+            {whoopData?.sleep && (
+                <div className="mt-4 pt-4 border-t border-white/5">
+                    <div className="text-xs text-gray-500 mb-2">SOMMEIL</div>
+                    <div className="grid grid-cols-3 gap-2">
+                        <div className="text-center p-2 rounded-lg bg-white/5">
+                            <div className="text-lg font-bold text-white">{whoopData.sleep.duration || '--'}h</div>
+                            <div className="text-[10px] text-gray-500">Durée</div>
+                        </div>
+                        <div className="text-center p-2 rounded-lg bg-white/5">
+                            <div className="text-lg font-bold text-purple-400">{whoopData.sleep.rem || '--'}</div>
+                            <div className="text-[10px] text-gray-500">REM (min)</div>
+                        </div>
+                        <div className="text-center p-2 rounded-lg bg-white/5">
+                            <div className="text-lg font-bold text-blue-400">{whoopData.sleep.deep || '--'}</div>
+                            <div className="text-[10px] text-gray-500">Deep (min)</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // UI COMPONENTS (Premium Design System)
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -4199,6 +4433,9 @@ const Dashboard = ({ setView, userId }) => {
                 <div className="text-xs text-blue-400 font-bold mb-1">💡 PENSÉE DU JOUR</div>
                 <div className="text-sm text-white italic">"{dailyQuote}"</div>
             </div>
+            
+            {/* WHOOP WIDGET */}
+            <WhoopWidget userId={userId} />
             
             {/* AI INSIGHTS */}
             {aiAnalysis.insights.length > 0 && (
