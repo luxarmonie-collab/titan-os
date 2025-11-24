@@ -271,6 +271,259 @@ app.post('/api/whoop/disconnect', async (req, res) => {
 });
 
 // ========================================
+// BRIDGE API - Agrégation bancaire
+// ========================================
+
+const BRIDGE_CLIENT_ID = 'sandbox_id_ea7a48de3e014f158bc4e1c15ffe9f65';
+const BRIDGE_CLIENT_SECRET = 'sandbox_secret_EcbBoJdxiXOKE2tExmrqNcHIdMdto3r5J514sTt3mHsVdwAYARnBZiCQKYQKjH6v';
+const BRIDGE_API_URL = 'https://api.bridgeapi.io';
+
+// Helper: Get Bridge access token
+async function getBridgeAccessToken() {
+    const response = await fetch(`${BRIDGE_API_URL}/v2/authenticate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            client_id: BRIDGE_CLIENT_ID,
+            client_secret: BRIDGE_CLIENT_SECRET
+        })
+    });
+    const data = await response.json();
+    return data.access_token;
+}
+
+// Step 1: Create Bridge user and get connect URL
+app.get('/api/bridge/connect', async (req, res) => {
+    const userId = req.query.user_id || 'default';
+    
+    try {
+        // Get Bridge access token
+        const accessToken = await getBridgeAccessToken();
+        console.log('Bridge access token obtained');
+        
+        // Check if user already exists
+        const { data: existing } = await supabase
+            .from('bridge_connections')
+            .select('bridge_user_uuid')
+            .eq('user_id', userId)
+            .single();
+        
+        let bridgeUserUuid = existing?.bridge_user_uuid;
+        
+        // Create Bridge user if doesn't exist
+        if (!bridgeUserUuid) {
+            const userResponse = await fetch(`${BRIDGE_API_URL}/v2/users`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Content-Type': 'application/json',
+                    'Bridge-Version': '2021-06-01'
+                },
+                body: JSON.stringify({
+                    external_user_id: userId
+                })
+            });
+            
+            const userData = await userResponse.json();
+            console.log('Bridge user created:', userData);
+            
+            if (userData.uuid) {
+                bridgeUserUuid = userData.uuid;
+                
+                // Save to Supabase
+                await supabase.from('bridge_connections').upsert({
+                    user_id: userId,
+                    bridge_user_uuid: bridgeUserUuid,
+                    updated_at: new Date().toISOString()
+                });
+            } else {
+                throw new Error('Failed to create Bridge user');
+            }
+        }
+        
+        // Generate connect URL
+        const connectResponse = await fetch(`${BRIDGE_API_URL}/v2/connect/items/add/url`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+                'Bridge-Version': '2021-06-01'
+            },
+            body: JSON.stringify({
+                user_uuid: bridgeUserUuid,
+                prefill_email: `${userId}@titan-os.app`,
+                redirect_url: `${BASE_URL}/api/bridge/callback?user_id=${userId}`
+            })
+        });
+        
+        const connectData = await connectResponse.json();
+        console.log('Bridge connect URL:', connectData);
+        
+        if (connectData.redirect_url) {
+            res.redirect(connectData.redirect_url);
+        } else {
+            res.redirect(`${BASE_URL}?bridge_error=connect_failed`);
+        }
+        
+    } catch (error) {
+        console.error('Bridge connect error:', error);
+        res.redirect(`${BASE_URL}?bridge_error=server_error`);
+    }
+});
+
+// Step 2: Bridge callback after bank connection
+app.get('/api/bridge/callback', async (req, res) => {
+    const { user_id: userId, item_id: itemId, error } = req.query;
+    
+    console.log('Bridge callback:', { userId, itemId, error });
+    
+    if (error) {
+        return res.redirect(`${BASE_URL}?bridge_error=${error}`);
+    }
+    
+    if (itemId) {
+        // Update connection with item_id
+        await supabase.from('bridge_connections').update({
+            access_token: itemId,
+            updated_at: new Date().toISOString()
+        }).eq('user_id', userId);
+    }
+    
+    res.redirect(`${BASE_URL}?bridge_connected=true`);
+});
+
+// Step 3: Check connection status
+app.get('/api/bridge/status', async (req, res) => {
+    const userId = req.query.user_id || 'default';
+    
+    try {
+        const { data, error } = await supabase
+            .from('bridge_connections')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+        
+        if (error || !data || !data.access_token) {
+            return res.json({ connected: false });
+        }
+        
+        res.json({ 
+            connected: true,
+            lastUpdated: data.updated_at
+        });
+    } catch (error) {
+        res.json({ connected: false });
+    }
+});
+
+// Step 4: Get accounts
+app.get('/api/bridge/accounts', async (req, res) => {
+    const userId = req.query.user_id || 'default';
+    
+    try {
+        const { data: connection } = await supabase
+            .from('bridge_connections')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+        
+        if (!connection?.bridge_user_uuid) {
+            return res.status(401).json({ error: 'Not connected', connected: false });
+        }
+        
+        const accessToken = await getBridgeAccessToken();
+        
+        // Get accounts
+        const accountsResponse = await fetch(`${BRIDGE_API_URL}/v2/accounts?user_uuid=${connection.bridge_user_uuid}`, {
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Bridge-Version': '2021-06-01'
+            }
+        });
+        
+        const accountsData = await accountsResponse.json();
+        console.log('Bridge accounts:', accountsData);
+        
+        const accounts = (accountsData.resources || []).map(acc => ({
+            id: acc.id,
+            name: acc.name,
+            balance: acc.balance,
+            currency: acc.currency_code,
+            type: acc.type,
+            bankName: acc.bank?.name || 'Banque'
+        }));
+        
+        res.json({ connected: true, accounts });
+        
+    } catch (error) {
+        console.error('Bridge accounts error:', error);
+        res.status(500).json({ error: 'Failed to fetch accounts' });
+    }
+});
+
+// Step 5: Get transactions
+app.get('/api/bridge/transactions', async (req, res) => {
+    const userId = req.query.user_id || 'default';
+    const limit = parseInt(req.query.limit) || 50;
+    
+    try {
+        const { data: connection } = await supabase
+            .from('bridge_connections')
+            .select('*')
+            .eq('user_id', userId)
+            .single();
+        
+        if (!connection?.bridge_user_uuid) {
+            return res.status(401).json({ error: 'Not connected', connected: false });
+        }
+        
+        const accessToken = await getBridgeAccessToken();
+        
+        // Get transactions
+        const txResponse = await fetch(
+            `${BRIDGE_API_URL}/v2/transactions?user_uuid=${connection.bridge_user_uuid}&limit=${limit}`, 
+            {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`,
+                    'Bridge-Version': '2021-06-01'
+                }
+            }
+        );
+        
+        const txData = await txResponse.json();
+        console.log('Bridge transactions count:', txData.resources?.length);
+        
+        const transactions = (txData.resources || []).map(tx => ({
+            id: tx.id,
+            amount: tx.amount,
+            currency: tx.currency_code,
+            description: tx.clean_description || tx.raw_description,
+            category: tx.category?.name || 'Autre',
+            categoryId: tx.category?.id,
+            date: tx.date,
+            accountId: tx.account_id
+        }));
+        
+        res.json({ connected: true, transactions });
+        
+    } catch (error) {
+        console.error('Bridge transactions error:', error);
+        res.status(500).json({ error: 'Failed to fetch transactions' });
+    }
+});
+
+// Disconnect Bridge
+app.post('/api/bridge/disconnect', async (req, res) => {
+    const userId = req.body.user_id || req.query.user_id || 'default';
+    
+    await supabase.from('bridge_connections').delete().eq('user_id', userId);
+    await supabase.from('bank_transactions').delete().eq('user_id', userId);
+    console.log('Bridge disconnected for user:', userId);
+    
+    res.json({ success: true });
+});
+
+// ========================================
 // STATIC FILES - Serve React App
 // ========================================
 
