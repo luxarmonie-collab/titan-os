@@ -1549,32 +1549,45 @@ const SecondBrainDashboard = ({
             {/* TODAY'S CARDIO */}
             {todayData.cardio && todayData.cardio !== 'Non' && (
                 <div className="p-4 rounded-xl border border-orange-500/30 bg-orange-500/5">
-                    <div className="flex items-center justify-between mb-3">
-                        <div>
-                            <div className="text-xs text-orange-400 font-bold">🏃 CARDIO</div>
-                            <div className="text-lg font-bold text-white">{todayData.cardio}</div>
-                        </div>
-                        <button
-                            onClick={() => {
-                                addLog({ 
-                                    date: todayStr, 
-                                    session: 'CARDIO', 
-                                    cardioType: todayData.cardio, 
-                                    type: 'Cardio', 
-                                    status: 'completed', 
-                                    timestamp: new Date().toISOString() 
-                                });
-                            }}
-                            className="px-4 py-2 bg-green-500/20 text-green-400 font-bold rounded-xl text-sm"
-                        >
-                            ✓ Fait
-                        </button>
-                    </div>
-                    <div className="text-xs text-gray-400">
-                        {todayData.cardio.includes('LISS') && '25-45 min • Zone 2 (60-70% FCmax)'}
-                        {todayData.cardio.includes('HIIT') && '15-25 min • Intervalles haute intensité'}
-                        {todayData.cardio.includes('Course') && '10km • Allure modérée'}
-                    </div>
+                    {(() => {
+                        const cardioAlreadyDone = workoutLogs.some(log => log.date === todayStr && log.type === 'Cardio');
+                        return (
+                            <>
+                                <div className="flex items-center justify-between mb-3">
+                                    <div>
+                                        <div className="text-xs text-orange-400 font-bold">🏃 CARDIO</div>
+                                        <div className="text-lg font-bold text-white">{todayData.cardio}</div>
+                                    </div>
+                                    {cardioAlreadyDone ? (
+                                        <div className="px-4 py-2 bg-green-500/20 text-green-400 font-bold rounded-xl text-sm">
+                                            ✓ Validé
+                                        </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => {
+                                                addLog({ 
+                                                    date: todayStr, 
+                                                    session: 'CARDIO', 
+                                                    cardioType: todayData.cardio, 
+                                                    type: 'Cardio', 
+                                                    status: 'completed', 
+                                                    timestamp: new Date().toISOString() 
+                                                });
+                                            }}
+                                            className="px-4 py-2 bg-orange-500/20 text-orange-400 font-bold rounded-xl text-sm hover:bg-orange-500/30 transition-all"
+                                        >
+                                            Marquer fait
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                    {todayData.cardio.includes('LISS') && '25-45 min • Zone 2 (60-70% FCmax)'}
+                                    {todayData.cardio.includes('HIIT') && '15-25 min • Intervalles haute intensité'}
+                                    {todayData.cardio.includes('Course') && '10km • Allure modérée'}
+                                </div>
+                            </>
+                        );
+                    })()}
                 </div>
             )}
             
@@ -1586,173 +1599,6 @@ const SecondBrainDashboard = ({
                     <div className="text-sm text-gray-500">Récupération active</div>
                 </div>
             )}
-            
-            {/* AI INSIGHTS */}
-            {aiAnalysis.insights.length > 0 && (
-                <div className="space-y-2">
-                    {aiAnalysis.insights.slice(0, 2).map((insight, i) => (
-                        <div 
-                            key={i}
-                            className={`p-3 rounded-xl border ${
-                                insight.type === 'success' ? 'border-green-500/30 bg-green-500/10' :
-                                insight.type === 'warning' ? 'border-yellow-500/30 bg-yellow-500/10' :
-                                insight.type === 'danger' ? 'border-red-500/30 bg-red-500/10' :
-                                'border-blue-500/30 bg-blue-500/10'
-                            }`}
-                        >
-                            <div className="flex items-start gap-3">
-                                <Brain size={18} className={
-                                    insight.type === 'success' ? 'text-green-400' :
-                                    insight.type === 'warning' ? 'text-yellow-400' :
-                                    insight.type === 'danger' ? 'text-red-400' :
-                                    'text-blue-400'
-                                } />
-                                <div className="flex-1">
-                                    <div className="font-medium text-white text-sm">{insight.title}</div>
-                                    <div className="text-xs text-gray-400 mt-0.5">{insight.message}</div>
-                                    {insight.action && (
-                                        <div className="text-xs text-gray-500 mt-1 italic">→ {insight.action}</div>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            )}
-            
-            {/* AI QUESTIONS (contextual, non-intrusive) */}
-            {aiAnalysis.questions.length > 0 && !showAiQuestion && (
-                <button
-                    onClick={() => setShowAiQuestion(aiAnalysis.questions[0])}
-                    className="w-full p-3 rounded-xl border border-purple-500/30 bg-purple-500/10 flex items-center gap-3"
-                >
-                    <MessageCircle size={18} className="text-purple-400" />
-                    <div className="flex-1 text-left">
-                        <div className="text-sm font-medium text-white">Question du jour</div>
-                        <div className="text-xs text-gray-400 truncate">{aiAnalysis.questions[0].text}</div>
-                    </div>
-                    <ChevronRight size={16} className="text-purple-400" />
-                </button>
-            )}
-            
-            {/* Question Modal Inline */}
-            {showAiQuestion && (
-                <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5">
-                    <div className="flex items-center gap-2 mb-3">
-                        <Brain size={16} className="text-purple-400" />
-                        <span className="text-xs font-bold text-purple-400">TITAN veut comprendre</span>
-                    </div>
-                    <p className="text-sm text-white mb-3">{showAiQuestion.text}</p>
-                    {showAiQuestion.options ? (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                            {showAiQuestion.options.map(opt => (
-                                <button
-                                    key={opt}
-                                    onClick={() => setQuestionAnswer(opt)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
-                                        questionAnswer === opt 
-                                            ? 'bg-purple-500 text-white' 
-                                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                                    }`}
-                                >
-                                    {opt}
-                                </button>
-                            ))}
-                        </div>
-                    ) : (
-                        <input
-                            type="text"
-                            value={questionAnswer}
-                            onChange={e => setQuestionAnswer(e.target.value)}
-                            placeholder="Ta réponse..."
-                            className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm mb-3"
-                        />
-                    )}
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={() => { setShowAiQuestion(null); setQuestionAnswer(''); }}
-                            className="flex-1 py-2 bg-white/10 text-gray-400 rounded-lg text-xs"
-                        >
-                            Plus tard
-                        </button>
-                        <button 
-                            onClick={submitQuestionAnswer}
-                            disabled={!questionAnswer}
-                            className="flex-1 py-2 bg-purple-600 text-white rounded-lg text-xs font-bold disabled:opacity-50"
-                        >
-                            Enregistrer
-                        </button>
-                    </div>
-                </div>
-            )}
-            
-            {/* QUICK STATE - Non intrusive */}
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-bold text-white">⚡ État rapide</span>
-                    <span className="text-xs text-gray-500">Facultatif</span>
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                    {[
-                        { id: 'energy', label: 'Énergie', emoji: '⚡' },
-                        { id: 'sleep', label: 'Sommeil', emoji: '😴' },
-                        { id: 'mood', label: 'Humeur', emoji: '😊' },
-                        { id: 'motivation', label: 'Motiv', emoji: '🔥' }
-                    ].map(item => (
-                        <div key={item.id} className="text-center">
-                            <div className="text-lg mb-1">{item.emoji}</div>
-                            <div className="flex justify-center gap-0.5">
-                                {[1,2,3,4,5].map(n => (
-                                    <button
-                                        key={n}
-                                        onClick={() => updateCheckin(item.id, n)}
-                                        className={`w-4 h-4 rounded-full transition-all ${
-                                            (todayCheckin?.[item.id] || 0) >= n
-                                                ? n <= 2 ? 'bg-red-500' : n <= 3 ? 'bg-yellow-500' : 'bg-green-500'
-                                                : 'bg-gray-700'
-                                        }`}
-                                    />
-                                ))}
-                            </div>
-                            <div className="text-[10px] text-gray-500 mt-1">{item.label}</div>
-                        </div>
-                    ))}
-                </div>
-            </div>
-            
-            {/* SUPPLEMENTS TRACKER */}
-            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
-                <div className="flex items-center justify-between mb-3">
-                    <span className="text-sm font-bold text-white">💊 Compléments</span>
-                </div>
-                <div className="space-y-3">
-                    {Object.entries(SUPPLEMENTS_ROUTINE).map(([period, supps]) => (
-                        <div key={period}>
-                            <div className="text-xs text-gray-500 mb-1 capitalize">
-                                {period === 'postWorkout' ? 'Post-entraînement' : period}
-                            </div>
-                            <div className="flex flex-wrap gap-1">
-                                {supps.map(supp => {
-                                    const taken = todaySupplements[period]?.includes(supp.id);
-                                    return (
-                                        <button
-                                            key={supp.id}
-                                            onClick={() => toggleSupplement(period, supp.id)}
-                                            className={`px-2 py-1 rounded-lg text-xs transition-all ${
-                                                taken 
-                                                    ? 'bg-green-500/20 text-green-400 line-through' 
-                                                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                                            }`}
-                                        >
-                                            {supp.emoji} {supp.name}
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
             
             {/* Quick validation modal */}
             {showQuickMuscu && (
@@ -2844,8 +2690,55 @@ const LifestyleView = ({ userId }) => {
         return available[Math.floor(Math.random() * available.length)];
     };
     
-    const currentMonth = new Date().toLocaleString('fr-FR', { month: 'long' }).toLowerCase();
-    const months = ['janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre'];
+    const currentMonth = new Date().toLocaleString('fr-FR', { month: 'long' }).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    // Ordre: septembre 2025 → août 2026
+    const months = ['septembre', 'octobre', 'novembre', 'decembre', 'janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'aout', 'ete'];
+    const monthLabels = {
+        'septembre': 'Septembre 2025', 'octobre': 'Octobre 2025', 'novembre': 'Novembre 2025', 'decembre': 'Décembre 2025',
+        'janvier': 'Janvier 2026', 'fevrier': 'Février 2026', 'mars': 'Mars 2026', 'avril': 'Avril 2026',
+        'mai': 'Mai 2026', 'juin': 'Juin 2026', 'juillet': 'Juillet 2026', 'aout': 'Août 2026', 'ete': 'Été 2026'
+    };
+    
+    // Listes personnelles éditables
+    const [myLivres, setMyLivres] = useLocalStorage(`titan_my_livres_${userId}`, LIVRES_A_LIRE);
+    const [myFilms, setMyFilms] = useLocalStorage(`titan_my_films_${userId}`, FILMS_SERIES_INSPIRANTS);
+    const [newLivre, setNewLivre] = useState('');
+    const [newFilm, setNewFilm] = useState('');
+    const [showAddLivre, setShowAddLivre] = useState(false);
+    const [showAddFilm2, setShowAddFilm2] = useState(false);
+    
+    const addToMyLivres = () => {
+        if (newLivre.trim()) {
+            setMyLivres(prev => [...prev, newLivre.trim()]);
+            setNewLivre('');
+            setShowAddLivre(false);
+        }
+    };
+    
+    const removeFromMyLivres = (livre) => {
+        setMyLivres(prev => prev.filter(l => l !== livre));
+    };
+    
+    const addToMyFilms = () => {
+        if (newFilm.trim()) {
+            setMyFilms(prev => [...prev, newFilm.trim()]);
+            setNewFilm('');
+            setShowAddFilm2(false);
+        }
+    };
+    
+    const removeFromMyFilms = (film) => {
+        setMyFilms(prev => prev.filter(f => f !== film));
+    };
+    
+    const assignRandomToMonth = (type, month) => {
+        const list = type === 'livre' ? myLivres : myFilms;
+        const available = list.filter(item => !Object.keys(devPersoProgress).some(k => k.includes(item) && devPersoProgress[k]));
+        if (available.length > 0) {
+            const random = available[Math.floor(Math.random() * available.length)];
+            setRandomPick({ type, item: random, month });
+        }
+    };
 
     return (
         <div className="space-y-4">
@@ -2902,28 +2795,43 @@ const LifestyleView = ({ userId }) => {
                     
                     {/* Calendrier Livres */}
                     <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
-                        <div className="text-sm font-bold text-white mb-3">📖 Calendrier Livres</div>
-                        <div className="space-y-2 max-h-60 overflow-auto">
+                        <div className="text-sm font-bold text-white mb-3">📖 Calendrier Livres (Sept 2025 → Été 2026)</div>
+                        <div className="space-y-2 max-h-80 overflow-auto">
                             {months.map(month => {
                                 const livres = DEV_PERSO_CALENDAR.livres[month] || [];
-                                if (livres.length === 0) return null;
+                                const monthNorm = currentMonth.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                                const isCurrentMonth = month === monthNorm;
                                 return (
-                                    <div key={month} className={`p-2 rounded-lg ${month === currentMonth ? 'bg-green-500/10 border border-green-500/30' : 'bg-white/5'}`}>
-                                        <div className="text-xs text-gray-500 capitalize mb-1">
-                                            {month} {month === currentMonth && <span className="text-green-400">← Mois actuel</span>}
-                                        </div>
-                                        <div className="space-y-1">
-                                            {livres.map(livre => (
-                                                <button 
-                                                    key={livre}
-                                                    onClick={() => toggleDevPerso('livre', month, livre)}
-                                                    className={`w-full text-left px-2 py-1 rounded text-sm flex items-center gap-2 ${isCompleted('livre', month, livre) ? 'text-green-400 line-through opacity-70' : 'text-white'}`}
+                                    <div key={month} className={`p-2 rounded-lg ${isCurrentMonth ? 'bg-green-500/10 border border-green-500/30' : 'bg-white/5'}`}>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <div className="text-xs text-gray-500">
+                                                {monthLabels[month]} {isCurrentMonth && <span className="text-green-400">← Actuel</span>}
+                                            </div>
+                                            {livres.length === 0 && (
+                                                <button
+                                                    onClick={() => assignRandomToMonth('livre', month)}
+                                                    className="text-[10px] px-2 py-0.5 bg-green-500/20 text-green-400 rounded"
                                                 >
-                                                    {isCompleted('livre', month, livre) ? <Check size={14} /> : <span className="w-3.5 h-3.5 rounded border border-gray-600" />}
-                                                    {livre}
+                                                    🎲 Random
                                                 </button>
-                                            ))}
+                                            )}
                                         </div>
+                                        {livres.length > 0 ? (
+                                            <div className="space-y-1">
+                                                {livres.map(livre => (
+                                                    <button 
+                                                        key={livre}
+                                                        onClick={() => toggleDevPerso('livre', month, livre)}
+                                                        className={`w-full text-left px-2 py-1 rounded text-sm flex items-center gap-2 ${isCompleted('livre', month, livre) ? 'text-green-400 line-through opacity-70' : 'text-white'}`}
+                                                    >
+                                                        {isCompleted('livre', month, livre) ? <Check size={14} /> : <span className="w-3.5 h-3.5 rounded border border-gray-600" />}
+                                                        {livre}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-xs text-gray-600 italic">Aucun livre assigné</div>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -2932,46 +2840,137 @@ const LifestyleView = ({ userId }) => {
                     
                     {/* Calendrier Films */}
                     <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
-                        <div className="text-sm font-bold text-white mb-3">🎬 Calendrier Films</div>
-                        <div className="space-y-2 max-h-60 overflow-auto">
+                        <div className="text-sm font-bold text-white mb-3">🎬 Calendrier Films (Sept 2025 → Été 2026)</div>
+                        <div className="space-y-2 max-h-80 overflow-auto">
                             {months.map(month => {
                                 const filmsMonth = DEV_PERSO_CALENDAR.films[month] || [];
-                                if (filmsMonth.length === 0) return null;
+                                const monthNorm = currentMonth.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                                const isCurrentMonth = month === monthNorm;
                                 return (
-                                    <div key={month} className={`p-2 rounded-lg ${month === currentMonth ? 'bg-pink-500/10 border border-pink-500/30' : 'bg-white/5'}`}>
-                                        <div className="text-xs text-gray-500 capitalize mb-1">
-                                            {month} {month === currentMonth && <span className="text-pink-400">← Mois actuel</span>}
-                                        </div>
-                                        <div className="space-y-1">
-                                            {filmsMonth.map(film => (
-                                                <button 
-                                                    key={film}
-                                                    onClick={() => toggleDevPerso('film', month, film)}
-                                                    className={`w-full text-left px-2 py-1 rounded text-sm flex items-center gap-2 ${isCompleted('film', month, film) ? 'text-green-400 line-through opacity-70' : 'text-white'}`}
+                                    <div key={month} className={`p-2 rounded-lg ${isCurrentMonth ? 'bg-pink-500/10 border border-pink-500/30' : 'bg-white/5'}`}>
+                                        <div className="flex items-center justify-between mb-1">
+                                            <div className="text-xs text-gray-500">
+                                                {monthLabels[month]} {isCurrentMonth && <span className="text-pink-400">← Actuel</span>}
+                                            </div>
+                                            {filmsMonth.length === 0 && (
+                                                <button
+                                                    onClick={() => assignRandomToMonth('film', month)}
+                                                    className="text-[10px] px-2 py-0.5 bg-pink-500/20 text-pink-400 rounded"
                                                 >
-                                                    {isCompleted('film', month, film) ? <Check size={14} /> : <span className="w-3.5 h-3.5 rounded border border-gray-600" />}
-                                                    {film}
+                                                    🎲 Random
                                                 </button>
-                                            ))}
+                                            )}
                                         </div>
+                                        {filmsMonth.length > 0 ? (
+                                            <div className="space-y-1">
+                                                {filmsMonth.map(film => (
+                                                    <button 
+                                                        key={film}
+                                                        onClick={() => toggleDevPerso('film', month, film)}
+                                                        className={`w-full text-left px-2 py-1 rounded text-sm flex items-center gap-2 ${isCompleted('film', month, film) ? 'text-green-400 line-through opacity-70' : 'text-white'}`}
+                                                    >
+                                                        {isCompleted('film', month, film) ? <Check size={14} /> : <span className="w-3.5 h-3.5 rounded border border-gray-600" />}
+                                                        {film}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="text-xs text-gray-600 italic">Aucun film assigné</div>
+                                        )}
                                     </div>
                                 );
                             })}
                         </div>
                     </div>
                     
-                    {/* Liste complète des films à voir */}
+                    {/* Liste Livres à lire */}
                     <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
-                        <div className="text-sm font-bold text-white mb-3">🎥 Films & Séries inspirants ({FILMS_SERIES_INSPIRANTS.length})</div>
-                        <div className="flex flex-wrap gap-1 max-h-40 overflow-auto">
-                            {FILMS_SERIES_INSPIRANTS.map(film => (
-                                <button 
-                                    key={film}
-                                    onClick={() => toggleDevPerso('film', 'liste', film)}
-                                    className={`px-2 py-1 rounded text-xs transition-all ${isCompleted('film', 'liste', film) ? 'bg-green-500/20 text-green-400 line-through' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                                >
-                                    {film}
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="text-sm font-bold text-white">📚 Ma liste de livres ({myLivres.length})</div>
+                            <button
+                                onClick={() => setShowAddLivre(!showAddLivre)}
+                                className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded"
+                            >
+                                {showAddLivre ? '✕ Fermer' : '+ Ajouter'}
+                            </button>
+                        </div>
+                        {showAddLivre && (
+                            <div className="flex gap-2 mb-3">
+                                <input
+                                    type="text"
+                                    value={newLivre}
+                                    onChange={e => setNewLivre(e.target.value)}
+                                    placeholder="Nom du livre..."
+                                    className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                                    onKeyDown={e => e.key === 'Enter' && addToMyLivres()}
+                                />
+                                <button onClick={addToMyLivres} className="px-3 py-2 bg-green-600 text-white rounded-lg text-sm">
+                                    Ajouter
                                 </button>
+                            </div>
+                        )}
+                        <div className="flex flex-wrap gap-1 max-h-40 overflow-auto">
+                            {myLivres.map(livre => (
+                                <div 
+                                    key={livre}
+                                    className={`group px-2 py-1 rounded text-xs transition-all flex items-center gap-1 ${isCompleted('livre', 'liste', livre) ? 'bg-green-500/20 text-green-400 line-through' : 'bg-white/5 text-gray-400'}`}
+                                >
+                                    <button onClick={() => toggleDevPerso('livre', 'liste', livre)}>
+                                        {livre}
+                                    </button>
+                                    <button
+                                        onClick={() => removeFromMyLivres(livre)}
+                                        className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 ml-1"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {/* Liste Films & Séries */}
+                    <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
+                        <div className="flex items-center justify-between mb-3">
+                            <div className="text-sm font-bold text-white">🎥 Ma liste de films ({myFilms.length})</div>
+                            <button
+                                onClick={() => setShowAddFilm2(!showAddFilm2)}
+                                className="text-xs px-2 py-1 bg-pink-500/20 text-pink-400 rounded"
+                            >
+                                {showAddFilm2 ? '✕ Fermer' : '+ Ajouter'}
+                            </button>
+                        </div>
+                        {showAddFilm2 && (
+                            <div className="flex gap-2 mb-3">
+                                <input
+                                    type="text"
+                                    value={newFilm}
+                                    onChange={e => setNewFilm(e.target.value)}
+                                    placeholder="Nom du film/série..."
+                                    className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm"
+                                    onKeyDown={e => e.key === 'Enter' && addToMyFilms()}
+                                />
+                                <button onClick={addToMyFilms} className="px-3 py-2 bg-pink-600 text-white rounded-lg text-sm">
+                                    Ajouter
+                                </button>
+                            </div>
+                        )}
+                        <div className="flex flex-wrap gap-1 max-h-40 overflow-auto">
+                            {myFilms.map(film => (
+                                <div 
+                                    key={film}
+                                    className={`group px-2 py-1 rounded text-xs transition-all flex items-center gap-1 ${isCompleted('film', 'liste', film) ? 'bg-green-500/20 text-green-400 line-through' : 'bg-white/5 text-gray-400'}`}
+                                >
+                                    <button onClick={() => toggleDevPerso('film', 'liste', film)}>
+                                        {film}
+                                    </button>
+                                    <button
+                                        onClick={() => removeFromMyFilms(film)}
+                                        className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 ml-1"
+                                    >
+                                        ×
+                                    </button>
+                                </div>
                             ))}
                         </div>
                     </div>
@@ -3552,6 +3551,61 @@ const Layout = ({ children, view, setView }) => {
 
 const Dashboard = ({ setView, userId }) => {
     const [biometrics] = useLocalStorage(`titan_biometrics_${userId}`, {});
+    const [dailyCheckins, setDailyCheckins] = useLocalStorage(`titan_checkins_${userId}`, {});
+    const [supplementLogs, setSupplementLogs] = useLocalStorage(`titan_supplements_${userId}`, {});
+    const [workoutLogs] = useLocalStorage(`titan_workouts_${userId}`, []);
+    const [showAiQuestion, setShowAiQuestion] = useState(false);
+    const [questionAnswer, setQuestionAnswer] = useState('');
+    const [aiNotes, setAiNotes] = useLocalStorage(`titan_ai_notes_${userId}`, []);
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayCheckin = dailyCheckins[todayStr] || {};
+    const todaySupplements = supplementLogs[todayStr] || {};
+    
+    const updateCheckin = (field, value) => {
+        setDailyCheckins(prev => ({
+            ...prev,
+            [todayStr]: { ...prev[todayStr], [field]: value }
+        }));
+    };
+    
+    const toggleSupplement = (period, id) => {
+        const current = todaySupplements[period] || [];
+        const updated = current.includes(id) 
+            ? current.filter(x => x !== id)
+            : [...current, id];
+        setSupplementLogs(prev => ({
+            ...prev,
+            [todayStr]: { ...prev[todayStr], [period]: updated }
+        }));
+    };
+    
+    // Analyse IA centralisée
+    const aiAnalysis = useMemo(() => {
+        return analyzeAllData({
+            checkins: dailyCheckins,
+            workoutLogs,
+            biometrics,
+            whoopData: null,
+            supplementLogs
+        });
+    }, [dailyCheckins, workoutLogs, biometrics, supplementLogs]);
+    
+    const addAiNote = (note) => {
+        setAiNotes(prev => [...prev, { ...note, timestamp: new Date().toISOString() }]);
+    };
+    
+    const submitQuestionAnswer = () => {
+        if (aiAnalysis.questions.length > 0 && questionAnswer) {
+            addAiNote({
+                questionId: aiAnalysis.questions[0].id,
+                question: aiAnalysis.questions[0].text,
+                answer: questionAnswer
+            });
+            setShowAiQuestion(false);
+            setQuestionAnswer('');
+        }
+    };
     
     const getLastWeighIn = () => {
         const entries = Object.entries(biometrics).filter(([k, v]) => v.poids);
@@ -3564,12 +3618,195 @@ const Dashboard = ({ setView, userId }) => {
     const daysSinceWeighIn = lastWeighIn ? Math.floor((new Date() - new Date(lastWeighIn.date)) / (1000 * 60 * 60 * 24)) : null;
     const needsWeighIn = !lastWeighIn || daysSinceWeighIn >= 7;
     const isMonday = new Date().getDay() === 1;
+    
+    // Motivational quotes
+    const quotes = [
+        "Le succès, c'est d'aller d'échec en échec sans perdre son enthousiasme.",
+        "La discipline est le pont entre les objectifs et leur réalisation.",
+        "Chaque jour est une nouvelle opportunité de devenir meilleur.",
+        "Le seul mauvais entraînement est celui qui n'a pas eu lieu.",
+        "Ta seule limite, c'est toi."
+    ];
+    const dailyQuote = quotes[new Date().getDate() % quotes.length];
 
     return (
-        <div className="space-y-6 animate-fade-in">
-            <div className="text-center mb-8">
-                <h1 className="text-4xl font-black gradient-text mb-2">TITAN.OS</h1>
-                <p className="text-gray-500">Bienvenue, Théo. Semaine {getWeekNumber(new Date())}.</p>
+        <div className="space-y-4 animate-fade-in">
+            {/* HEADER */}
+            <div className="text-center mb-6">
+                <h1 className="text-3xl font-black gradient-text mb-1">TITAN.OS</h1>
+                <p className="text-gray-500 text-sm">Semaine {getWeekNumber(new Date())} • {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            </div>
+            
+            {/* MOTIVATION */}
+            <div className="p-4 rounded-xl bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20">
+                <div className="text-xs text-blue-400 font-bold mb-1">💡 PENSÉE DU JOUR</div>
+                <div className="text-sm text-white italic">"{dailyQuote}"</div>
+            </div>
+            
+            {/* AI INSIGHTS */}
+            {aiAnalysis.insights.length > 0 && (
+                <div className="space-y-2">
+                    {aiAnalysis.insights.slice(0, 2).map((insight, i) => (
+                        <div 
+                            key={i}
+                            className={`p-3 rounded-xl border ${
+                                insight.type === 'success' ? 'border-green-500/30 bg-green-500/10' :
+                                insight.type === 'warning' ? 'border-yellow-500/30 bg-yellow-500/10' :
+                                insight.type === 'danger' ? 'border-red-500/30 bg-red-500/10' :
+                                'border-blue-500/30 bg-blue-500/10'
+                            }`}
+                        >
+                            <div className="flex items-start gap-3">
+                                <Brain size={18} className={
+                                    insight.type === 'success' ? 'text-green-400' :
+                                    insight.type === 'warning' ? 'text-yellow-400' :
+                                    insight.type === 'danger' ? 'text-red-400' :
+                                    'text-blue-400'
+                                } />
+                                <div className="flex-1">
+                                    <div className="font-medium text-white text-sm">{insight.title}</div>
+                                    <div className="text-xs text-gray-400 mt-0.5">{insight.message}</div>
+                                    {insight.action && (
+                                        <div className="text-xs text-gray-500 mt-1 italic">→ {insight.action}</div>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+            
+            {/* AI QUESTION */}
+            {aiAnalysis.questions.length > 0 && !showAiQuestion && (
+                <button
+                    onClick={() => setShowAiQuestion(true)}
+                    className="w-full p-3 rounded-xl border border-purple-500/30 bg-purple-500/10 flex items-center gap-3"
+                >
+                    <MessageCircle size={18} className="text-purple-400" />
+                    <div className="flex-1 text-left">
+                        <div className="text-sm font-medium text-white">Question du jour</div>
+                        <div className="text-xs text-gray-400 truncate">{aiAnalysis.questions[0].text}</div>
+                    </div>
+                    <ChevronRight size={16} className="text-purple-400" />
+                </button>
+            )}
+            
+            {showAiQuestion && aiAnalysis.questions.length > 0 && (
+                <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Brain size={16} className="text-purple-400" />
+                        <span className="text-xs font-bold text-purple-400">TITAN veut comprendre</span>
+                    </div>
+                    <p className="text-sm text-white mb-3">{aiAnalysis.questions[0].text}</p>
+                    {aiAnalysis.questions[0].options ? (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                            {aiAnalysis.questions[0].options.map(opt => (
+                                <button
+                                    key={opt}
+                                    onClick={() => setQuestionAnswer(opt)}
+                                    className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
+                                        questionAnswer === opt 
+                                            ? 'bg-purple-500 text-white' 
+                                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                    }`}
+                                >
+                                    {opt}
+                                </button>
+                            ))}
+                        </div>
+                    ) : (
+                        <input
+                            type="text"
+                            value={questionAnswer}
+                            onChange={e => setQuestionAnswer(e.target.value)}
+                            placeholder="Ta réponse..."
+                            className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm mb-3"
+                        />
+                    )}
+                    <div className="flex gap-2">
+                        <button 
+                            onClick={() => { setShowAiQuestion(false); setQuestionAnswer(''); }}
+                            className="flex-1 py-2 bg-white/10 text-gray-400 rounded-lg text-xs"
+                        >
+                            Plus tard
+                        </button>
+                        <button 
+                            onClick={submitQuestionAnswer}
+                            disabled={!questionAnswer}
+                            className="flex-1 py-2 bg-purple-600 text-white rounded-lg text-xs font-bold disabled:opacity-50"
+                        >
+                            Enregistrer
+                        </button>
+                    </div>
+                </div>
+            )}
+            
+            {/* QUICK STATE */}
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-bold text-white">⚡ État rapide</span>
+                    <span className="text-xs text-gray-500">Facultatif</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2">
+                    {[
+                        { id: 'energy', label: 'Énergie', emoji: '⚡' },
+                        { id: 'sleep', label: 'Sommeil', emoji: '😴' },
+                        { id: 'mood', label: 'Humeur', emoji: '😊' },
+                        { id: 'motivation', label: 'Motiv', emoji: '🔥' }
+                    ].map(item => (
+                        <div key={item.id} className="text-center">
+                            <div className="text-lg mb-1">{item.emoji}</div>
+                            <div className="flex justify-center gap-0.5">
+                                {[1,2,3,4,5].map(n => (
+                                    <button
+                                        key={n}
+                                        onClick={() => updateCheckin(item.id, n)}
+                                        className={`w-4 h-4 rounded-full transition-all ${
+                                            (todayCheckin?.[item.id] || 0) >= n
+                                                ? n <= 2 ? 'bg-red-500' : n <= 3 ? 'bg-yellow-500' : 'bg-green-500'
+                                                : 'bg-gray-700'
+                                        }`}
+                                    />
+                                ))}
+                            </div>
+                            <div className="text-[10px] text-gray-500 mt-1">{item.label}</div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+            
+            {/* SUPPLEMENTS */}
+            <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-bold text-white">💊 Compléments</span>
+                </div>
+                <div className="space-y-3">
+                    {Object.entries(SUPPLEMENTS_ROUTINE).map(([period, supps]) => (
+                        <div key={period}>
+                            <div className="text-xs text-gray-500 mb-1 capitalize">
+                                {period === 'postWorkout' ? 'Post-entraînement' : period}
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                                {supps.map(supp => {
+                                    const taken = todaySupplements[period]?.includes(supp.id);
+                                    return (
+                                        <button
+                                            key={supp.id}
+                                            onClick={() => toggleSupplement(period, supp.id)}
+                                            className={`px-2 py-1 rounded-lg text-xs transition-all ${
+                                                taken 
+                                                    ? 'bg-green-500/20 text-green-400 line-through' 
+                                                    : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                            }`}
+                                        >
+                                            {supp.emoji} {supp.name}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
             
             {/* Biometric Reminder */}
@@ -3597,56 +3834,53 @@ const Dashboard = ({ setView, userId }) => {
                 </Card>
             )}
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card onClick={() => setView('fitness')} className="p-6 group" glow>
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Dumbbell className="text-cyan-400" size={28}/>
+            {/* QUICK ACCESS */}
+            <div className="grid grid-cols-2 gap-3">
+                <Card onClick={() => setView('fitness')} className="p-4 group" glow>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Dumbbell className="text-cyan-400" size={20}/>
                         </div>
                         <div className="flex-1">
-                            <div className="text-xl font-bold text-white">Fitness</div>
-                            <div className="text-sm text-gray-400">Programme & Perfs</div>
+                            <div className="font-bold text-white">Fitness</div>
+                            <div className="text-xs text-gray-500">Programme</div>
                         </div>
-                        <ChevronRight className="text-gray-600 group-hover:text-cyan-400 transition-colors" />
                     </div>
                 </Card>
                 
-                <Card onClick={() => setView('routine')} className="p-6 group" glow>
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <ListTodo className="text-purple-400" size={28}/>
+                <Card onClick={() => setView('routine')} className="p-4 group" glow>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <ListTodo className="text-purple-400" size={20}/>
                         </div>
                         <div className="flex-1">
-                            <div className="text-xl font-bold text-white">Routine</div>
-                            <div className="text-sm text-gray-400">12 habitudes à tracker</div>
+                            <div className="font-bold text-white">Routine</div>
+                            <div className="text-xs text-gray-500">Habitudes</div>
                         </div>
-                        <ChevronRight className="text-gray-600 group-hover:text-purple-400 transition-colors" />
                     </div>
                 </Card>
                 
-                <Card onClick={() => setView('finance')} className="p-6 group" glow>
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-yellow-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Wallet className="text-yellow-400" size={28}/>
+                <Card onClick={() => setView('finance')} className="p-4 group" glow>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-yellow-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Wallet className="text-yellow-400" size={20}/>
                         </div>
                         <div className="flex-1">
-                            <div className="text-xl font-bold text-white">Finance</div>
-                            <div className="text-sm text-gray-400">Suivi des dépenses</div>
+                            <div className="font-bold text-white">Finance</div>
+                            <div className="text-xs text-gray-500">Dépenses</div>
                         </div>
-                        <ChevronRight className="text-gray-600 group-hover:text-yellow-400 transition-colors" />
                     </div>
                 </Card>
                 
-                <Card onClick={() => setView('lifestyle')} className="p-6 group" glow>
-                    <div className="flex items-center gap-4">
-                        <div className="w-14 h-14 rounded-2xl bg-pink-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                            <Clapperboard className="text-pink-400" size={28}/>
+                <Card onClick={() => setView('lifestyle')} className="p-4 group" glow>
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-pink-500/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Clapperboard className="text-pink-400" size={20}/>
                         </div>
                         <div className="flex-1">
-                            <div className="text-xl font-bold text-white">Lifestyle</div>
-                            <div className="text-sm text-gray-400">Films & Vins + IA</div>
+                            <div className="font-bold text-white">Lifestyle</div>
+                            <div className="text-xs text-gray-500">Dev Perso</div>
                         </div>
-                        <ChevronRight className="text-gray-600 group-hover:text-pink-400 transition-colors" />
                     </div>
                 </Card>
             </div>
