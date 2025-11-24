@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TITAN.OS v8 — Second Brain + Whoop Deep Integration
+// TITAN.OS v9 — Dashboard Central + Dev Perso + Cardio Integration
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const GlobalStyles = () => (
@@ -708,6 +708,9 @@ const DEV_PERSO_CALENDAR = {
         mars: ['Never Split the Difference', 'Le rêve d\'un homme ridicule'],
         avril: ['The Lean Startup', 'Comment se faire des amis'],
         mai: ['Psychologie des foules'],
+        juin: [],
+        juillet: [],
+        aout: [],
         ete: ['Zero to One', 'Les Lois de la nature humaine', 'Miracle Morning']
     },
     films: {
@@ -720,9 +723,45 @@ const DEV_PERSO_CALENDAR = {
         mars: ['The Big Short', 'La vie est belle'],
         avril: ['Le Stratège', 'La Haine', 'A Beautiful Mind', 'The Last Dance'],
         mai: ['The Great Hack'],
+        juin: [],
+        juillet: [],
+        aout: [],
         ete: ['Inception', 'The Social Network', 'Cosmos', 'Scarface', 'Erin Brockovich']
     }
 };
+
+// Listes complètes pour le random
+const LIVRES_A_LIRE = [
+    'L\'effet cumulé', 'Les quatre accords toltèques', 'Par delà le bien et le mal', 'Propaganda',
+    'Discours de la servitude volontaire', 'Sapiens', 'L\'enseignement de l\'ignorance', 'Anti-fragile',
+    'Jouer sa peau', 'Système 1 système 2', 'Factfulness', 'Voyage au bout de la nuit',
+    'Les transclasses ou la non reproduction', 'Les lois de la nature humaine', 'Le rêve d\'un homme ridicule',
+    'L\'âme et la vie', 'Humain trop humain', 'L\'essentialisme', 'L\'orateur idéal',
+    'De la démocratie en Amérique', 'Influence et Manipulation', 'Père Riche Père Pauvre',
+    'Dotcom Secrets', 'Expert Secrets', 'Traffic Secrets', 'Cashvertising', 'The One Hour Content',
+    'Comment se faire des amis', '48 lois du pouvoir', 'Atomic Habits', 'Miracle Morning',
+    'Psychologie des foules', 'Systemology', 'Pre-suasion', 'Libérez votre créativité',
+    'La loi et la promesse', 'La sagesse des loups', 'Atteindre l\'excellence', 'L\'art de la guerre',
+    'Le storytelling en marketing', 'Permission marketing', 'Pitch anything', 'To sell is human',
+    'The millionaire fast lane', 'Think like a rocket scientist', 'How to think like Leonardo da Vinci',
+    'Le magicien des peurs', 'Libérez votre cerveau', 'L\'Alchimiste', 'Siddhartha',
+    'La semaine de 4 heures', 'Zero to One', 'The Lean Startup', 'Les Outils des géants',
+    'The Almanack of Naval Ravikant', 'The Boron Letters', '$100M Offers', 'Good to Great',
+    'The 5 Levels of Leadership', 'Never Split The Difference', 'Deep Work', 'Steve Jobs',
+    'Elon Musk', 'Shoe Dog', 'Billion Dollar Loser', 'Thinking Fast and Slow',
+    'The Power of Habit', 'The Wealth of Nations', 'The Innovator\'s Dilemma',
+    'The Hard Thing About Hard Things', 'The Magic of Thinking Big', 'Principes', 'Le MBA Personnel'
+];
+
+const FILMS_SERIES_INSPIRANTS = [
+    'Joy', 'The Inventor', 'Adidas vs Puma', 'Ford v Ferrari', 'Walt', 'Saving Mr Banks',
+    'Billions', 'Dirty Money', 'Silicon Valley', 'Pablo Escobar', 'Inside Bill\'s Brain',
+    'House of Cards', 'Startup', 'McMillions', 'Shark Tank', 'Pulp Fiction',
+    'Le Seigneur des Anneaux', 'Inception', 'Fight Club', 'The Dark Knight', 'Forrest Gump',
+    'Matrix', 'Gladiator', 'La La Land', 'Interstellar', 'Amélie Poulain', 'Avatar',
+    'Django Unchained', 'Whiplash', 'Parasite', 'The Social Network', 'The Big Short',
+    'Good Will Hunting', 'A Beautiful Mind', 'The Founder', 'Free Solo', 'Cosmos', 'Scarface'
+];
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SECOND BRAIN - SYSTÈME D'ANALYSE IA CENTRALISÉ
@@ -1447,56 +1486,106 @@ const SecondBrainDashboard = ({
 
     return (
         <div className="space-y-4">
-            {/* WHOOP WIDGET - Style Whoop App */}
-            <div className="rounded-2xl bg-gradient-to-br from-gray-900 to-black border border-white/10 p-4">
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                        <span className="text-sm font-bold text-white">WHOOP</span>
-                    </div>
-                    {!mockWhoopData.connected && (
-                        <button 
-                            onClick={() => setWhoopData({ ...mockWhoopData, connected: true, recovery: 72, strain: 8.4, sleepScore: 85, hrv: 65 })}
-                            className="text-xs text-blue-400 hover:text-blue-300"
-                        >
-                            Connecter (demo)
-                        </button>
-                    )}
+            {/* WEEKLY STATS */}
+            <div className="grid grid-cols-3 gap-2">
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center">
+                    <div className="text-2xl font-black text-white">{muscuCount}</div>
+                    <div className="text-[10px] text-gray-500">MUSCU /6</div>
                 </div>
-                
-                <div className="flex items-center gap-6">
-                    <RecoveryRing value={mockWhoopData.recovery} />
-                    
-                    <div className="flex-1 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">STRAIN</span>
-                            <span className="text-lg font-bold text-blue-400">{mockWhoopData.strain || '--'}</span>
-                        </div>
-                        <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                            <div 
-                                className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all"
-                                style={{ width: `${(mockWhoopData.strain || 0) / 21 * 100}%` }}
-                            />
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">SOMMEIL</span>
-                            <span className="text-lg font-bold text-purple-400">{mockWhoopData.sleepScore || '--'}%</span>
-                        </div>
-                        <div className="h-1.5 bg-gray-800 rounded-full overflow-hidden">
-                            <div 
-                                className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full transition-all"
-                                style={{ width: `${mockWhoopData.sleepScore || 0}%` }}
-                            />
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-gray-500">HRV</span>
-                            <span className="text-sm font-bold text-gray-300">{mockWhoopData.hrv || '--'} ms</span>
-                        </div>
-                    </div>
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center">
+                    <div className="text-2xl font-black text-white">{cardioCount}</div>
+                    <div className="text-[10px] text-gray-500">CARDIO /4</div>
+                </div>
+                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center">
+                    <div className="text-2xl font-black text-white">{lastWeighIn?.weight || '--'}</div>
+                    <div className="text-[10px] text-gray-500">POIDS KG</div>
                 </div>
             </div>
+            
+            {/* TODAY'S WORKOUT - MUSCU */}
+            {todayData.seance && (
+                <div className="p-4 rounded-xl border border-blue-500/30 bg-blue-500/5">
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <div className="text-xs text-blue-400 font-bold">💪 MUSCULATION</div>
+                            <div className="text-xl font-bold text-white">{todayData.seance}</div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-sm text-gray-400">{todayData.duree} min</div>
+                        </div>
+                    </div>
+                    
+                    {EXERCISES_DB[todayData.seance] && (
+                        <div className="space-y-1 mb-4">
+                            {EXERCISES_DB[todayData.seance].slice(0, 3).map((ex, i) => (
+                                <div key={i} className="flex justify-between text-xs py-1 border-b border-white/5">
+                                    <span className="text-gray-300">{ex.name}</span>
+                                    <span className="text-gray-500">{ex.sets}x{ex.reps}</span>
+                                </div>
+                            ))}
+                            {EXERCISES_DB[todayData.seance].length > 3 && (
+                                <div className="text-xs text-gray-600 text-center">+{EXERCISES_DB[todayData.seance].length - 3} exercices</div>
+                            )}
+                        </div>
+                    )}
+                    
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => setShowQuickMuscu(true)}
+                            className="flex-1 py-3 bg-green-500/20 text-green-400 font-bold rounded-xl text-sm"
+                        >
+                            ✓ Fait
+                        </button>
+                        <button
+                            onClick={() => startWorkout(todayData.seance)}
+                            className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl text-sm"
+                        >
+                            ▶ Lancer
+                        </button>
+                    </div>
+                </div>
+            )}
+            
+            {/* TODAY'S CARDIO */}
+            {todayData.cardio && todayData.cardio !== 'Non' && (
+                <div className="p-4 rounded-xl border border-orange-500/30 bg-orange-500/5">
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <div className="text-xs text-orange-400 font-bold">🏃 CARDIO</div>
+                            <div className="text-lg font-bold text-white">{todayData.cardio}</div>
+                        </div>
+                        <button
+                            onClick={() => {
+                                addLog({ 
+                                    date: todayStr, 
+                                    session: 'CARDIO', 
+                                    cardioType: todayData.cardio, 
+                                    type: 'Cardio', 
+                                    status: 'completed', 
+                                    timestamp: new Date().toISOString() 
+                                });
+                            }}
+                            className="px-4 py-2 bg-green-500/20 text-green-400 font-bold rounded-xl text-sm"
+                        >
+                            ✓ Fait
+                        </button>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                        {todayData.cardio.includes('LISS') && '25-45 min • Zone 2 (60-70% FCmax)'}
+                        {todayData.cardio.includes('HIIT') && '15-25 min • Intervalles haute intensité'}
+                        {todayData.cardio.includes('Course') && '10km • Allure modérée'}
+                    </div>
+                </div>
+            )}
+            
+            {/* Jour de repos */}
+            {!todayData.seance && (!todayData.cardio || todayData.cardio === 'Non') && (
+                <div className="p-6 rounded-xl border border-white/10 bg-white/[0.02] text-center">
+                    <div className="text-2xl mb-2">😴</div>
+                    <div className="text-lg font-bold text-white">Jour de repos</div>
+                    <div className="text-sm text-gray-500">Récupération active</div>
+                </div>
+            )}
             
             {/* AI INSIGHTS */}
             {aiAnalysis.insights.length > 0 && (
@@ -1630,75 +1719,6 @@ const SecondBrainDashboard = ({
                     ))}
                 </div>
             </div>
-            
-            {/* WEEKLY STATS */}
-            <div className="grid grid-cols-3 gap-2">
-                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center">
-                    <div className="text-2xl font-black text-white">{muscuCount}</div>
-                    <div className="text-[10px] text-gray-500">MUSCU /6</div>
-                </div>
-                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center">
-                    <div className="text-2xl font-black text-white">{cardioCount}</div>
-                    <div className="text-[10px] text-gray-500">CARDIO /4</div>
-                </div>
-                <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center">
-                    <div className="text-2xl font-black text-white">{lastWeighIn?.weight || '--'}</div>
-                    <div className="text-[10px] text-gray-500">POIDS KG</div>
-                </div>
-            </div>
-            
-            {/* TODAY'S WORKOUT */}
-            {todayData.seance && (
-                <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
-                    <div className="flex items-center justify-between mb-3">
-                        <div>
-                            <div className="text-xs text-gray-500">Séance du jour</div>
-                            <div className="text-xl font-bold text-white">{todayData.seance}</div>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-xs text-gray-500">{todayData.duree} min</div>
-                            {mockWhoopData.recovery && (
-                                <div className={`text-xs font-bold ${
-                                    mockWhoopData.recovery > 66 ? 'text-green-400' : 
-                                    mockWhoopData.recovery > 33 ? 'text-yellow-400' : 'text-red-400'
-                                }`}>
-                                    {mockWhoopData.recovery > 66 ? 'GO HARD' : 
-                                     mockWhoopData.recovery > 33 ? 'MODÉRÉ' : 'LÉGER'}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    
-                    {EXERCISES_DB[todayData.seance] && (
-                        <div className="space-y-1 mb-4">
-                            {EXERCISES_DB[todayData.seance].slice(0, 3).map((ex, i) => (
-                                <div key={i} className="flex justify-between text-xs py-1 border-b border-white/5">
-                                    <span className="text-gray-300">{ex.name}</span>
-                                    <span className="text-gray-500">{ex.sets}x{ex.reps}</span>
-                                </div>
-                            ))}
-                            {EXERCISES_DB[todayData.seance].length > 3 && (
-                                <div className="text-xs text-gray-600 text-center">+{EXERCISES_DB[todayData.seance].length - 3} exercices</div>
-                            )}
-                        </div>
-                    )}
-                    
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setShowQuickMuscu(true)}
-                            className="flex-1 py-3 bg-green-500/20 text-green-400 font-bold rounded-xl text-sm"
-                        >
-                            ✓ Fait
-                        </button>
-                        <button
-                            onClick={() => startWorkout(todayData.seance)}
-                            className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl text-sm"
-                        >
-                            ▶ Lancer
-                        </button>
-                    </div>
-                </div>
-            )}
             
             {/* SUPPLEMENTS TRACKER */}
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
@@ -2783,13 +2803,15 @@ const TransactionForm = ({ initialData, onSubmit, onDelete }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const LifestyleView = ({ userId }) => {
-    const [view, setView] = useState('films');
+    const [view, setView] = useState('devperso');
     const [films, setFilms] = useLocalStorage(`titan_films_${userId}`, DEFAULT_FILMS);
     const [wines, setWines] = useLocalStorage(`titan_wines_${userId}`, DEFAULT_WINES);
+    const [devPersoProgress, setDevPersoProgress] = useLocalStorage(`titan_devperso_${userId}`, {});
     const [selectedFilm, setSelectedFilm] = useState(null);
     const [selectedWine, setSelectedWine] = useState(null);
     const [showAddFilm, setShowAddFilm] = useState(false);
     const [showAddWine, setShowAddWine] = useState(false);
+    const [randomPick, setRandomPick] = useState(null);
 
     const addFilm = (film) => { setFilms(prev => [...prev, { ...film, id: Date.now().toString(), createdAt: new Date().toISOString() }]); setShowAddFilm(false); };
     const updateFilm = (id, updates) => { setFilms(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f)); setSelectedFilm(null); };
@@ -2798,17 +2820,163 @@ const LifestyleView = ({ userId }) => {
     const addWine = (wine) => { setWines(prev => [...prev, { ...wine, id: Date.now().toString(), createdAt: new Date().toISOString() }]); setShowAddWine(false); };
     const updateWine = (id, updates) => { setWines(prev => prev.map(w => w.id === id ? { ...w, ...updates } : w)); setSelectedWine(null); };
     const deleteWine = (id) => { setWines(prev => prev.filter(w => w.id !== id)); setSelectedWine(null); };
+    
+    // Dev Perso functions
+    const toggleDevPerso = (type, month, item) => {
+        const key = `${type}_${month}_${item}`;
+        setDevPersoProgress(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+    
+    const isCompleted = (type, month, item) => {
+        const key = `${type}_${month}_${item}`;
+        return devPersoProgress[key] || false;
+    };
+    
+    const getRandomLivre = () => {
+        const available = LIVRES_A_LIRE.filter(l => !Object.keys(devPersoProgress).some(k => k.includes(l) && devPersoProgress[k]));
+        if (available.length === 0) return null;
+        return available[Math.floor(Math.random() * available.length)];
+    };
+    
+    const getRandomFilm = () => {
+        const available = FILMS_SERIES_INSPIRANTS.filter(f => !Object.keys(devPersoProgress).some(k => k.includes(f) && devPersoProgress[k]));
+        if (available.length === 0) return null;
+        return available[Math.floor(Math.random() * available.length)];
+    };
+    
+    const currentMonth = new Date().toLocaleString('fr-FR', { month: 'long' }).toLowerCase();
+    const months = ['janvier', 'fevrier', 'mars', 'avril', 'mai', 'juin', 'juillet', 'aout', 'septembre', 'octobre', 'novembre', 'decembre'];
 
     return (
         <div className="space-y-4">
-            <div className="flex space-x-2 pb-2">
-                <button onClick={() => setView('films')} className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${view === 'films' ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-lg' : 'bg-white/5 text-gray-400'}`}>
+            <div className="flex space-x-2 pb-2 overflow-x-auto" style={{scrollbarWidth: 'none'}}>
+                <button onClick={() => setView('devperso')} className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${view === 'devperso' ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-lg' : 'bg-white/5 text-gray-400'}`}>
+                    <BookOpen size={18}/> Dev Perso
+                </button>
+                <button onClick={() => setView('films')} className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${view === 'films' ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-lg' : 'bg-white/5 text-gray-400'}`}>
                     <Film size={18}/> Films
                 </button>
-                <button onClick={() => setView('wines')} className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${view === 'wines' ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg' : 'bg-white/5 text-gray-400'}`}>
+                <button onClick={() => setView('wines')} className={`flex-1 px-4 py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all whitespace-nowrap ${view === 'wines' ? 'bg-gradient-to-r from-purple-500 to-violet-600 text-white shadow-lg' : 'bg-white/5 text-gray-400'}`}>
                     <Wine size={18}/> Vins
                 </button>
             </div>
+
+            {/* DEV PERSO TAB */}
+            {view === 'devperso' && (
+                <div className="space-y-4 animate-fade-in">
+                    <h2 className="text-xl font-bold text-white">📚 Développement Personnel</h2>
+                    
+                    {/* Random Picker */}
+                    <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
+                        <div className="text-sm font-bold text-white mb-3">🎲 Tirer au hasard</div>
+                        <div className="flex gap-2">
+                            <button 
+                                onClick={() => setRandomPick({ type: 'livre', item: getRandomLivre() })}
+                                className="flex-1 py-2 bg-green-500/20 text-green-400 rounded-lg text-sm font-medium"
+                            >
+                                📖 Livre random
+                            </button>
+                            <button 
+                                onClick={() => setRandomPick({ type: 'film', item: getRandomFilm() })}
+                                className="flex-1 py-2 bg-pink-500/20 text-pink-400 rounded-lg text-sm font-medium"
+                            >
+                                🎬 Film random
+                            </button>
+                        </div>
+                        {randomPick && randomPick.item && (
+                            <div className="mt-3 p-3 bg-white/5 rounded-lg">
+                                <div className="text-xs text-gray-500 mb-1">{randomPick.type === 'livre' ? '📖 Livre suggéré' : '🎬 Film suggéré'}</div>
+                                <div className="text-white font-bold">{randomPick.item}</div>
+                                <button 
+                                    onClick={() => {
+                                        toggleDevPerso(randomPick.type, 'random', randomPick.item);
+                                        setRandomPick(null);
+                                    }}
+                                    className="mt-2 text-xs text-green-400"
+                                >
+                                    ✓ Marquer comme lu/vu
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                    
+                    {/* Calendrier Livres */}
+                    <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
+                        <div className="text-sm font-bold text-white mb-3">📖 Calendrier Livres</div>
+                        <div className="space-y-2 max-h-60 overflow-auto">
+                            {months.map(month => {
+                                const livres = DEV_PERSO_CALENDAR.livres[month] || [];
+                                if (livres.length === 0) return null;
+                                return (
+                                    <div key={month} className={`p-2 rounded-lg ${month === currentMonth ? 'bg-green-500/10 border border-green-500/30' : 'bg-white/5'}`}>
+                                        <div className="text-xs text-gray-500 capitalize mb-1">
+                                            {month} {month === currentMonth && <span className="text-green-400">← Mois actuel</span>}
+                                        </div>
+                                        <div className="space-y-1">
+                                            {livres.map(livre => (
+                                                <button 
+                                                    key={livre}
+                                                    onClick={() => toggleDevPerso('livre', month, livre)}
+                                                    className={`w-full text-left px-2 py-1 rounded text-sm flex items-center gap-2 ${isCompleted('livre', month, livre) ? 'text-green-400 line-through opacity-70' : 'text-white'}`}
+                                                >
+                                                    {isCompleted('livre', month, livre) ? <Check size={14} /> : <span className="w-3.5 h-3.5 rounded border border-gray-600" />}
+                                                    {livre}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    
+                    {/* Calendrier Films */}
+                    <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
+                        <div className="text-sm font-bold text-white mb-3">🎬 Calendrier Films</div>
+                        <div className="space-y-2 max-h-60 overflow-auto">
+                            {months.map(month => {
+                                const filmsMonth = DEV_PERSO_CALENDAR.films[month] || [];
+                                if (filmsMonth.length === 0) return null;
+                                return (
+                                    <div key={month} className={`p-2 rounded-lg ${month === currentMonth ? 'bg-pink-500/10 border border-pink-500/30' : 'bg-white/5'}`}>
+                                        <div className="text-xs text-gray-500 capitalize mb-1">
+                                            {month} {month === currentMonth && <span className="text-pink-400">← Mois actuel</span>}
+                                        </div>
+                                        <div className="space-y-1">
+                                            {filmsMonth.map(film => (
+                                                <button 
+                                                    key={film}
+                                                    onClick={() => toggleDevPerso('film', month, film)}
+                                                    className={`w-full text-left px-2 py-1 rounded text-sm flex items-center gap-2 ${isCompleted('film', month, film) ? 'text-green-400 line-through opacity-70' : 'text-white'}`}
+                                                >
+                                                    {isCompleted('film', month, film) ? <Check size={14} /> : <span className="w-3.5 h-3.5 rounded border border-gray-600" />}
+                                                    {film}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    
+                    {/* Liste complète des films à voir */}
+                    <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
+                        <div className="text-sm font-bold text-white mb-3">🎥 Films & Séries inspirants ({FILMS_SERIES_INSPIRANTS.length})</div>
+                        <div className="flex flex-wrap gap-1 max-h-40 overflow-auto">
+                            {FILMS_SERIES_INSPIRANTS.map(film => (
+                                <button 
+                                    key={film}
+                                    onClick={() => toggleDevPerso('film', 'liste', film)}
+                                    className={`px-2 py-1 rounded text-xs transition-all ${isCompleted('film', 'liste', film) ? 'bg-green-500/20 text-green-400 line-through' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                                >
+                                    {film}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {view === 'films' && (
                 <div className="space-y-4 animate-fade-in">
@@ -3340,7 +3508,7 @@ const Layout = ({ children, view, setView }) => {
             <div className="hidden md:flex w-64 flex-col border-r border-white/5 p-4 bg-black/40 backdrop-blur-xl relative z-10">
                 <div className="mb-8 px-4 pt-2">
                     <div className="text-2xl font-black tracking-tighter gradient-text">TITAN.OS</div>
-                    <div className="text-xs text-gray-600 tracking-wide font-medium">V8.0 • SECOND BRAIN</div>
+                    <div className="text-xs text-gray-600 tracking-wide font-medium">V9.0 • SECOND BRAIN</div>
                 </div>
                 <div className="space-y-1 flex-1">
                     <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
