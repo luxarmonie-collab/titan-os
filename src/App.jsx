@@ -1703,6 +1703,250 @@ const WhoopWidget = ({ userId }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// FINANCE WIDGET - Connexion bancaire Bridge
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const FinanceWidget = ({ userId }) => {
+    const [loading, setLoading] = useState(true);
+    const [connected, setConnected] = useState(false);
+    const [accounts, setAccounts] = useState([]);
+    const [transactions, setTransactions] = useState([]);
+    const [error, setError] = useState(null);
+    const [showTransactions, setShowTransactions] = useState(false);
+    
+    // Check URL params
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        if (params.get('bridge_connected') === 'true') {
+            window.history.replaceState({}, document.title, window.location.pathname);
+            fetchBankData();
+        }
+        if (params.get('bridge_error')) {
+            setError(params.get('bridge_error'));
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setLoading(false);
+        }
+    }, []);
+    
+    const fetchBankData = async () => {
+        setLoading(true);
+        try {
+            // Fetch accounts
+            const accRes = await fetch(`/api/bridge/accounts?user_id=${userId}`);
+            const accData = await accRes.json();
+            
+            if (accData.connected) {
+                setConnected(true);
+                setAccounts(accData.accounts || []);
+                
+                // Fetch transactions
+                const txRes = await fetch(`/api/bridge/transactions?user_id=${userId}&limit=30`);
+                const txData = await txRes.json();
+                setTransactions(txData.transactions || []);
+            } else {
+                setConnected(false);
+            }
+        } catch (e) {
+            console.error('Bank fetch error:', e);
+        }
+        setLoading(false);
+    };
+    
+    // Check status on mount
+    useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                const res = await fetch(`/api/bridge/status?user_id=${userId}`);
+                const data = await res.json();
+                if (data.connected) {
+                    fetchBankData();
+                } else {
+                    setLoading(false);
+                }
+            } catch (e) {
+                setLoading(false);
+            }
+        };
+        checkStatus();
+    }, [userId]);
+    
+    const connectBank = () => {
+        window.location.href = `/api/bridge/connect?user_id=${userId}`;
+    };
+    
+    const disconnectBank = async () => {
+        await fetch(`/api/bridge/disconnect?user_id=${userId}`, { method: 'POST' });
+        setConnected(false);
+        setAccounts([]);
+        setTransactions([]);
+    };
+    
+    // Calculate totals
+    const totalBalance = accounts.reduce((sum, acc) => sum + (acc.balance || 0), 0);
+    
+    // Group transactions by category
+    const spendingByCategory = useMemo(() => {
+        const spending = {};
+        transactions.filter(tx => tx.amount < 0).forEach(tx => {
+            const cat = tx.category || 'Autre';
+            spending[cat] = (spending[cat] || 0) + Math.abs(tx.amount);
+        });
+        return Object.entries(spending)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+    }, [transactions]);
+    
+    // This month's spending
+    const thisMonthSpending = useMemo(() => {
+        const now = new Date();
+        const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        return transactions
+            .filter(tx => tx.date?.startsWith(thisMonth) && tx.amount < 0)
+            .reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
+    }, [transactions]);
+    
+    if (loading) {
+        return (
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/5">
+                <div className="flex items-center justify-center gap-2 py-4">
+                    <Loader2 size={20} className="animate-spin text-gray-400" />
+                    <span className="text-sm text-gray-400">Chargement banque...</span>
+                </div>
+            </div>
+        );
+    }
+    
+    if (!connected) {
+        return (
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/5">
+                <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center">
+                        <Wallet size={20} className="text-white" />
+                    </div>
+                    <div>
+                        <div className="font-bold text-white">BANQUE</div>
+                        <div className="text-xs text-gray-500">Non connectée</div>
+                    </div>
+                </div>
+                {error && (
+                    <div className="p-2 mb-3 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+                        Erreur: {error}
+                    </div>
+                )}
+                <button
+                    onClick={connectBank}
+                    className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-700 text-white font-bold text-sm hover:opacity-90 transition-opacity"
+                >
+                    Connecter ma banque
+                </button>
+                <div className="text-[10px] text-gray-600 text-center mt-2">Sécurisé par Bridge (Bankin')</div>
+            </div>
+        );
+    }
+    
+    // Connected - show data
+    return (
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/5">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center">
+                        <Wallet size={16} className="text-white" />
+                    </div>
+                    <div>
+                        <div className="font-bold text-white text-sm">BANQUE</div>
+                        <div className="text-[10px] text-gray-500">
+                            {accounts.length} compte{accounts.length > 1 ? 's' : ''}
+                        </div>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={fetchBankData} className="p-1.5 hover:bg-white/5 rounded-lg">
+                        <RefreshCw size={14} className="text-gray-400" />
+                    </button>
+                    <button onClick={disconnectBank} className="p-1.5 hover:bg-white/5 rounded-lg">
+                        <X size={14} className="text-gray-400" />
+                    </button>
+                </div>
+            </div>
+            
+            {/* Total Balance */}
+            <div className="text-center mb-4 p-3 rounded-xl bg-white/5">
+                <div className="text-xs text-gray-500 mb-1">Solde total</div>
+                <div className="text-2xl font-black text-white">
+                    {totalBalance.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                </div>
+            </div>
+            
+            {/* Accounts */}
+            <div className="space-y-2 mb-4">
+                {accounts.map(acc => (
+                    <div key={acc.id} className="flex justify-between items-center p-2 rounded-lg bg-white/5">
+                        <div>
+                            <div className="text-sm font-medium text-white">{acc.name}</div>
+                            <div className="text-[10px] text-gray-500">{acc.bankName}</div>
+                        </div>
+                        <div className={`font-bold ${acc.balance >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                            {acc.balance?.toLocaleString('fr-FR', { style: 'currency', currency: acc.currency || 'EUR' })}
+                        </div>
+                    </div>
+                ))}
+            </div>
+            
+            {/* This month spending */}
+            <div className="p-3 rounded-xl bg-white/5 mb-4">
+                <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-500">Dépenses ce mois</span>
+                    <span className="font-bold text-red-400">
+                        -{thisMonthSpending.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}
+                    </span>
+                </div>
+            </div>
+            
+            {/* Top categories */}
+            {spendingByCategory.length > 0 && (
+                <div className="mb-4">
+                    <div className="text-xs text-gray-500 mb-2">Top catégories</div>
+                    <div className="space-y-1">
+                        {spendingByCategory.map(([cat, amount]) => (
+                            <div key={cat} className="flex justify-between items-center text-xs">
+                                <span className="text-gray-400">{cat}</span>
+                                <span className="text-white">{amount.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+            
+            {/* Recent transactions toggle */}
+            <button 
+                onClick={() => setShowTransactions(!showTransactions)}
+                className="w-full py-2 rounded-lg bg-white/5 text-sm text-gray-400 hover:bg-white/10 transition-colors"
+            >
+                {showTransactions ? 'Masquer transactions' : `Voir ${transactions.length} transactions`}
+            </button>
+            
+            {/* Transactions list */}
+            {showTransactions && (
+                <div className="mt-3 space-y-1 max-h-60 overflow-auto">
+                    {transactions.slice(0, 20).map(tx => (
+                        <div key={tx.id} className="flex justify-between items-center p-2 rounded-lg bg-white/5">
+                            <div className="flex-1 min-w-0">
+                                <div className="text-xs font-medium text-white truncate">{tx.description}</div>
+                                <div className="text-[10px] text-gray-500">{tx.date} • {tx.category}</div>
+                            </div>
+                            <div className={`ml-2 font-bold text-sm ${tx.amount >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {tx.amount >= 0 ? '+' : ''}{tx.amount?.toLocaleString('fr-FR', { style: 'currency', currency: tx.currency || 'EUR' })}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // UI COMPONENTS (Premium Design System)
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -3288,6 +3532,13 @@ const FinanceView = ({ userId }) => {
 
     return (
         <div className="space-y-4">
+            {/* Bridge Bank Widget */}
+            <FinanceWidget userId={userId} />
+            
+            {/* Manual Finance Section */}
+            <div className="pt-4 border-t border-white/10">
+                <div className="text-xs text-gray-500 uppercase font-bold mb-3">📝 Transactions manuelles</div>
+            
             <div className="flex space-x-2 overflow-x-auto pb-2" style={{scrollbarWidth: 'none'}}>
                 {['overview', 'transactions'].map(v => (
                     <button key={v} onClick={() => setView(v)} className={`px-4 py-2 rounded-xl text-xs font-bold uppercase whitespace-nowrap transition-all ${view === v ? 'bg-gradient-to-r from-yellow-500 to-orange-600 text-black shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}>
@@ -3345,6 +3596,7 @@ const FinanceView = ({ userId }) => {
                     })}
                 </div>
             )}
+            </div>
 
             <Modal isOpen={showAddManual} onClose={() => setShowAddManual(false)} title="Nouvelle transaction">
                 <TransactionForm onSubmit={(tx) => { addTransaction(tx); setShowAddManual(false); }} onCancel={() => setShowAddManual(false)} />
