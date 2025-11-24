@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback, createContext, useContext } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { 
   Dumbbell, CheckCircle, Clock, Flame, ChevronRight, ArrowLeft, X, Scale, Wallet,
   ChevronLeft, Menu, LayoutDashboard, ListTodo, Clapperboard, Sparkles, Play, Heart,
@@ -7,8 +8,19 @@ import {
   Gamepad2, Home, Plane, CreditCard, Wrench, Package, PiggyBank, Building2, Banknote,
   CircleDollarSign, Timer, Zap, Star, Check, FileText, Film, Wine, Mic, Image,
   Award, User, MapPin, Clock3, Grape, Thermometer, Eye, Edit3, Trash2, Save,
-  Search, Loader2, AlertCircle, MessageCircle
+  Search, Loader2, AlertCircle, MessageCircle, Cloud, CloudOff, RefreshCw
 } from 'lucide-react';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUPABASE CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://nzejiljpfdslouvehvin.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56ZWppbGpwZmRzbG91dmVodmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTMzOTEsImV4cCI6MjA3OTU2OTM5MX0.vJV8mDV-5ksA76q5cOFpC6Wc4dJGR_8ssrPLYqgkFl4';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Context pour le statut de sync
+const SyncContext = createContext({ syncing: false, lastSync: null, error: null });
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TITAN.OS v9 — Dashboard Central + Dev Perso + Cardio Integration
@@ -1161,6 +1173,302 @@ const useLocalStorage = (key, initialValue) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// SUPABASE HOOKS - Sync cloud avec localStorage fallback
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Hook pour sync les check-ins
+const useSupabaseCheckins = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_checkins_${userId}`, {});
+    const [syncing, setSyncing] = useState(false);
+    
+    // Charger depuis Supabase au montage
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('daily_checkins')
+                    .select('*')
+                    .eq('user_id', userId);
+                if (!error && rows) {
+                    const mapped = {};
+                    rows.forEach(row => {
+                        mapped[row.date] = { energy: row.energy, sleep: row.sleep, mood: row.mood, motivation: row.motivation };
+                    });
+                    if (Object.keys(mapped).length > 0) setData(prev => ({ ...prev, ...mapped }));
+                }
+            } catch (e) { console.log('Supabase load error:', e); }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    // Sauvegarder vers Supabase
+    const saveCheckin = async (date, values) => {
+        const newData = { ...data, [date]: { ...data[date], ...values } };
+        setData(newData);
+        
+        try {
+            await supabase.from('daily_checkins').upsert({
+                user_id: userId,
+                date,
+                ...values
+            }, { onConflict: 'user_id,date' });
+        } catch (e) { console.log('Supabase save error:', e); }
+    };
+    
+    return [data, saveCheckin, syncing];
+};
+
+// Hook pour sync les workouts
+const useSupabaseWorkouts = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_workouts_${userId}`, []);
+    const [syncing, setSyncing] = useState(false);
+    
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('workout_logs')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('date', { ascending: false });
+                if (!error && rows && rows.length > 0) {
+                    setData(rows.map(r => ({
+                        date: r.date,
+                        session: r.session,
+                        type: r.type,
+                        duration: r.duration,
+                        calories: r.calories,
+                        cardioType: r.cardio_type,
+                        exercises: r.exercises,
+                        status: r.status,
+                        id: r.id
+                    })));
+                }
+            } catch (e) { console.log('Supabase load error:', e); }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    const addWorkout = async (workout) => {
+        const newData = [...data, workout];
+        setData(newData);
+        
+        try {
+            await supabase.from('workout_logs').insert({
+                user_id: userId,
+                date: workout.date,
+                session: workout.session,
+                type: workout.type,
+                duration: workout.duration,
+                calories: workout.calories,
+                cardio_type: workout.cardioType,
+                exercises: workout.exercises,
+                status: workout.status
+            });
+        } catch (e) { console.log('Supabase save error:', e); }
+    };
+    
+    return [data, setData, addWorkout];
+};
+
+// Hook pour sync la biométrie
+const useSupabaseBiometrics = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_biometrics_${userId}`, {});
+    
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('biometrics')
+                    .select('*')
+                    .eq('user_id', userId);
+                if (!error && rows) {
+                    const mapped = {};
+                    rows.forEach(row => {
+                        mapped[row.date] = { poids: row.poids, tourTaille: row.tour_taille, tourBras: row.tour_bras, bodyFat: row.body_fat };
+                    });
+                    if (Object.keys(mapped).length > 0) setData(prev => ({ ...prev, ...mapped }));
+                }
+            } catch (e) { console.log('Supabase load error:', e); }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    const saveBiometric = async (date, values) => {
+        const newData = { ...data, [date]: { ...data[date], ...values } };
+        setData(newData);
+        
+        try {
+            await supabase.from('biometrics').upsert({
+                user_id: userId,
+                date,
+                poids: values.poids,
+                tour_taille: values.tourTaille,
+                tour_bras: values.tourBras,
+                body_fat: values.bodyFat
+            }, { onConflict: 'user_id,date' });
+        } catch (e) { console.log('Supabase save error:', e); }
+    };
+    
+    return [data, setData, saveBiometric];
+};
+
+// Hook pour sync les compléments
+const useSupabaseSupplements = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_supplements_${userId}`, {});
+    
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('supplement_logs')
+                    .select('*')
+                    .eq('user_id', userId);
+                if (!error && rows) {
+                    const mapped = {};
+                    rows.forEach(row => {
+                        if (!mapped[row.date]) mapped[row.date] = {};
+                        mapped[row.date][row.period] = row.supplements;
+                    });
+                    if (Object.keys(mapped).length > 0) setData(prev => ({ ...prev, ...mapped }));
+                }
+            } catch (e) { console.log('Supabase load error:', e); }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    const saveSupplement = async (date, period, supplements) => {
+        const newData = { ...data, [date]: { ...data[date], [period]: supplements } };
+        setData(newData);
+        
+        try {
+            await supabase.from('supplement_logs').upsert({
+                user_id: userId,
+                date,
+                period,
+                supplements
+            }, { onConflict: 'user_id,date,period' });
+        } catch (e) { console.log('Supabase save error:', e); }
+    };
+    
+    return [data, setData, saveSupplement];
+};
+
+// Hook pour sync dev perso
+const useSupabaseDevPerso = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_devperso_${userId}`, {});
+    
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('dev_perso_progress')
+                    .select('*')
+                    .eq('user_id', userId);
+                if (!error && rows) {
+                    const mapped = {};
+                    rows.forEach(row => {
+                        const key = `${row.type}_${row.month}_${row.item}`;
+                        mapped[key] = row.completed;
+                    });
+                    if (Object.keys(mapped).length > 0) setData(prev => ({ ...prev, ...mapped }));
+                }
+            } catch (e) { console.log('Supabase load error:', e); }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    const toggleItem = async (type, month, item) => {
+        const key = `${type}_${month}_${item}`;
+        const newValue = !data[key];
+        setData(prev => ({ ...prev, [key]: newValue }));
+        
+        try {
+            await supabase.from('dev_perso_progress').upsert({
+                user_id: userId,
+                type,
+                month,
+                item,
+                completed: newValue
+            }, { onConflict: 'user_id,type,month,item' });
+        } catch (e) { console.log('Supabase save error:', e); }
+    };
+    
+    return [data, setData, toggleItem];
+};
+
+// Hook pour sync les habitudes
+const useSupabaseHabits = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_habits_${userId}`, {});
+    
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('habits')
+                    .select('*')
+                    .eq('user_id', userId);
+                if (!error && rows) {
+                    const mapped = {};
+                    rows.forEach(row => {
+                        const key = `${row.date}_${row.habit_id}`;
+                        mapped[key] = row.completed;
+                    });
+                    if (Object.keys(mapped).length > 0) setData(prev => ({ ...prev, ...mapped }));
+                }
+            } catch (e) { console.log('Supabase load error:', e); }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    const toggleHabit = async (date, habitId, value) => {
+        const key = `${date}_${habitId}`;
+        setData(prev => ({ ...prev, [key]: value }));
+        
+        try {
+            await supabase.from('habits').upsert({
+                user_id: userId,
+                date,
+                habit_id: habitId,
+                completed: value
+            }, { onConflict: 'user_id,date,habit_id' });
+        } catch (e) { console.log('Supabase save error:', e); }
+    };
+    
+    return [data, setData, toggleHabit];
+};
+
+// Indicateur de sync cloud
+const CloudSyncIndicator = ({ syncing = false }) => {
+    const [isOnline, setIsOnline] = useState(navigator.onLine);
+    
+    useEffect(() => {
+        const handleOnline = () => setIsOnline(true);
+        const handleOffline = () => setIsOnline(false);
+        window.addEventListener('online', handleOnline);
+        window.addEventListener('offline', handleOffline);
+        return () => {
+            window.removeEventListener('online', handleOnline);
+            window.removeEventListener('offline', handleOffline);
+        };
+    }, []);
+    
+    return (
+        <div className="flex items-center gap-1 text-xs">
+            {isOnline ? (
+                syncing ? (
+                    <><RefreshCw size={12} className="text-blue-400 animate-spin" /><span className="text-blue-400">Sync...</span></>
+                ) : (
+                    <><Cloud size={12} className="text-green-400" /><span className="text-green-400">Cloud</span></>
+                )
+            ) : (
+                <><CloudOff size={12} className="text-yellow-400" /><span className="text-yellow-400">Offline</span></>
+            )}
+        </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // UI COMPONENTS (Premium Design System)
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -1316,21 +1624,39 @@ const FitnessModule = ({ userId }) => {
         setAiNotes(prev => [...prev, { ...note, id: Date.now(), date: todayStr, timestamp: new Date().toISOString() }]);
     };
 
-    const tabs = ['dashboard', 'programme', 'planning', 'progress', 'biometrics'];
+    const tabs = [
+        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+        { id: 'programme', label: 'Programme', icon: '📅' },
+        { id: 'planning', label: 'Planning', icon: '🗓️' },
+        { id: 'progress', label: 'Progrès', icon: '📈' },
+        { id: 'biometrics', label: 'Biométrie', icon: '⚖️' }
+    ];
 
     return (
         <div className="space-y-4">
             {view !== 'logger' && (
-                <div className="flex space-x-2 overflow-x-auto pb-2" style={{scrollbarWidth: 'none'}}>
-                    {tabs.map(v => (
-                        <button 
-                            key={v} 
-                            onClick={() => setView(v)} 
-                            className={`px-4 py-2 rounded-xl text-xs font-bold uppercase whitespace-nowrap transition-all ${view === v ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                        >
-                            {v === 'programme' ? '📅 Programme' : v === 'progress' ? '📈 Progress' : v}
-                        </button>
-                    ))}
+                <div className="relative">
+                    <div 
+                        className="flex space-x-2 overflow-x-auto pb-2 px-1 -mx-1" 
+                        style={{
+                            scrollbarWidth: 'none',
+                            WebkitOverflowScrolling: 'touch',
+                            msOverflowStyle: 'none'
+                        }}
+                    >
+                        {tabs.map(tab => (
+                            <button 
+                                key={tab.id} 
+                                onClick={() => setView(tab.id)} 
+                                className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${view === tab.id ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                            >
+                                <span>{tab.icon}</span>
+                                <span className="uppercase">{tab.label}</span>
+                            </button>
+                        ))}
+                    </div>
+                    {/* Indicateur scroll droit */}
+                    <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-[#030305] to-transparent pointer-events-none md:hidden" />
                 </div>
             )}
             
@@ -2241,23 +2567,226 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
 };
 
 const FitnessBiometrics = ({ userId }) => {
-    const [form, setForm] = useState({});
+    const [biometrics, setBiometrics] = useLocalStorage(`titan_biometrics_${userId}`, {});
+    const [showForm, setShowForm] = useState(false);
+    const [viewHistory, setViewHistory] = useState(false);
+    const [form, setForm] = useState({
+        poids: '', imc: '', graisse: '', muscleSq: '', poidsSansGras: '', 
+        grasSousCut: '', graisseVisc: '', eau: '', masseMuscu: '', 
+        masseOsseuse: '', proteines: '', bmr: '', ageMetabo: ''
+    });
     const [saved, setSaved] = useState(false);
-    const fields = ["Poids", "IMC", "Graisse %", "Muscle Sq", "Poids sans gras", "Gras Sous-Cut", "Graisse Visc.", "Eau %", "Masse Muscu", "Masse Osseuse", "Protéines", "BMR", "Age Métabo"];
-    const save = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    // Sauvegarder les données
+    const save = async () => {
+        const newEntry = { ...form, timestamp: new Date().toISOString() };
+        setBiometrics(prev => ({ ...prev, [todayStr]: newEntry }));
+        
+        // Sync Supabase
+        try {
+            await supabase.from('biometrics').upsert({
+                user_id: userId,
+                date: todayStr,
+                poids: parseFloat(form.poids) || null,
+                tour_taille: null,
+                tour_bras: null,
+                body_fat: parseFloat(form.graisse) || null
+            }, { onConflict: 'user_id,date' });
+        } catch (e) { console.log('Save error:', e); }
+        
+        setSaved(true);
+        setTimeout(() => { setSaved(false); setShowForm(false); }, 1500);
+    };
+    
+    // Récupérer l'historique trié par date
+    const history = useMemo(() => {
+        return Object.entries(biometrics)
+            .map(([date, data]) => ({ date, ...data }))
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+    }, [biometrics]);
+    
+    // Données pour le graphique (derniers 12 points)
+    const chartData = useMemo(() => {
+        return Object.entries(biometrics)
+            .filter(([_, data]) => data.poids)
+            .map(([date, data]) => ({ date, poids: parseFloat(data.poids) }))
+            .sort((a, b) => new Date(a.date) - new Date(b.date))
+            .slice(-12);
+    }, [biometrics]);
+    
+    const latestEntry = history[0];
+    const previousEntry = history[1];
+    
+    // Calcul de la progression
+    const weightDiff = latestEntry?.poids && previousEntry?.poids 
+        ? (parseFloat(latestEntry.poids) - parseFloat(previousEntry.poids)).toFixed(1)
+        : null;
+    
+    const fields = [
+        { key: 'poids', label: 'Poids', unit: 'kg' },
+        { key: 'imc', label: 'IMC', unit: '' },
+        { key: 'graisse', label: 'Graisse %', unit: '%' },
+        { key: 'muscleSq', label: 'Muscle Sq', unit: '' },
+        { key: 'poidsSansGras', label: 'Poids sans gras', unit: 'kg' },
+        { key: 'grasSousCut', label: 'Gras Sous-Cut', unit: '' },
+        { key: 'graisseVisc', label: 'Graisse Visc.', unit: '' },
+        { key: 'eau', label: 'Eau %', unit: '%' },
+        { key: 'masseMuscu', label: 'Masse Muscu', unit: 'kg' },
+        { key: 'masseOsseuse', label: 'Masse Osseuse', unit: 'kg' },
+        { key: 'proteines', label: 'Protéines', unit: '%' },
+        { key: 'bmr', label: 'BMR', unit: 'kcal' },
+        { key: 'ageMetabo', label: 'Âge Métabo', unit: 'ans' }
+    ];
+    
+    // Mini graphique SVG
+    const MiniChart = ({ data }) => {
+        if (!data || data.length < 2) return null;
+        const values = data.map(d => d.poids);
+        const min = Math.min(...values) - 1;
+        const max = Math.max(...values) + 1;
+        const width = 280;
+        const height = 80;
+        const points = data.map((d, i) => {
+            const x = (i / (data.length - 1)) * width;
+            const y = height - ((d.poids - min) / (max - min)) * height;
+            return `${x},${y}`;
+        }).join(' ');
+        
+        return (
+            <svg width={width} height={height} className="mx-auto">
+                <defs>
+                    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#3b82f6" />
+                        <stop offset="100%" stopColor="#8b5cf6" />
+                    </linearGradient>
+                </defs>
+                <polyline
+                    fill="none"
+                    stroke="url(#lineGradient)"
+                    strokeWidth="2"
+                    points={points}
+                />
+                {data.map((d, i) => {
+                    const x = (i / (data.length - 1)) * width;
+                    const y = height - ((d.poids - min) / (max - min)) * height;
+                    return <circle key={i} cx={x} cy={y} r="4" fill="#8b5cf6" />;
+                })}
+            </svg>
+        );
+    };
     
     return (
         <div className="space-y-4 animate-fade-in">
-            <div className="text-center mb-4"><Scale className="mx-auto text-purple-500 mb-2" size={40}/><h3 className="text-white font-bold text-xl">Données Biométriques</h3></div>
-            <Card className="p-4 grid grid-cols-2 gap-3">
-                {fields.map(label => (
-                    <div key={label}>
-                        <label className="text-xs text-gray-500 uppercase block mb-1 font-bold">{label}</label>
-                        <input type="number" step="0.1" className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-purple-500 outline-none" onChange={e => setForm({...form, [label]: e.target.value})} />
+            {/* Header */}
+            <div className="text-center mb-4">
+                <Scale className="mx-auto text-purple-500 mb-2" size={40}/>
+                <h3 className="text-white font-bold text-xl">Données Biométriques</h3>
+            </div>
+            
+            {/* Stats actuelles */}
+            {latestEntry && (
+                <Card className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="text-xs text-gray-500">Dernière mesure : {new Date(latestEntry.date).toLocaleDateString('fr-FR')}</div>
+                        {weightDiff && (
+                            <Badge color={parseFloat(weightDiff) > 0 ? 'yellow' : 'green'} size="sm">
+                                {parseFloat(weightDiff) > 0 ? '+' : ''}{weightDiff} kg
+                            </Badge>
+                        )}
                     </div>
-                ))}
-            </Card>
-            <Button onClick={save} variant={saved ? "success" : "accent"} className="w-full">{saved ? "✓ Enregistré !" : "Enregistrer"}</Button>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                        <div>
+                            <div className="text-3xl font-black text-white">{latestEntry.poids || '--'}</div>
+                            <div className="text-xs text-gray-500">Poids (kg)</div>
+                        </div>
+                        <div>
+                            <div className="text-3xl font-black text-white">{latestEntry.graisse || '--'}</div>
+                            <div className="text-xs text-gray-500">Graisse %</div>
+                        </div>
+                        <div>
+                            <div className="text-3xl font-black text-white">{latestEntry.masseMuscu || '--'}</div>
+                            <div className="text-xs text-gray-500">Muscle (kg)</div>
+                        </div>
+                    </div>
+                </Card>
+            )}
+            
+            {/* Graphique évolution */}
+            {chartData.length >= 2 && (
+                <Card className="p-4">
+                    <div className="text-sm font-bold text-white mb-3">📈 Évolution du poids</div>
+                    <MiniChart data={chartData} />
+                    <div className="flex justify-between text-xs text-gray-500 mt-2">
+                        <span>{chartData[0]?.date}</span>
+                        <span>{chartData[chartData.length - 1]?.date}</span>
+                    </div>
+                </Card>
+            )}
+            
+            {/* Boutons actions */}
+            <div className="flex gap-2">
+                <Button onClick={() => setShowForm(!showForm)} variant={showForm ? 'secondary' : 'accent'} className="flex-1">
+                    {showForm ? '✕ Fermer' : '+ Nouvelle mesure'}
+                </Button>
+                <Button onClick={() => setViewHistory(!viewHistory)} variant="secondary" className="flex-1">
+                    {viewHistory ? 'Masquer' : `📋 Historique (${history.length})`}
+                </Button>
+            </div>
+            
+            {/* Formulaire */}
+            {showForm && (
+                <Card className="p-4 animate-fade-in">
+                    <div className="text-sm font-bold text-white mb-3">📝 Nouvelle mesure - {new Date().toLocaleDateString('fr-FR')}</div>
+                    <div className="grid grid-cols-2 gap-3">
+                        {fields.map(({ key, label, unit }) => (
+                            <div key={key}>
+                                <label className="text-xs text-gray-500 uppercase block mb-1 font-bold">{label}</label>
+                                <input 
+                                    type="number" 
+                                    step="0.1" 
+                                    value={form[key]}
+                                    placeholder={unit}
+                                    className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-purple-500 outline-none text-sm" 
+                                    onChange={e => setForm({...form, [key]: e.target.value})} 
+                                />
+                            </div>
+                        ))}
+                    </div>
+                    <Button onClick={save} variant={saved ? "success" : "accent"} className="w-full mt-4">
+                        {saved ? "✓ Enregistré !" : "Enregistrer"}
+                    </Button>
+                </Card>
+            )}
+            
+            {/* Historique */}
+            {viewHistory && (
+                <Card className="p-4 animate-fade-in">
+                    <div className="text-sm font-bold text-white mb-3">📋 Historique des mesures</div>
+                    <div className="space-y-2 max-h-60 overflow-auto">
+                        {history.length === 0 ? (
+                            <div className="text-center text-gray-500 py-4">Aucune mesure enregistrée</div>
+                        ) : (
+                            history.map((entry, i) => (
+                                <div key={entry.date} className={`p-3 rounded-xl ${i === 0 ? 'bg-purple-500/10 border border-purple-500/30' : 'bg-white/5'}`}>
+                                    <div className="flex justify-between items-center">
+                                        <div>
+                                            <div className="text-sm font-bold text-white">{new Date(entry.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
+                                            <div className="text-xs text-gray-500">
+                                                {entry.poids && `${entry.poids}kg`}
+                                                {entry.graisse && ` • ${entry.graisse}% graisse`}
+                                                {entry.masseMuscu && ` • ${entry.masseMuscu}kg muscle`}
+                                            </div>
+                                        </div>
+                                        {i === 0 && <Badge color="purple" size="sm">Dernier</Badge>}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </Card>
+            )}
         </div>
     );
 };
@@ -3493,6 +4022,16 @@ const Layout = ({ children, view, setView }) => {
         </button>
     );
     
+    const MobileNavItem = ({ id, icon: Icon, label }) => (
+        <button 
+            onClick={() => setView(id)} 
+            className={`flex flex-col items-center justify-center flex-1 py-2 transition-all ${view === id ? 'text-cyan-400' : 'text-gray-500'}`}
+        >
+            <Icon size={20}/>
+            <span className="text-[10px] mt-0.5 font-medium">{label}</span>
+        </button>
+    );
+    
     return (
         <div className="flex h-screen bg-[#050508] text-white overflow-hidden" style={{ fontFamily: 'var(--font-family)' }}>
             <GlobalStyles />
@@ -3508,6 +4047,7 @@ const Layout = ({ children, view, setView }) => {
                 <div className="mb-8 px-4 pt-2">
                     <div className="text-2xl font-black tracking-tighter gradient-text">TITAN.OS</div>
                     <div className="text-xs text-gray-600 tracking-wide font-medium">V9.0 • SECOND BRAIN</div>
+                    <CloudSyncIndicator />
                 </div>
                 <div className="space-y-1 flex-1">
                     <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
@@ -3520,18 +4060,24 @@ const Layout = ({ children, view, setView }) => {
             
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-full relative z-10">
-                {/* Mobile Header */}
-                <div className="md:hidden flex justify-between items-center p-4 border-b border-white/5 bg-black/60 backdrop-blur-xl">
-                    <div className="font-black text-lg gradient-text">TITAN.OS</div>
+                {/* Mobile Header - Fixed */}
+                <div className="md:hidden sticky top-0 flex justify-between items-center p-3 border-b border-white/5 bg-black/90 backdrop-blur-xl z-40">
+                    <div className="flex items-center gap-2">
+                        <div className="font-black text-lg gradient-text">TITAN.OS</div>
+                        <CloudSyncIndicator />
+                    </div>
                     <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="p-2 hover:bg-white/10 rounded-xl">
-                        {mobileMenuOpen ? <X size={24}/> : <Menu size={24}/>}
+                        {mobileMenuOpen ? <X size={22}/> : <Menu size={22}/>}
                     </button>
                 </div>
                 
-                {/* Mobile Menu */}
+                {/* Mobile Menu Overlay */}
                 {mobileMenuOpen && (
-                    <div className="absolute inset-0 bg-black/95 backdrop-blur-xl z-50 p-4 space-y-2 md:hidden animate-fade-in">
-                        <div className="flex justify-end mb-4"><button onClick={() => setMobileMenuOpen(false)} className="p-2 hover:bg-white/10 rounded-xl"><X size={24}/></button></div>
+                    <div className="fixed inset-0 bg-black/95 backdrop-blur-xl z-50 p-4 space-y-2 md:hidden animate-fade-in">
+                        <div className="flex justify-between items-center mb-6">
+                            <div className="text-xl font-black gradient-text">Menu</div>
+                            <button onClick={() => setMobileMenuOpen(false)} className="p-2 hover:bg-white/10 rounded-xl"><X size={24}/></button>
+                        </div>
                         <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
                         <NavItem id="fitness" icon={Dumbbell} label="Fitness" />
                         <NavItem id="routine" icon={ListTodo} label="Routine" />
@@ -3540,9 +4086,20 @@ const Layout = ({ children, view, setView }) => {
                     </div>
                 )}
                 
-                {/* Content Area */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8">
+                {/* Content Area - Ajusté pour mobile avec bottom nav */}
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8">
                     <div className="max-w-4xl mx-auto">{children}</div>
+                </div>
+                
+                {/* Mobile Bottom Navigation */}
+                <div className="md:hidden fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-xl border-t border-white/10 z-40 safe-area-bottom">
+                    <div className="flex">
+                        <MobileNavItem id="dashboard" icon={LayoutDashboard} label="Accueil" />
+                        <MobileNavItem id="fitness" icon={Dumbbell} label="Fitness" />
+                        <MobileNavItem id="routine" icon={ListTodo} label="Routine" />
+                        <MobileNavItem id="finance" icon={Wallet} label="Finance" />
+                        <MobileNavItem id="lifestyle" icon={Clapperboard} label="Lifestyle" />
+                    </div>
                 </div>
             </div>
         </div>
