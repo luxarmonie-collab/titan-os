@@ -1,7 +1,7 @@
 {
   "name": "titan-os",
-  "version": "8.0.0",
-  "description": "TITAN.OS - Second Brain Dashboard",
+  "version": "9.0.0",
+  "description": "TITAN.OS - Second Brain Dashboard with Cloud Sync",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,7 +13,8 @@
   "dependencies": {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "lucide-react": "^0.263.1"
+    "lucide-react": "^0.263.1",
+    "@supabase/supabase-js": "^2.39.0"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.2.1",
