@@ -5310,4 +5310,5 @@ export default function App() {
             {view === 'finance' && <FinanceView userId={userId} />}
             {view === 'lifestyle' && <LifestyleView userId={userId} />}
         </Layout>
-   
+    );
+}
