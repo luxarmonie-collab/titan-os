@@ -46,30 +46,39 @@ const AuthScreen = ({ onAuthenticated }) => {
   // Check if PIN exists and biometric support
   useEffect(() => {
     const checkAuth = async () => {
+      console.log('🔍 Checking authentication status...');
       try {
         // Check if biometric is available
         if (window.PublicKeyCredential) {
           const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
           setSupportsBiometric(available);
+          console.log('🔐 Biometric available:', available);
         }
 
         // Check if PIN exists in Supabase
+        console.log('📡 Checking Supabase for existing PIN...');
         const { data, error } = await supabase
           .from('user_settings')
           .select('pin_hash, biometric_enabled')
           .eq('user_id', 'default')
           .single();
 
+        console.log('📊 Supabase response:', { data, error });
+
         if (error || !data?.pin_hash) {
+          console.log('⚙️ No PIN found → SETUP mode');
           setMode('setup');
         } else {
+          console.log('✅ PIN found → LOGIN mode');
           setMode('login');
           // Try biometric if enabled
           if (data.biometric_enabled && supportsBiometric) {
+            console.log('🔐 Attempting biometric login...');
             tryBiometric();
           }
         }
       } catch (e) {
+        console.error('❌ checkAuth error:', e);
         setMode('setup');
       }
     };
@@ -103,35 +112,52 @@ const AuthScreen = ({ onAuthenticated }) => {
   };
 
   const setupPIN = async () => {
+    console.log('🔧 setupPIN called', { pin: pin.length, confirmPin: confirmPin.length });
+    
     if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
       setError('Le PIN doit contenir exactement 6 chiffres');
+      console.error('❌ Invalid PIN length');
       return;
     }
 
     if (mode === 'setup' && pin !== confirmPin) {
       setError('Les codes PIN ne correspondent pas');
+      console.error('❌ PINs do not match');
+      setConfirmPin(''); // Reset confirmation
       return;
     }
 
+    console.log('✅ Validation passed, saving to Supabase...');
     setLoading(true);
+    
     try {
       const pinHash = await hashPIN(pin);
+      console.log('🔐 PIN hashed:', pinHash.substring(0, 10) + '...');
 
       // Save to Supabase
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('user_settings')
         .upsert({
           user_id: 'default',
           pin_hash: pinHash,
           biometric_enabled: supportsBiometric,
           updated_at: new Date().toISOString()
-        });
+        }, {
+          onConflict: 'user_id'
+        })
+        .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('✅ PIN saved to Supabase:', data);
 
       // Setup biometric if supported
       if (supportsBiometric) {
         try {
+          console.log('🔐 Setting up biometric...');
           const challenge = new Uint8Array(32);
           crypto.getRandomValues(challenge);
 
@@ -155,14 +181,17 @@ const AuthScreen = ({ onAuthenticated }) => {
               timeout: 60000
             }
           });
+          console.log('✅ Biometric setup successful');
         } catch (e) {
-          console.log('Biometric setup failed, PIN only');
+          console.log('⚠️ Biometric setup failed (will use PIN only):', e);
         }
       }
 
+      console.log('🎉 Authentication complete!');
       onAuthenticated();
     } catch (e) {
-      setError('Erreur lors de la configuration');
+      console.error('❌ Setup error:', e);
+      setError('Erreur lors de la configuration: ' + e.message);
     } finally {
       setLoading(false);
     }
@@ -198,14 +227,21 @@ const AuthScreen = ({ onAuthenticated }) => {
   };
 
   const handlePinInput = (digit) => {
+    console.log('🔢 Digit pressed:', digit, { mode, pinLen: pin.length, confirmLen: confirmPin.length });
+    
     if (mode === 'setup') {
       if (pin.length < 6 && confirmPin === '') {
-        setPin(pin + digit);
+        const newPin = pin + digit;
+        setPin(newPin);
+        console.log('📝 Setting initial PIN:', newPin.length + '/6');
       } else if (confirmPin.length < 6) {
         const newConfirmPin = confirmPin + digit;
         setConfirmPin(newConfirmPin);
+        console.log('📝 Setting confirmation PIN:', newConfirmPin.length + '/6');
+        
         // Auto-submit quand les 6 chiffres de confirmation sont saisis
         if (newConfirmPin.length === 6 && pin.length === 6) {
+          console.log('✅ Both PINs complete, calling setupPIN()...');
           setTimeout(() => setupPIN(), 100);
         }
       }
@@ -213,7 +249,9 @@ const AuthScreen = ({ onAuthenticated }) => {
       if (pin.length < 6) {
         const newPin = pin + digit;
         setPin(newPin);
+        console.log('🔓 Login PIN:', newPin.length + '/6');
         if (newPin.length === 6) {
+          console.log('✅ Login PIN complete, verifying...');
           setTimeout(() => loginPIN(), 100);
         }
       }
