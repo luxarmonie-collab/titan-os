@@ -9,7 +9,7 @@ import {
   CircleDollarSign, Timer, Zap, Star, Check, FileText, Film, Wine, Mic, Image,
   Award, User, MapPin, Clock3, Grape, Thermometer, Eye, Edit3, Trash2, Save,
   Search, Loader2, AlertCircle, MessageCircle, Cloud, CloudOff, RefreshCw,
-  NotebookPen, CalendarDays, CircleDot, Square, CheckSquare, StickyNote, Layers
+  ClipboardList, CalendarDays, Square, CheckSquare, StickyNote, Layers
 } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -4830,7 +4830,7 @@ const Layout = ({ children, view, setView }) => {
                     <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
                     <NavItem id="fitness" icon={Dumbbell} label="Fitness" />
                     <NavItem id="routine" icon={ListTodo} label="Routine" />
-                    <NavItem id="tasks" icon={NotebookPen} label="Tâches" />
+                    <NavItem id="tasks" icon={ClipboardList} label="Tâches" />
                     <NavItem id="finance" icon={Wallet} label="Finance" />
                     <NavItem id="lifestyle" icon={Clapperboard} label="Lifestyle" />
                 </div>
@@ -4859,7 +4859,7 @@ const Layout = ({ children, view, setView }) => {
                         <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
                         <NavItem id="fitness" icon={Dumbbell} label="Fitness" />
                         <NavItem id="routine" icon={ListTodo} label="Routine" />
-                        <NavItem id="tasks" icon={NotebookPen} label="Tâches" />
+                        <NavItem id="tasks" icon={ClipboardList} label="Tâches" />
                         <NavItem id="finance" icon={Wallet} label="Finance" />
                         <NavItem id="lifestyle" icon={Clapperboard} label="Lifestyle" />
                     </div>
@@ -4875,7 +4875,7 @@ const Layout = ({ children, view, setView }) => {
                     <div className="flex">
                         <MobileNavItem id="dashboard" icon={LayoutDashboard} label="Accueil" />
                         <MobileNavItem id="fitness" icon={Dumbbell} label="Fitness" />
-                        <MobileNavItem id="tasks" icon={NotebookPen} label="Tâches" />
+                        <MobileNavItem id="tasks" icon={ClipboardList} label="Tâches" />
                         <MobileNavItem id="finance" icon={Wallet} label="Finance" />
                         <MobileNavItem id="lifestyle" icon={Clapperboard} label="Plus" />
                     </div>
@@ -5435,7 +5435,7 @@ const TasksView = ({ userId }) => {
         <div className="space-y-4 animate-fade-in">
             {/* Header */}
             <div className="text-center mb-4">
-                <NotebookPen className="mx-auto text-indigo-500 mb-2" size={40}/>
+                <ClipboardList className="mx-auto text-indigo-500 mb-2" size={40}/>
                 <h3 className="text-white font-bold text-xl">Tâches & Notes</h3>
             </div>
 
