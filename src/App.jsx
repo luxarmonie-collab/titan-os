@@ -202,7 +202,12 @@ const AuthScreen = ({ onAuthenticated }) => {
       if (pin.length < 6 && confirmPin === '') {
         setPin(pin + digit);
       } else if (confirmPin.length < 6) {
-        setConfirmPin(confirmPin + digit);
+        const newConfirmPin = confirmPin + digit;
+        setConfirmPin(newConfirmPin);
+        // Auto-submit quand les 6 chiffres de confirmation sont saisis
+        if (newConfirmPin.length === 6 && pin.length === 6) {
+          setTimeout(() => setupPIN(), 100);
+        }
       }
     } else {
       if (pin.length < 6) {
