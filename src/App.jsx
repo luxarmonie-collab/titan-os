@@ -8,7 +8,8 @@ import {
   Gamepad2, Home, Plane, CreditCard, Wrench, Package, PiggyBank, Building2, Banknote,
   CircleDollarSign, Timer, Zap, Star, Check, FileText, Film, Wine, Mic, Image,
   Award, User, MapPin, Clock3, Grape, Thermometer, Eye, Edit3, Trash2, Save,
-  Search, Loader2, AlertCircle, MessageCircle, Cloud, CloudOff, RefreshCw
+  Search, Loader2, AlertCircle, MessageCircle, Cloud, CloudOff, RefreshCw,
+  NotebookPen, CalendarDays, CircleDot, Square, CheckSquare, StickyNote, Layers
 } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -3001,6 +3002,44 @@ const FitnessCalendar = ({ onSelectDay, workoutLogs, addLog, removeLog }) => {
         days.push(getCalendarForDate(d.toISOString().split('T')[0]));
     }
 
+    // Quick validate without opening modal
+    const quickToggleMuscu = (e, d, muscuLog) => {
+        e.stopPropagation();
+        if (muscuLog) {
+            // Remove log
+            removeLog(muscuLog.id || muscuLog.timestamp);
+        } else {
+            // Add quick log
+            addLog({ 
+                date: d.dateStr, 
+                session: d.seance, 
+                type: 'Musculation', 
+                duration: 60, 
+                calories: 350, 
+                status: 'completed', 
+                timestamp: new Date().toISOString() 
+            });
+        }
+    };
+
+    const quickToggleCardio = (e, d, cardioLog) => {
+        e.stopPropagation();
+        if (cardioLog) {
+            removeLog(cardioLog.id || cardioLog.timestamp);
+        } else {
+            addLog({ 
+                date: d.dateStr, 
+                session: 'CARDIO', 
+                cardioType: d.cardio, 
+                type: 'Cardio', 
+                duration: 30, 
+                calories: 200, 
+                status: 'completed', 
+                timestamp: new Date().toISOString() 
+            });
+        }
+    };
+
     return (
         <div className="space-y-4 animate-fade-in">
             <Card className="p-3 flex justify-between items-center">
@@ -3036,9 +3075,33 @@ const FitnessCalendar = ({ onSelectDay, workoutLogs, addLog, removeLog }) => {
                                     {d.cardio !== 'Non' && <span className="text-orange-400"> + Cardio</span>}
                                 </div>
                             </div>
-                            <div className="flex gap-2">
-                                {d.type === 'Training' && (muscuLog ? <CheckCircle size={18} className="text-emerald-500"/> : <div className="w-5 h-5 rounded-full border-2 border-gray-600"/>)}
-                                {d.cardio !== 'Non' && (cardioLog ? <Heart size={18} className="text-orange-500 fill-orange-500"/> : <Heart size={18} className="text-gray-600"/>)}
+                            <div className="flex gap-3 items-center">
+                                {/* Quick checkbox for Musculation */}
+                                {d.type === 'Training' && (
+                                    <button 
+                                        onClick={(e) => quickToggleMuscu(e, d, muscuLog)}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                            muscuLog 
+                                                ? 'bg-emerald-500 hover:bg-emerald-600' 
+                                                : 'bg-white/5 border-2 border-gray-600 hover:border-cyan-500'
+                                        }`}
+                                    >
+                                        {muscuLog ? <Check size={16} className="text-white"/> : <Dumbbell size={14} className="text-gray-500"/>}
+                                    </button>
+                                )}
+                                {/* Quick checkbox for Cardio */}
+                                {d.cardio !== 'Non' && (
+                                    <button 
+                                        onClick={(e) => quickToggleCardio(e, d, cardioLog)}
+                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                            cardioLog 
+                                                ? 'bg-orange-500 hover:bg-orange-600' 
+                                                : 'bg-white/5 border-2 border-gray-600 hover:border-orange-500'
+                                        }`}
+                                    >
+                                        {cardioLog ? <Check size={16} className="text-white"/> : <Heart size={14} className="text-gray-500"/>}
+                                    </button>
+                                )}
                             </div>
                         </Card>
                     );
@@ -4767,6 +4830,7 @@ const Layout = ({ children, view, setView }) => {
                     <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
                     <NavItem id="fitness" icon={Dumbbell} label="Fitness" />
                     <NavItem id="routine" icon={ListTodo} label="Routine" />
+                    <NavItem id="tasks" icon={NotebookPen} label="Tâches" />
                     <NavItem id="finance" icon={Wallet} label="Finance" />
                     <NavItem id="lifestyle" icon={Clapperboard} label="Lifestyle" />
                 </div>
@@ -4795,6 +4859,7 @@ const Layout = ({ children, view, setView }) => {
                         <NavItem id="dashboard" icon={LayoutDashboard} label="Dashboard" />
                         <NavItem id="fitness" icon={Dumbbell} label="Fitness" />
                         <NavItem id="routine" icon={ListTodo} label="Routine" />
+                        <NavItem id="tasks" icon={NotebookPen} label="Tâches" />
                         <NavItem id="finance" icon={Wallet} label="Finance" />
                         <NavItem id="lifestyle" icon={Clapperboard} label="Lifestyle" />
                     </div>
@@ -4810,9 +4875,9 @@ const Layout = ({ children, view, setView }) => {
                     <div className="flex">
                         <MobileNavItem id="dashboard" icon={LayoutDashboard} label="Accueil" />
                         <MobileNavItem id="fitness" icon={Dumbbell} label="Fitness" />
-                        <MobileNavItem id="routine" icon={ListTodo} label="Routine" />
+                        <MobileNavItem id="tasks" icon={NotebookPen} label="Tâches" />
                         <MobileNavItem id="finance" icon={Wallet} label="Finance" />
-                        <MobileNavItem id="lifestyle" icon={Clapperboard} label="Lifestyle" />
+                        <MobileNavItem id="lifestyle" icon={Clapperboard} label="Plus" />
                     </div>
                 </div>
             </div>
@@ -5162,6 +5227,411 @@ const Dashboard = ({ setView, userId }) => {
     );
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// TASKS MODULE - Style Timestripe
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const TasksView = ({ userId }) => {
+    const [tasks, setTasks] = useState([]);
+    const [notes, setNotes] = useState({});
+    const [view, setView] = useState('day'); // day, week, month, year
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [showAddTask, setShowAddTask] = useState(false);
+    const [newTask, setNewTask] = useState({ title: '', priority: 'medium', dueDate: '' });
+    const [editingNote, setEditingNote] = useState(null);
+    const [noteText, setNoteText] = useState('');
+    const [loading, setLoading] = useState(true);
+
+    // Load from Supabase
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                // Load tasks
+                const { data: tasksData } = await supabase
+                    .from('tasks')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false });
+                
+                if (tasksData) setTasks(tasksData);
+
+                // Load notes
+                const { data: notesData } = await supabase
+                    .from('notes')
+                    .select('*')
+                    .eq('user_id', userId);
+                
+                if (notesData) {
+                    const notesMap = {};
+                    notesData.forEach(n => {
+                        notesMap[n.period_key] = n;
+                    });
+                    setNotes(notesMap);
+                }
+            } catch (e) {
+                console.log('Load error:', e);
+                // Load from localStorage as fallback
+                const local = localStorage.getItem(`titan_tasks_${userId}`);
+                if (local) setTasks(JSON.parse(local));
+                const localNotes = localStorage.getItem(`titan_notes_${userId}`);
+                if (localNotes) setNotes(JSON.parse(localNotes));
+            }
+            setLoading(false);
+        };
+        loadData();
+    }, [userId]);
+
+    // Save tasks
+    const saveTasks = async (newTasks) => {
+        setTasks(newTasks);
+        localStorage.setItem(`titan_tasks_${userId}`, JSON.stringify(newTasks));
+        // Sync individual task changes to Supabase handled in add/update/delete functions
+    };
+
+    // Save notes
+    const saveNote = async (periodKey, text) => {
+        const newNotes = { ...notes, [periodKey]: { period_key: periodKey, content: text, updated_at: new Date().toISOString() } };
+        setNotes(newNotes);
+        localStorage.setItem(`titan_notes_${userId}`, JSON.stringify(newNotes));
+        
+        try {
+            await supabase.from('notes').upsert({
+                user_id: userId,
+                period_key: periodKey,
+                content: text,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id,period_key' });
+        } catch (e) { console.log('Note save error:', e); }
+    };
+
+    // Add task
+    const addTask = async () => {
+        if (!newTask.title.trim()) return;
+        
+        const task = {
+            id: Date.now().toString(),
+            user_id: userId,
+            title: newTask.title,
+            completed: false,
+            priority: newTask.priority,
+            due_date: newTask.dueDate || selectedDate.toISOString().split('T')[0],
+            created_at: new Date().toISOString()
+        };
+        
+        const newTasks = [task, ...tasks];
+        saveTasks(newTasks);
+        
+        try {
+            await supabase.from('tasks').insert(task);
+        } catch (e) { console.log('Task save error:', e); }
+        
+        setNewTask({ title: '', priority: 'medium', dueDate: '' });
+        setShowAddTask(false);
+    };
+
+    // Toggle task
+    const toggleTask = async (taskId) => {
+        const newTasks = tasks.map(t => 
+            t.id === taskId ? { ...t, completed: !t.completed } : t
+        );
+        saveTasks(newTasks);
+        
+        const task = newTasks.find(t => t.id === taskId);
+        try {
+            await supabase.from('tasks').update({ completed: task.completed }).eq('id', taskId);
+        } catch (e) { console.log('Toggle error:', e); }
+    };
+
+    // Delete task
+    const deleteTask = async (taskId) => {
+        const newTasks = tasks.filter(t => t.id !== taskId);
+        saveTasks(newTasks);
+        
+        try {
+            await supabase.from('tasks').delete().eq('id', taskId);
+        } catch (e) { console.log('Delete error:', e); }
+    };
+
+    // Navigation helpers
+    const navigate = (direction) => {
+        const d = new Date(selectedDate);
+        if (view === 'day') d.setDate(d.getDate() + direction);
+        else if (view === 'week') d.setDate(d.getDate() + (direction * 7));
+        else if (view === 'month') d.setMonth(d.getMonth() + direction);
+        else if (view === 'year') d.setFullYear(d.getFullYear() + direction);
+        setSelectedDate(d);
+    };
+
+    const goToToday = () => setSelectedDate(new Date());
+
+    // Period key for notes
+    const getPeriodKey = () => {
+        const d = selectedDate;
+        if (view === 'day') return d.toISOString().split('T')[0];
+        if (view === 'week') {
+            const weekStart = new Date(d);
+            weekStart.setDate(d.getDate() - d.getDay() + 1);
+            return `week-${weekStart.toISOString().split('T')[0]}`;
+        }
+        if (view === 'month') return `month-${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+        if (view === 'year') return `year-${d.getFullYear()}`;
+    };
+
+    // Get tasks for current period
+    const getTasksForPeriod = () => {
+        const d = selectedDate;
+        return tasks.filter(t => {
+            const taskDate = new Date(t.due_date);
+            if (view === 'day') return t.due_date === d.toISOString().split('T')[0];
+            if (view === 'week') {
+                const weekStart = new Date(d);
+                weekStart.setDate(d.getDate() - d.getDay() + 1);
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                return taskDate >= weekStart && taskDate <= weekEnd;
+            }
+            if (view === 'month') return taskDate.getMonth() === d.getMonth() && taskDate.getFullYear() === d.getFullYear();
+            if (view === 'year') return taskDate.getFullYear() === d.getFullYear();
+            return false;
+        });
+    };
+
+    // Format period title
+    const getPeriodTitle = () => {
+        const d = selectedDate;
+        const options = { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' };
+        if (view === 'day') return d.toLocaleDateString('fr-FR', options);
+        if (view === 'week') {
+            const weekStart = new Date(d);
+            weekStart.setDate(d.getDate() - d.getDay() + 1);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            return `${weekStart.getDate()} - ${weekEnd.getDate()} ${weekEnd.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`;
+        }
+        if (view === 'month') return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        if (view === 'year') return d.getFullYear().toString();
+    };
+
+    const periodTasks = getTasksForPeriod();
+    const completedCount = periodTasks.filter(t => t.completed).length;
+    const periodKey = getPeriodKey();
+    const currentNote = notes[periodKey]?.content || '';
+
+    const priorityColors = {
+        high: 'border-red-500 bg-red-500/10',
+        medium: 'border-yellow-500 bg-yellow-500/10',
+        low: 'border-green-500 bg-green-500/10'
+    };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-64">
+                <Loader2 className="animate-spin text-cyan-500" size={32}/>
+            </div>
+        );
+    }
+
+    return (
+        <div className="space-y-4 animate-fade-in">
+            {/* Header */}
+            <div className="text-center mb-4">
+                <NotebookPen className="mx-auto text-indigo-500 mb-2" size={40}/>
+                <h3 className="text-white font-bold text-xl">Tâches & Notes</h3>
+            </div>
+
+            {/* View Switcher */}
+            <Card className="p-2">
+                <div className="flex gap-1">
+                    {[
+                        { id: 'day', label: 'Jour', icon: Sun },
+                        { id: 'week', label: 'Semaine', icon: CalendarDays },
+                        { id: 'month', label: 'Mois', icon: Calendar },
+                        { id: 'year', label: 'Année', icon: Layers }
+                    ].map(v => {
+                        const Icon = v.icon;
+                        return (
+                            <button
+                                key={v.id}
+                                onClick={() => setView(v.id)}
+                                className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all flex items-center justify-center gap-1 ${
+                                    view === v.id 
+                                        ? 'bg-indigo-500 text-white' 
+                                        : 'text-gray-400 hover:bg-white/5'
+                                }`}
+                            >
+                                <Icon size={14}/>
+                                <span className="hidden sm:inline">{v.label}</span>
+                            </button>
+                        );
+                    })}
+                </div>
+            </Card>
+
+            {/* Period Navigation */}
+            <Card className="p-3 flex justify-between items-center">
+                <button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                    <ChevronLeft className="text-gray-400" size={20}/>
+                </button>
+                <div className="text-center">
+                    <div className="text-white font-bold capitalize">{getPeriodTitle()}</div>
+                    <button onClick={goToToday} className="text-xs text-indigo-400 hover:text-indigo-300">
+                        Aujourd'hui
+                    </button>
+                </div>
+                <button onClick={() => navigate(1)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                    <ChevronRight className="text-gray-400" size={20}/>
+                </button>
+            </Card>
+
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-2">
+                <Card className="p-3 text-center">
+                    <div className="text-2xl font-bold text-white">{periodTasks.length}</div>
+                    <div className="text-xs text-gray-500">Total</div>
+                </Card>
+                <Card className="p-3 text-center">
+                    <div className="text-2xl font-bold text-emerald-400">{completedCount}</div>
+                    <div className="text-xs text-gray-500">Faites</div>
+                </Card>
+                <Card className="p-3 text-center">
+                    <div className="text-2xl font-bold text-orange-400">{periodTasks.length - completedCount}</div>
+                    <div className="text-xs text-gray-500">En cours</div>
+                </Card>
+            </div>
+
+            {/* Add Task Button */}
+            <Button onClick={() => setShowAddTask(true)} variant="primary" className="w-full" icon={Plus}>
+                Nouvelle tâche
+            </Button>
+
+            {/* Tasks List */}
+            <div className="space-y-2">
+                {periodTasks.length === 0 ? (
+                    <Card className="p-6 text-center">
+                        <CheckSquare className="mx-auto text-gray-600 mb-2" size={32}/>
+                        <p className="text-gray-500">Aucune tâche pour cette période</p>
+                    </Card>
+                ) : (
+                    periodTasks.map(task => (
+                        <Card 
+                            key={task.id} 
+                            className={`p-3 border-l-4 ${priorityColors[task.priority]} ${task.completed ? 'opacity-60' : ''}`}
+                        >
+                            <div className="flex items-center gap-3">
+                                <button 
+                                    onClick={() => toggleTask(task.id)}
+                                    className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all ${
+                                        task.completed 
+                                            ? 'bg-emerald-500' 
+                                            : 'border-2 border-gray-600 hover:border-emerald-500'
+                                    }`}
+                                >
+                                    {task.completed && <Check size={14} className="text-white"/>}
+                                </button>
+                                <div className="flex-1">
+                                    <div className={`text-white font-medium ${task.completed ? 'line-through text-gray-500' : ''}`}>
+                                        {task.title}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                        {new Date(task.due_date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={() => deleteTask(task.id)}
+                                    className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                                >
+                                    <Trash2 size={16} className="text-red-400"/>
+                                </button>
+                            </div>
+                        </Card>
+                    ))
+                )}
+            </div>
+
+            {/* Notes Section */}
+            <Card className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                        <StickyNote className="text-yellow-500" size={18}/>
+                        <span className="text-white font-medium">Notes</span>
+                    </div>
+                    {editingNote !== periodKey ? (
+                        <button 
+                            onClick={() => { setEditingNote(periodKey); setNoteText(currentNote); }}
+                            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                        >
+                            <Edit3 size={16} className="text-gray-400"/>
+                        </button>
+                    ) : (
+                        <button 
+                            onClick={() => { saveNote(periodKey, noteText); setEditingNote(null); }}
+                            className="p-2 hover:bg-emerald-500/20 rounded-lg transition-colors"
+                        >
+                            <Save size={16} className="text-emerald-400"/>
+                        </button>
+                    )}
+                </div>
+                {editingNote === periodKey ? (
+                    <textarea
+                        value={noteText}
+                        onChange={(e) => setNoteText(e.target.value)}
+                        placeholder="Écris tes notes ici..."
+                        className="w-full bg-white/5 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:border-indigo-500 focus:outline-none resize-none"
+                        rows={4}
+                        autoFocus
+                    />
+                ) : (
+                    <div className="text-gray-400 text-sm whitespace-pre-wrap min-h-[60px]">
+                        {currentNote || <span className="italic text-gray-600">Clique pour ajouter des notes...</span>}
+                    </div>
+                )}
+            </Card>
+
+            {/* Add Task Modal */}
+            <Modal isOpen={showAddTask} onClose={() => setShowAddTask(false)} title="Nouvelle Tâche">
+                <div className="space-y-4">
+                    <Input
+                        label="Titre"
+                        value={newTask.title}
+                        onChange={(e) => setNewTask({ ...newTask, title: e.target.value })}
+                        placeholder="Qu'est-ce que tu dois faire ?"
+                    />
+                    
+                    <div>
+                        <label className="block text-gray-400 text-sm mb-2">Priorité</label>
+                        <div className="flex gap-2">
+                            {['low', 'medium', 'high'].map(p => (
+                                <button
+                                    key={p}
+                                    onClick={() => setNewTask({ ...newTask, priority: p })}
+                                    className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all ${
+                                        newTask.priority === p 
+                                            ? p === 'high' ? 'bg-red-500 text-white' : p === 'medium' ? 'bg-yellow-500 text-black' : 'bg-green-500 text-white'
+                                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
+                                    }`}
+                                >
+                                    {p === 'high' ? '🔥 Haute' : p === 'medium' ? '⚡ Moyenne' : '✨ Basse'}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <Input
+                        label="Date d'échéance"
+                        type="date"
+                        value={newTask.dueDate || selectedDate.toISOString().split('T')[0]}
+                        onChange={(e) => setNewTask({ ...newTask, dueDate: e.target.value })}
+                    />
+                    
+                    <Button onClick={addTask} variant="primary" className="w-full" icon={Plus}>
+                        Ajouter la tâche
+                    </Button>
+                </div>
+            </Modal>
+        </div>
+    );
+};
+
 // --- MAIN APP ---
 export default function App() {
     const [view, setView] = useState('dashboard');
@@ -5178,6 +5648,7 @@ export default function App() {
             {view === 'dashboard' && <Dashboard setView={setView} userId={userId} />}
             {view === 'fitness' && <FitnessModule userId={userId} />}
             {view === 'routine' && <RoutineView userId={userId} />}
+            {view === 'tasks' && <TasksView userId={userId} />}
             {view === 'finance' && <FinanceView userId={userId} />}
             {view === 'lifestyle' && <LifestyleView userId={userId} />}
         </Layout>
