@@ -111,16 +111,20 @@ const AuthScreen = ({ onAuthenticated }) => {
     }
   };
 
-  const setupPIN = async () => {
-    console.log('🔧 setupPIN called', { pin: pin.length, confirmPin: confirmPin.length });
+  const setupPIN = async (pinValue, confirmPinValue) => {
+    // Utiliser les valeurs passées en paramètres (pas le state qui peut être stale)
+    const actualPin = pinValue || pin;
+    const actualConfirmPin = confirmPinValue || confirmPin;
     
-    if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+    console.log('🔧 setupPIN called', { pinLen: actualPin.length, confirmLen: actualConfirmPin.length });
+    
+    if (actualPin.length !== 6 || !/^\d{6}$/.test(actualPin)) {
       setError('Le PIN doit contenir exactement 6 chiffres');
       console.error('❌ Invalid PIN length');
       return;
     }
 
-    if (mode === 'setup' && pin !== confirmPin) {
+    if (actualPin !== actualConfirmPin) {
       setError('Les codes PIN ne correspondent pas');
       console.error('❌ PINs do not match');
       setConfirmPin(''); // Reset confirmation
@@ -131,7 +135,7 @@ const AuthScreen = ({ onAuthenticated }) => {
     setLoading(true);
     
     try {
-      const pinHash = await hashPIN(pin);
+      const pinHash = await hashPIN(actualPin);
       console.log('🔐 PIN hashed:', pinHash.substring(0, 10) + '...');
 
       // Save to Supabase
@@ -154,58 +158,28 @@ const AuthScreen = ({ onAuthenticated }) => {
       
       console.log('✅ PIN saved to Supabase:', data);
 
-      // Setup biometric if supported
-      if (supportsBiometric) {
-        try {
-          console.log('🔐 Setting up biometric...');
-          const challenge = new Uint8Array(32);
-          crypto.getRandomValues(challenge);
-
-          await navigator.credentials.create({
-            publicKey: {
-              challenge,
-              rp: {
-                name: 'TITAN.OS',
-                id: window.location.hostname
-              },
-              user: {
-                id: new TextEncoder().encode('titan-os-user'),
-                name: 'default',
-                displayName: 'TITAN.OS User'
-              },
-              pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
-              authenticatorSelection: {
-                authenticatorAttachment: 'platform',
-                userVerification: 'required'
-              },
-              timeout: 60000
-            }
-          });
-          console.log('✅ Biometric setup successful');
-        } catch (e) {
-          console.log('⚠️ Biometric setup failed (will use PIN only):', e);
-        }
-      }
-
+      // Skip biometric setup for now - just authenticate
       console.log('🎉 Authentication complete!');
       onAuthenticated();
     } catch (e) {
       console.error('❌ Setup error:', e);
-      setError('Erreur lors de la configuration: ' + e.message);
+      setError('Erreur lors de la configuration: ' + (e.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
   };
 
-  const loginPIN = async () => {
-    if (pin.length !== 6) {
+  const loginPIN = async (pinValue) => {
+    const actualPin = pinValue || pin;
+    
+    if (actualPin.length !== 6) {
       setError('Code PIN invalide');
       return;
     }
 
     setLoading(true);
     try {
-      const pinHash = await hashPIN(pin);
+      const pinHash = await hashPIN(actualPin);
 
       const { data, error } = await supabase
         .from('user_settings')
@@ -242,7 +216,8 @@ const AuthScreen = ({ onAuthenticated }) => {
         // Auto-submit quand les 6 chiffres de confirmation sont saisis
         if (newConfirmPin.length === 6 && pin.length === 6) {
           console.log('✅ Both PINs complete, calling setupPIN()...');
-          setTimeout(() => setupPIN(), 100);
+          // IMPORTANT: Passer les valeurs directement car setState est asynchrone!
+          setTimeout(() => setupPIN(pin, newConfirmPin), 100);
         }
       }
     } else {
@@ -252,7 +227,7 @@ const AuthScreen = ({ onAuthenticated }) => {
         console.log('🔓 Login PIN:', newPin.length + '/6');
         if (newPin.length === 6) {
           console.log('✅ Login PIN complete, verifying...');
-          setTimeout(() => loginPIN(), 100);
+          setTimeout(() => loginPIN(newPin), 100);
         }
       }
     }
