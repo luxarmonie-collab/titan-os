@@ -23,6 +23,320 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const SyncContext = createContext({ syncing: false, lastSync: null, error: null });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// AUTHENTICATION SYSTEM - PIN + Face ID
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Simple hash function for PIN
+const hashPIN = async (pin) => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(pin);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+};
+
+const AuthScreen = ({ onAuthenticated }) => {
+  const [mode, setMode] = useState('loading'); // loading, setup, login
+  const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [supportsBiometric, setSupportsBiometric] = useState(false);
+
+  // Check if PIN exists and biometric support
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        // Check if biometric is available
+        if (window.PublicKeyCredential) {
+          const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+          setSupportsBiometric(available);
+        }
+
+        // Check if PIN exists in Supabase
+        const { data, error } = await supabase
+          .from('user_settings')
+          .select('pin_hash, biometric_enabled')
+          .eq('user_id', 'default')
+          .single();
+
+        if (error || !data?.pin_hash) {
+          setMode('setup');
+        } else {
+          setMode('login');
+          // Try biometric if enabled
+          if (data.biometric_enabled && supportsBiometric) {
+            tryBiometric();
+          }
+        }
+      } catch (e) {
+        setMode('setup');
+      }
+    };
+    checkAuth();
+  }, []);
+
+  const tryBiometric = async () => {
+    try {
+      const challenge = new Uint8Array(32);
+      crypto.getRandomValues(challenge);
+
+      const credential = await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          allowCredentials: [{
+            id: new TextEncoder().encode('titan-os-user'),
+            type: 'public-key',
+            transports: ['internal']
+          }],
+          userVerification: 'required',
+          timeout: 60000
+        }
+      });
+
+      if (credential) {
+        onAuthenticated();
+      }
+    } catch (e) {
+      console.log('Biometric failed, fallback to PIN');
+    }
+  };
+
+  const setupPIN = async () => {
+    if (pin.length !== 6 || !/^\d{6}$/.test(pin)) {
+      setError('Le PIN doit contenir exactement 6 chiffres');
+      return;
+    }
+
+    if (mode === 'setup' && pin !== confirmPin) {
+      setError('Les codes PIN ne correspondent pas');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const pinHash = await hashPIN(pin);
+
+      // Save to Supabase
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: 'default',
+          pin_hash: pinHash,
+          biometric_enabled: supportsBiometric,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      // Setup biometric if supported
+      if (supportsBiometric) {
+        try {
+          const challenge = new Uint8Array(32);
+          crypto.getRandomValues(challenge);
+
+          await navigator.credentials.create({
+            publicKey: {
+              challenge,
+              rp: {
+                name: 'TITAN.OS',
+                id: window.location.hostname
+              },
+              user: {
+                id: new TextEncoder().encode('titan-os-user'),
+                name: 'default',
+                displayName: 'TITAN.OS User'
+              },
+              pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
+              authenticatorSelection: {
+                authenticatorAttachment: 'platform',
+                userVerification: 'required'
+              },
+              timeout: 60000
+            }
+          });
+        } catch (e) {
+          console.log('Biometric setup failed, PIN only');
+        }
+      }
+
+      onAuthenticated();
+    } catch (e) {
+      setError('Erreur lors de la configuration');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loginPIN = async () => {
+    if (pin.length !== 6) {
+      setError('Code PIN invalide');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const pinHash = await hashPIN(pin);
+
+      const { data, error } = await supabase
+        .from('user_settings')
+        .select('pin_hash')
+        .eq('user_id', 'default')
+        .single();
+
+      if (error || !data || data.pin_hash !== pinHash) {
+        setError('Code PIN incorrect');
+        setPin('');
+      } else {
+        onAuthenticated();
+      }
+    } catch (e) {
+      setError('Erreur de connexion');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handlePinInput = (digit) => {
+    if (mode === 'setup') {
+      if (pin.length < 6 && confirmPin === '') {
+        setPin(pin + digit);
+      } else if (confirmPin.length < 6) {
+        setConfirmPin(confirmPin + digit);
+      }
+    } else {
+      if (pin.length < 6) {
+        const newPin = pin + digit;
+        setPin(newPin);
+        if (newPin.length === 6) {
+          setTimeout(() => loginPIN(), 100);
+        }
+      }
+    }
+    setError('');
+  };
+
+  const handleDelete = () => {
+    if (mode === 'setup') {
+      if (confirmPin.length > 0) {
+        setConfirmPin(confirmPin.slice(0, -1));
+      } else if (pin.length > 0) {
+        setPin(pin.slice(0, -1));
+      }
+    } else {
+      setPin(pin.slice(0, -1));
+    }
+    setError('');
+  };
+
+  if (mode === 'loading') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#030305] via-[#080810] to-[#0c0c14] flex items-center justify-center">
+        <Loader2 size={48} className="animate-spin text-cyan-400" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#030305] via-[#080810] to-[#0c0c14] flex flex-col items-center justify-center p-6">
+      {/* Logo */}
+      <div className="mb-8 text-center">
+        <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 mb-2">
+          TITAN.OS
+        </div>
+        <div className="text-sm text-gray-500">v9.2 • SECOND BRAIN</div>
+      </div>
+
+      {/* Instructions */}
+      <div className="mb-8 text-center">
+        <h2 className="text-xl font-bold text-white mb-2">
+          {mode === 'setup' ? 'Configuration' : 'Connexion'}
+        </h2>
+        <p className="text-sm text-gray-400">
+          {mode === 'setup' 
+            ? (pin.length === 6 ? 'Confirmez votre code PIN' : 'Créez un code PIN à 6 chiffres')
+            : 'Entrez votre code PIN'
+          }
+        </p>
+        {supportsBiometric && mode === 'login' && (
+          <button
+            onClick={tryBiometric}
+            className="mt-4 px-4 py-2 rounded-xl bg-white/10 text-cyan-400 text-sm hover:bg-white/20 transition-colors"
+          >
+            🔐 Utiliser Face ID / Touch ID
+          </button>
+        )}
+      </div>
+
+      {/* PIN Display */}
+      <div className="flex gap-3 mb-8">
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className={`w-14 h-14 rounded-xl flex items-center justify-center border-2 transition-all ${
+              (mode === 'setup' && confirmPin === '' ? pin : confirmPin).length > i
+                ? 'border-cyan-400 bg-cyan-400/20'
+                : 'border-white/10 bg-white/5'
+            }`}
+          >
+            {(mode === 'setup' && confirmPin === '' ? pin : mode === 'setup' ? confirmPin : pin).length > i && (
+              <div className="w-3 h-3 rounded-full bg-cyan-400" />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 px-4 py-2 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-sm">
+          {error}
+        </div>
+      )}
+
+      {/* Numpad */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
+          <button
+            key={digit}
+            onClick={() => handlePinInput(digit.toString())}
+            disabled={loading}
+            className="w-20 h-20 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-2xl font-bold transition-all disabled:opacity-50"
+          >
+            {digit}
+          </button>
+        ))}
+        <div />
+        <button
+          onClick={() => handlePinInput('0')}
+          disabled={loading}
+          className="w-20 h-20 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 text-white text-2xl font-bold transition-all disabled:opacity-50"
+        >
+          0
+        </button>
+        <button
+          onClick={handleDelete}
+          disabled={loading}
+          className="w-20 h-20 rounded-2xl bg-white/10 hover:bg-white/20 active:bg-white/30 text-white transition-all disabled:opacity-50"
+        >
+          ←
+        </button>
+      </div>
+
+      {/* Setup Confirm Button */}
+      {mode === 'setup' && pin.length === 6 && confirmPin.length === 6 && (
+        <button
+          onClick={setupPIN}
+          disabled={loading}
+          className="px-8 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+        >
+          {loading ? 'Configuration...' : 'Confirmer'}
+        </button>
+      )}
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // TITAN.OS v9 — Dashboard Central + Dev Perso + Cardio Integration
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -4937,7 +5251,13 @@ const Dashboard = ({ setView, userId }) => {
 // --- MAIN APP ---
 export default function App() {
     const [view, setView] = useState('dashboard');
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
     const userId = 'demo-user';
+
+    // Show auth screen if not authenticated
+    if (!isAuthenticated) {
+        return <AuthScreen onAuthenticated={() => setIsAuthenticated(true)} />;
+    }
 
     return (
         <Layout view={view} setView={setView}>
