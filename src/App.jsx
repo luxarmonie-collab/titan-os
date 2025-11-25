@@ -14,9 +14,7 @@ import {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SUPABASE CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
-const SUPABASE_URL = 'https://nzejiljpfdslou'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56ZWppbGpwZmRzbG91dmVodmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTMzOTEsImV4cCI6MjA3OTU2OTM5MX0.vJV8mDV-5ksA76q5cOFpC6Wc4dJGR_8ssrPLYqgkFl4';
-
-const supabase = createClient(SUPABASE_URL, SUPABASEvehvin.supabase.co';
+const SUPABASE_URL = 'https://nzejiljpfdslouvehvin.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56ZWppbGpwZmRzbG91dmVodmluIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5OTMzOTEsImV4cCI6MjA3OTU2OTM5MX0.vJV8mDV-5ksA76q5cOFpC6Wc4dJGR_8ssrPLYqgkFl4';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
