@@ -2182,11 +2182,19 @@ const analyzeAllData = (data) => {
         { id: 'gratitude', text: 'Pour quoi es-tu reconnaissant aujourd\'hui ?', options: null },
         { id: 'improvement', text: 'Qu\'est-ce que tu aurais pu mieux faire hier ?', options: null },
         { id: 'priority', text: 'Si tu ne devais faire qu\'une chose aujourd\'hui, ce serait ?', options: null },
-        { id: 'stress', text: 'Ton niveau de stress actuel ?', options: ['Zen', 'Léger', 'Modéré', 'Élevé', 'Critique'] }
+        { id: 'stress', text: 'Ton niveau de stress actuel ?', options: ['Zen', 'Léger', 'Modéré', 'Élevé', 'Critique'] },
+        { id: 'win', text: 'Quelle a été ta plus grande victoire cette semaine ?', options: null },
+        { id: 'learning', text: 'Qu\'as-tu appris récemment sur toi-même ?', options: null },
+        { id: 'recharge', text: 'De quoi as-tu besoin pour te recharger ?', options: ['Sommeil', 'Sport', 'Temps seul', 'Temps social', 'Nature'] },
+        { id: 'obstacle', text: 'Quel obstacle évites-tu d\'affronter ?', options: null },
+        { id: 'momentum', text: 'Qu\'est-ce qui te donnerait du momentum maintenant ?', options: ['Quick win', 'Grosse tâche', 'Pause', 'Sport', 'Discussion'] },
+        { id: 'selfcare', text: 'Comment prends-tu soin de toi aujourd\'hui ?', options: null },
+        { id: 'focus', text: 'Sur une échelle de 1-10, ton niveau de focus ?', options: ['1-2', '3-4', '5-6', '7-8', '9-10'] }
     ];
-    const dayOfWeek = new Date().getDay();
+    // Rotation basée sur le jour de l'année pour plus de variété
+    const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
     if (questions.length === 0 || !questions.some(q => q.isSocratic)) {
-        questions.push(dailyQuestions[dayOfWeek % dailyQuestions.length]);
+        questions.push(dailyQuestions[dayOfYear % dailyQuestions.length]);
     }
     
     // Analyse poids (tendance)
@@ -2461,23 +2469,24 @@ const getCalendarForDate = (dateStr) => {
     try {
         const date = new Date(dateStr);
         const day = date.getDay();
+        // Programme Phase 1 - Masse (cardio optionnel = null pour ne pas l'afficher comme obligatoire)
         const schedule = {
-            1: { type: "Training", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-            2: { type: "Training", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-            3: { type: "Training", seance: "MOLLETS", duree: 35, cardio: "LISS_Opt" },
-            4: { type: "Training", seance: "LEGS_A", duree: 75, cardio: "Non" },
-            5: { type: "Training", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-            6: { type: "Training", seance: "PULL_B", duree: 60, cardio: "Course_10km" },
-            0: { type: "Repos", seance: null, duree: 0, cardio: "Non" }
+            1: { type: "Training", seance: "PUSH_A", duree: 70, cardio: null, cardioOpt: "LISS" },
+            2: { type: "Training", seance: "PULL_A", duree: 75, cardio: null, cardioOpt: "LISS" },
+            3: { type: "Training", seance: "MOLLETS", duree: 35, cardio: null, cardioOpt: "LISS" },
+            4: { type: "Training", seance: "LEGS_A", duree: 75, cardio: null },
+            5: { type: "Training", seance: "PUSH_B", duree: 60, cardio: null, cardioOpt: "LISS" },
+            6: { type: "Training", seance: "PULL_B", duree: 60, cardio: null },
+            0: { type: "Repos", seance: null, duree: 0, cardio: null }
         };
         const isSki = (date >= new Date("2024-12-13") && date <= new Date("2024-12-20"));
         if (isSki) {
             return { type: "Ski", seance: "UPPER_SKI", duree: 45, cardio: "Ski", dateStr, dateObj: date, dayName: date.toLocaleDateString('fr-FR', {weekday:'long'}) };
         }
-        const data = schedule[day] || { type: "Repos", seance: null, duree: 0, cardio: "Non" };
+        const data = schedule[day] || { type: "Repos", seance: null, duree: 0, cardio: null };
         return { ...data, dateStr, dateObj: date, dayName: date.toLocaleDateString('fr-FR', {weekday:'long'}) };
     } catch (e) {
-        return { type: "Repos", seance: null, duree: 0, cardio: "Non", dateStr, dateObj: new Date(), dayName: "Erreur" };
+        return { type: "Repos", seance: null, duree: 0, cardio: null, dateStr, dateObj: new Date(), dayName: "Erreur" };
     }
 };
 
@@ -2796,6 +2805,159 @@ const CloudSyncIndicator = ({ syncing = false }) => {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// WHOOP MANUAL ENTRY - Saisie manuelle des données Whoop
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const WhoopManualEntry = ({ userId, onDataUpdate, onConnect }) => {
+    const [whoopLogs, setWhoopLogs] = useLocalStorage(`titan_whoop_${userId}`, {});
+    const [showModal, setShowModal] = useState(false);
+    const [form, setForm] = useState({ recovery: '', strain: '', sleepHours: '', hrv: '', rhr: '' });
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    const todayData = whoopLogs[todayStr];
+    
+    const saveData = () => {
+        const data = {
+            recovery: parseInt(form.recovery) || null,
+            strain: parseFloat(form.strain) || null,
+            sleepHours: parseFloat(form.sleepHours) || null,
+            hrv: parseInt(form.hrv) || null,
+            rhr: parseInt(form.rhr) || null,
+            timestamp: new Date().toISOString()
+        };
+        setWhoopLogs(prev => ({ ...prev, [todayStr]: data }));
+        onDataUpdate && onDataUpdate({ connected: true, manual: true, ...data });
+        setShowModal(false);
+        setForm({ recovery: '', strain: '', sleepHours: '', hrv: '', rhr: '' });
+    };
+    
+    // Recovery color
+    const getRecoveryColor = (score) => {
+        if (!score) return 'gray';
+        if (score >= 67) return 'green';
+        if (score >= 34) return 'yellow';
+        return 'red';
+    };
+    
+    const recoveryColors = {
+        green: 'from-green-500 to-emerald-600',
+        yellow: 'from-yellow-500 to-orange-500',
+        red: 'from-red-500 to-rose-600',
+        gray: 'from-gray-600 to-gray-700'
+    };
+    
+    if (todayData) {
+        const color = getRecoveryColor(todayData.recovery);
+        return (
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/5">
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${recoveryColors[color]} flex items-center justify-center`}>
+                            <Activity size={16} className="text-white" />
+                        </div>
+                        <div>
+                            <div className="font-bold text-white text-sm">WHOOP</div>
+                            <div className="text-[10px] text-gray-500">Saisie manuelle</div>
+                        </div>
+                    </div>
+                    <button onClick={() => setShowModal(true)} className="text-xs text-gray-500 hover:text-gray-400">
+                        Modifier
+                    </button>
+                </div>
+                
+                <div className="grid grid-cols-3 gap-2">
+                    <div className={`p-3 rounded-xl bg-gradient-to-br ${recoveryColors[color]}/20 text-center`}>
+                        <div className={`text-2xl font-black ${color === 'green' ? 'text-green-400' : color === 'yellow' ? 'text-yellow-400' : color === 'red' ? 'text-red-400' : 'text-gray-400'}`}>
+                            {todayData.recovery || '--'}%
+                        </div>
+                        <div className="text-[10px] text-gray-500 uppercase">Recovery</div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-blue-500/10 text-center">
+                        <div className="text-2xl font-black text-blue-400">{todayData.strain || '--'}</div>
+                        <div className="text-[10px] text-gray-500 uppercase">Strain</div>
+                    </div>
+                    <div className="p-3 rounded-xl bg-purple-500/10 text-center">
+                        <div className="text-2xl font-black text-purple-400">{todayData.sleepHours || '--'}h</div>
+                        <div className="text-[10px] text-gray-500 uppercase">Sommeil</div>
+                    </div>
+                </div>
+                
+                {(todayData.hrv || todayData.rhr) && (
+                    <div className="flex gap-2 mt-2">
+                        {todayData.hrv && (
+                            <div className="flex-1 p-2 rounded-lg bg-white/5 text-center">
+                                <span className="text-xs text-gray-400">HRV</span>
+                                <span className="ml-2 font-bold text-white">{todayData.hrv}ms</span>
+                            </div>
+                        )}
+                        {todayData.rhr && (
+                            <div className="flex-1 p-2 rounded-lg bg-white/5 text-center">
+                                <span className="text-xs text-gray-400">RHR</span>
+                                <span className="ml-2 font-bold text-white">{todayData.rhr}bpm</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+                
+                <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Mettre à jour Whoop">
+                    <div className="space-y-4">
+                        <Input label="Recovery (%)" type="number" placeholder="0-100" value={form.recovery} onChange={e => setForm({...form, recovery: e.target.value})} />
+                        <Input label="Strain" type="number" step="0.1" placeholder="0-21" value={form.strain} onChange={e => setForm({...form, strain: e.target.value})} />
+                        <Input label="Heures de sommeil" type="number" step="0.1" placeholder="ex: 7.5" value={form.sleepHours} onChange={e => setForm({...form, sleepHours: e.target.value})} />
+                        <Input label="HRV (ms)" type="number" placeholder="ex: 45" value={form.hrv} onChange={e => setForm({...form, hrv: e.target.value})} />
+                        <Input label="RHR (bpm)" type="number" placeholder="ex: 55" value={form.rhr} onChange={e => setForm({...form, rhr: e.target.value})} />
+                        <Button onClick={saveData} variant="primary" className="w-full">Enregistrer</Button>
+                    </div>
+                </Modal>
+            </div>
+        );
+    }
+    
+    // No data yet - show entry form
+    return (
+        <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/5">
+            <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center">
+                    <Activity size={20} className="text-white" />
+                </div>
+                <div>
+                    <div className="font-bold text-white">WHOOP</div>
+                    <div className="text-xs text-gray-500">Données d'aujourd'hui</div>
+                </div>
+            </div>
+            
+            <button
+                onClick={() => setShowModal(true)}
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold text-sm hover:opacity-90 transition-opacity mb-2"
+            >
+                📊 Saisir mes données Whoop
+            </button>
+            
+            <button
+                onClick={onConnect}
+                className="w-full py-2 rounded-xl bg-white/5 text-gray-400 text-xs hover:bg-white/10 transition-colors"
+            >
+                Ou connecter automatiquement →
+            </button>
+            
+            <Modal isOpen={showModal} onClose={() => setShowModal(false)} title="Saisir données Whoop">
+                <div className="space-y-4">
+                    <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-xs text-gray-300">
+                        💡 Tu peux trouver ces infos dans ton app Whoop
+                    </div>
+                    <Input label="Recovery (%)" type="number" placeholder="0-100" value={form.recovery} onChange={e => setForm({...form, recovery: e.target.value})} />
+                    <Input label="Strain (hier)" type="number" step="0.1" placeholder="0-21" value={form.strain} onChange={e => setForm({...form, strain: e.target.value})} />
+                    <Input label="Heures de sommeil" type="number" step="0.1" placeholder="ex: 7.5" value={form.sleepHours} onChange={e => setForm({...form, sleepHours: e.target.value})} />
+                    <Input label="HRV (ms) - optionnel" type="number" placeholder="ex: 45" value={form.hrv} onChange={e => setForm({...form, hrv: e.target.value})} />
+                    <Input label="RHR (bpm) - optionnel" type="number" placeholder="ex: 55" value={form.rhr} onChange={e => setForm({...form, rhr: e.target.value})} />
+                    <Button onClick={saveData} variant="primary" className="w-full">Enregistrer</Button>
+                </div>
+            </Modal>
+        </div>
+    );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // WHOOP WIDGET - Données temps réel
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -2927,28 +3089,7 @@ const WhoopWidget = ({ userId }) => {
     
     if (!connected) {
         return (
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/5">
-                <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1DB954] to-[#0d8a3e] flex items-center justify-center">
-                        <Activity size={20} className="text-white" />
-                    </div>
-                    <div>
-                        <div className="font-bold text-white">WHOOP</div>
-                        <div className="text-xs text-gray-500">Non connecté</div>
-                    </div>
-                </div>
-                {error && (
-                    <div className="p-2 mb-3 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-400">
-                        Erreur: {error}
-                    </div>
-                )}
-                <button
-                    onClick={connectWhoop}
-                    className="w-full py-3 rounded-xl bg-gradient-to-r from-[#1DB954] to-[#0d8a3e] text-white font-bold text-sm hover:opacity-90 transition-opacity"
-                >
-                    Connecter mon Whoop
-                </button>
-            </div>
+            <WhoopManualEntry userId={userId} onDataUpdate={setWhoopData} onConnect={connectWhoop} />
         );
     }
     
@@ -3415,7 +3556,7 @@ const FitnessModule = ({ userId }) => {
     const todayCheckin = dailyCheckins.find(c => c.date === todayStr);
 
     const addLog = (log) => setWorkoutLogs(prev => [...prev, { ...log, id: Date.now().toString() }]);
-    const removeLog = (index) => setWorkoutLogs(prev => prev.filter((_, i) => i !== index));
+    const removeLog = (identifier) => setWorkoutLogs(prev => prev.filter(log => log.id !== identifier && log.timestamp !== identifier));
     const startWorkout = (code) => { setActiveSession(code); setView('logger'); };
     const handleExitLogger = () => { setActiveSession(null); setView('dashboard'); };
     
@@ -4170,7 +4311,8 @@ const FitnessCalendar = ({ onSelectDay, workoutLogs, addLog, removeLog }) => {
                                 </div>
                                 <div className="text-gray-500 text-xs mt-1">
                                     {d.seance || "Repos"}
-                                    {d.cardio !== 'Non' && <span className="text-orange-400"> + Cardio</span>}
+                                    {d.cardio && <span className="text-orange-400"> + Cardio</span>}
+                                    {d.cardioOpt && !d.cardio && <span className="text-gray-600"> (+ {d.cardioOpt} optionnel)</span>}
                                 </div>
                             </div>
                             <div className="flex gap-3 items-center">
