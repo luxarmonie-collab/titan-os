@@ -1005,14 +1005,1088 @@ const FILMS_SERIES_INSPIRANTS = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// SECOND BRAIN - SYSTÈME D'ANALYSE IA CENTRALISÉ
+// TITAN AI COUNCIL - Intelligence Collective Avancée v10.1
+// ═══════════════════════════════════════════════════════════════════════════════
+// Modules: Corrélations croisées, Monte-Carlo, DDA, Biais cognitifs, Socratique
+// Méta-Apprentissage: Cycles, Seuils, Préférences implicites, Règles apprises
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const DEFAULT_USER_PROFILE = {
+    version: 1,
+    lastUpdated: null,
+    cycles: { bestDays: [], worstDays: [], peakHours: null, energyPattern: null },
+    thresholds: { sleepMinimum: null, tasksMaxBeforeCrash: null, spendingTriggers: [] },
+    implicitPreferences: { bestMoodAfter: [], realMotivators: [], avoidancePatterns: [] },
+    learnedRules: [],
+    appSuggestions: [],
+    insightHistory: []
+};
+
+const TitanAICouncil = {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // HELPERS
+    // ═══════════════════════════════════════════════════════════════════════════
+    getLast: (n) => {
+        const days = [];
+        for (let i = 0; i < n; i++) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            days.push(d.toISOString().split('T')[0]);
+        }
+        return days;
+    },
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MÉTA-APPRENTISSAGE - Détection des Cycles Personnels
+    // ═══════════════════════════════════════════════════════════════════════════
+    detectCycles: (data) => {
+        const { checkins, workoutLogs, tasks } = data;
+        const last30Days = TitanAICouncil.getLast(30);
+        const dayStats = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] };
+        const dayNames = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+        
+        last30Days.forEach(dateStr => {
+            const d = new Date(dateStr);
+            const dayOfWeek = d.getDay();
+            const checkin = checkins?.[dateStr] || {};
+            const dayTasks = tasks?.filter(t => t.due_date === dateStr) || [];
+            const dayWorkouts = workoutLogs?.filter(w => w.date === dateStr) || [];
+            
+            let score = 0, factors = 0;
+            if (checkin.energy) { score += checkin.energy; factors++; }
+            if (checkin.mood) { score += checkin.mood; factors++; }
+            if (dayTasks.length > 0) {
+                const completionRate = dayTasks.filter(t => t.completed).length / dayTasks.length;
+                score += completionRate * 5;
+                factors++;
+            }
+            if (dayWorkouts.length > 0) { score += 1; factors++; }
+            
+            if (factors > 0) {
+                dayStats[dayOfWeek].push(score / factors);
+            }
+        });
+        
+        const avgByDay = {};
+        Object.keys(dayStats).forEach(day => {
+            if (dayStats[day].length >= 2) {
+                avgByDay[day] = dayStats[day].reduce((a, b) => a + b, 0) / dayStats[day].length;
+            }
+        });
+        
+        const sortedDays = Object.entries(avgByDay).sort((a, b) => b[1] - a[1]);
+        const bestDays = sortedDays.slice(0, 2).map(([day]) => dayNames[parseInt(day)]);
+        const worstDays = sortedDays.slice(-2).map(([day]) => dayNames[parseInt(day)]);
+        
+        return { bestDays, worstDays, avgByDay };
+    },
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MÉTA-APPRENTISSAGE - Détection des Seuils de Tolérance
+    // ═══════════════════════════════════════════════════════════════════════════
+    detectThresholds: (data) => {
+        const { checkins, tasks } = data;
+        const last60Days = TitanAICouncil.getLast(60);
+        const thresholds = {};
+        
+        // Seuil sommeil → productivité
+        const sleepProductivity = [];
+        last60Days.forEach(dateStr => {
+            const checkin = checkins?.[dateStr] || {};
+            const dayTasks = tasks?.filter(t => t.due_date === dateStr) || [];
+            if (checkin.sleep && dayTasks.length > 0) {
+                const completionRate = dayTasks.filter(t => t.completed).length / dayTasks.length;
+                sleepProductivity.push({ sleep: checkin.sleep, productivity: completionRate });
+            }
+        });
+        
+        if (sleepProductivity.length >= 10) {
+            const badSleepDays = sleepProductivity.filter(d => d.sleep <= 2);
+            const goodSleepDays = sleepProductivity.filter(d => d.sleep >= 4);
+            if (badSleepDays.length >= 3 && goodSleepDays.length >= 3) {
+                const avgBad = badSleepDays.reduce((s, d) => s + d.productivity, 0) / badSleepDays.length;
+                const avgGood = goodSleepDays.reduce((s, d) => s + d.productivity, 0) / goodSleepDays.length;
+                if (avgGood - avgBad > 0.2) {
+                    thresholds.sleepMinimum = 3;
+                    thresholds.sleepImpact = Math.round((avgGood - avgBad) * 100);
+                }
+            }
+        }
+        
+        // Seuil tâches → crash
+        const tasksCrash = [];
+        last60Days.forEach(dateStr => {
+            const dayTasks = tasks?.filter(t => t.due_date === dateStr) || [];
+            if (dayTasks.length > 0) {
+                const completionRate = dayTasks.filter(t => t.completed).length / dayTasks.length;
+                tasksCrash.push({ count: dayTasks.length, rate: completionRate });
+            }
+        });
+        
+        if (tasksCrash.length >= 10) {
+            const overloadDays = tasksCrash.filter(d => d.count >= 5);
+            const normalDays = tasksCrash.filter(d => d.count <= 3);
+            if (overloadDays.length >= 3 && normalDays.length >= 3) {
+                const avgOverload = overloadDays.reduce((s, d) => s + d.rate, 0) / overloadDays.length;
+                const avgNormal = normalDays.reduce((s, d) => s + d.rate, 0) / normalDays.length;
+                if (avgNormal - avgOverload > 0.2) {
+                    thresholds.tasksMaxBeforeCrash = 4;
+                }
+            }
+        }
+        
+        return thresholds;
+    },
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MÉTA-APPRENTISSAGE - Détection des Préférences Implicites
+    // ═══════════════════════════════════════════════════════════════════════════
+    detectImplicitPreferences: (data) => {
+        const { checkins, workoutLogs } = data;
+        const last30Days = TitanAICouncil.getLast(30);
+        const preferences = { bestMoodAfter: [], realMotivators: [] };
+        
+        // Analyser ce qui précède les bonnes humeurs
+        last30Days.forEach(dateStr => {
+            const checkin = checkins?.[dateStr] || {};
+            if (checkin.mood >= 4) {
+                const dayWorkouts = workoutLogs?.filter(w => w.date === dateStr) || [];
+                if (dayWorkouts.some(w => w.type === 'Cardio' || w.session === 'CARDIO')) {
+                    preferences.bestMoodAfter.push('cardio');
+                }
+                if (dayWorkouts.some(w => w.type !== 'Cardio' && w.session !== 'CARDIO')) {
+                    preferences.bestMoodAfter.push('musculation');
+                }
+            }
+        });
+        
+        // Compter les occurrences
+        const countOccurrences = (arr) => {
+            const counts = {};
+            arr.forEach(item => { counts[item] = (counts[item] || 0) + 1; });
+            return Object.entries(counts).sort((a, b) => b[1] - a[1]).map(([k]) => k);
+        };
+        
+        preferences.bestMoodAfter = countOccurrences(preferences.bestMoodAfter).slice(0, 2);
+        
+        return preferences;
+    },
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MÉTA-APPRENTISSAGE - Génération des Règles Apprises
+    // ═══════════════════════════════════════════════════════════════════════════
+    generateLearnedRules: (data, existingRules = []) => {
+        const cycles = TitanAICouncil.detectCycles(data);
+        const thresholds = TitanAICouncil.detectThresholds(data);
+        const preferences = TitanAICouncil.detectImplicitPreferences(data);
+        const newRules = [];
+        
+        // Règle: Meilleurs jours
+        if (cycles.bestDays.length >= 1) {
+            const ruleText = `Tes meilleurs jours sont ${cycles.bestDays.join(' et ')}. Planifie tes tâches importantes ces jours-là.`;
+            if (!existingRules.some(r => r.rule.includes('meilleurs jours'))) {
+                newRules.push({ rule: ruleText, type: 'cycle', confidence: 75, detectedAt: new Date().toISOString() });
+            }
+        }
+        
+        // Règle: Seuil sommeil
+        if (thresholds.sleepMinimum && thresholds.sleepImpact) {
+            const ruleText = `Quand ton sommeil est mauvais (≤2/5), ta productivité chute de ~${thresholds.sleepImpact}%.`;
+            if (!existingRules.some(r => r.rule.includes('sommeil'))) {
+                newRules.push({ rule: ruleText, type: 'threshold', confidence: 80, detectedAt: new Date().toISOString() });
+            }
+        }
+        
+        // Règle: Seuil tâches
+        if (thresholds.tasksMaxBeforeCrash) {
+            const ruleText = `Plus de ${thresholds.tasksMaxBeforeCrash} tâches/jour = risque de crash. Limite ta charge.`;
+            if (!existingRules.some(r => r.rule.includes('tâches/jour'))) {
+                newRules.push({ rule: ruleText, type: 'threshold', confidence: 70, detectedAt: new Date().toISOString() });
+            }
+        }
+        
+        // Règle: Préférence sport
+        if (preferences.bestMoodAfter.length > 0) {
+            const ruleText = `Le ${preferences.bestMoodAfter[0]} améliore systématiquement ton humeur. Utilise-le comme régulateur.`;
+            if (!existingRules.some(r => r.rule.includes('humeur'))) {
+                newRules.push({ rule: ruleText, type: 'preference', confidence: 70, detectedAt: new Date().toISOString() });
+            }
+        }
+        
+        return newRules;
+    },
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // IA PRODUCT MANAGER - Suggestions d'amélioration de l'app
+    // ═══════════════════════════════════════════════════════════════════════════
+    analyzeAppUsage: (data) => {
+        const { checkins, tasks, workoutLogs } = data;
+        const suggestions = [];
+        const last30Days = TitanAICouncil.getLast(30);
+        
+        // Analyser les champs rarement utilisés
+        const checkinFields = { energy: 0, mood: 0, sleep: 0, motivation: 0 };
+        last30Days.forEach(dateStr => {
+            const c = checkins?.[dateStr] || {};
+            if (c.energy) checkinFields.energy++;
+            if (c.mood) checkinFields.mood++;
+            if (c.sleep) checkinFields.sleep++;
+            if (c.motivation) checkinFields.motivation++;
+        });
+        
+        // Suggérer de supprimer les champs jamais utilisés
+        Object.entries(checkinFields).forEach(([field, count]) => {
+            if (count < 5 && last30Days.length > 14) {
+                suggestions.push({
+                    type: 'remove',
+                    field: field,
+                    reason: `Tu n'as rempli "${field}" que ${count} fois en 30 jours. Supprimer pour simplifier ?`,
+                    priority: 'low'
+                });
+            }
+        });
+        
+        // Analyser si on manque de données critiques
+        const hasEnoughCheckins = Object.keys(checkins || {}).length >= 7;
+        if (!hasEnoughCheckins) {
+            suggestions.push({
+                type: 'usage',
+                field: 'checkins',
+                reason: 'Remplis ton "État rapide" plus souvent pour que je puisse mieux te comprendre.',
+                priority: 'high'
+            });
+        }
+        
+        // Suggérer des automatisations
+        if (workoutLogs?.length >= 10) {
+            const sessions = workoutLogs.map(w => w.session);
+            const counts = {};
+            sessions.forEach(s => { counts[s] = (counts[s] || 0) + 1; });
+            const mostCommon = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
+            if (mostCommon && mostCommon[1] >= 5) {
+                suggestions.push({
+                    type: 'automate',
+                    field: 'workout',
+                    reason: `Tu fais souvent "${mostCommon[0]}". Créer un raccourci "Quick Log" ?`,
+                    priority: 'medium'
+                });
+            }
+        }
+        
+        return suggestions;
+    },
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // CORRÉLATIONS CROISÉES - Liens invisibles entre domaines
+    // ═══════════════════════════════════════════════════════════════════════════
+    analyzeCorrelations: (data) => {
+        const { checkins, workoutLogs, transactions, tasks } = data;
+        const correlations = [];
+        const last14Days = TitanAICouncil.getLast(14);
+        
+        // Construire le profil journalier
+        const dailyProfiles = last14Days.map(date => {
+            const dayCheckin = checkins?.[date] || {};
+            const dayWorkouts = workoutLogs?.filter(w => w.date === date) || [];
+            const dayTasks = tasks?.filter(t => t.due_date === date) || [];
+            const dayTransactions = transactions?.filter(t => t.date === date) || [];
+            
+            return {
+                date,
+                energy: dayCheckin.energy || null,
+                mood: dayCheckin.mood || null,
+                sleep: dayCheckin.sleep || null,
+                workoutsDone: dayWorkouts.length,
+                tasksTotal: dayTasks.length,
+                tasksCompleted: dayTasks.filter(t => t.completed).length,
+                taskCompletionRate: dayTasks.length > 0 ? dayTasks.filter(t => t.completed).length / dayTasks.length : null,
+                spending: dayTransactions.reduce((sum, t) => sum + (t.amount || 0), 0),
+                impulsiveSpending: dayTransactions.filter(t => ['jeux_argent', 'loisirs', 'repas_ext'].includes(t.category)).reduce((sum, t) => sum + (t.amount || 0), 0)
+            };
+        });
+        
+        // CORRÉLATION 1: Tâches complexes → Dépenses impulsives (J+1)
+        const taskOverloadDays = dailyProfiles.filter((p, i) => p.tasksTotal >= 5 && i < 13);
+        if (taskOverloadDays.length >= 2) {
+            const impulseAfterOverload = taskOverloadDays.filter(p => {
+                const nextDayIdx = dailyProfiles.findIndex(d => d.date < p.date) - 1;
+                return nextDayIdx >= 0 && dailyProfiles[nextDayIdx]?.impulsiveSpending > 20;
+            });
+            if (impulseAfterOverload.length > taskOverloadDays.length * 0.4) {
+                correlations.push({
+                    type: 'task_spending',
+                    strength: Math.round((impulseAfterOverload.length / taskOverloadDays.length) * 100),
+                    insight: `Quand tu as +5 tâches/jour, tu as ${Math.round((impulseAfterOverload.length / taskOverloadDays.length) * 100)}% de chances de dépenser impulsivement le lendemain.`,
+                    recommendation: 'Limite tes tâches complexes à 3/jour pour protéger tes finances.'
+                });
+            }
+        }
+        
+        // CORRÉLATION 2: Mauvais sommeil → Baisse productivité
+        const badSleepDays = dailyProfiles.filter(p => p.sleep && p.sleep <= 2);
+        if (badSleepDays.length >= 2) {
+            const lowProdAfterBadSleep = badSleepDays.filter(p => p.taskCompletionRate !== null && p.taskCompletionRate < 0.5);
+            if (lowProdAfterBadSleep.length > badSleepDays.length * 0.5) {
+                correlations.push({
+                    type: 'sleep_productivity',
+                    strength: Math.round((lowProdAfterBadSleep.length / badSleepDays.length) * 100),
+                    insight: `Les jours de mauvais sommeil, ta productivité chute de ${Math.round((lowProdAfterBadSleep.length / badSleepDays.length) * 100)}%.`,
+                    recommendation: 'Le sommeil est ton levier #1. Protège-le.'
+                });
+            }
+        }
+        
+        // CORRÉLATION 3: Sport → Énergie/Humeur
+        const sportDays = dailyProfiles.filter(p => p.workoutsDone > 0);
+        if (sportDays.length >= 3) {
+            const goodMoodAfterSport = sportDays.filter(p => p.mood && p.mood >= 4);
+            if (goodMoodAfterSport.length > sportDays.length * 0.5) {
+                correlations.push({
+                    type: 'sport_mood',
+                    strength: Math.round((goodMoodAfterSport.length / sportDays.length) * 100),
+                    insight: `Le sport booste ton humeur dans ${Math.round((goodMoodAfterSport.length / sportDays.length) * 100)}% des cas.`,
+                    recommendation: 'Utilise le sport comme régulateur émotionnel.'
+                });
+            }
+        }
+        
+        return correlations;
+    },
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SIMULATION MONTE-CARLO - Prédictions futures
+    // ═══════════════════════════════════════════════════════════════════════════
+    predictFuture: (data) => {
+        const { checkins, workoutLogs, tasks, transactions } = data;
+        const predictions = [];
+        const last7Days = TitanAICouncil.getLast(7);
+        
+        // Moyenne de sommeil/énergie
+        const recentCheckins = last7Days.map(date => checkins?.[date]).filter(Boolean);
+        const avgSleep = recentCheckins.length > 0 ? recentCheckins.reduce((sum, c) => sum + (c.sleep || 3), 0) / recentCheckins.length : 3;
+        const avgEnergy = recentCheckins.length > 0 ? recentCheckins.reduce((sum, c) => sum + (c.energy || 3), 0) / recentCheckins.length : 3;
+        
+        // Taux de complétion des tâches
+        const recentTasks = tasks?.filter(t => last7Days.includes(t.due_date)) || [];
+        const completionRate = recentTasks.length > 0 ? recentTasks.filter(t => t.completed).length / recentTasks.length : 0.5;
+        
+        // PRÉDICTION BURNOUT
+        if (avgSleep < 2.5 && avgEnergy < 2.5) {
+            const burnoutRisk = Math.min(95, Math.round((5 - avgSleep) * 15 + (5 - avgEnergy) * 15));
+            predictions.push({
+                type: 'burnout',
+                probability: burnoutRisk,
+                horizon: '2 semaines',
+                message: `Risque de burnout à ${burnoutRisk}% si tu continues ce rythme.`,
+                action: 'Priorise le repos immédiatement.'
+            });
+        }
+        
+        // PRÉDICTION PRODUCTIVITÉ
+        if (completionRate < 0.4 && recentTasks.length > 3) {
+            const productivityCrash = Math.min(90, Math.round((1 - completionRate) * 100));
+            predictions.push({
+                type: 'productivity_crash',
+                probability: productivityCrash,
+                horizon: '1 semaine',
+                message: `Taux complétion ${Math.round(completionRate * 100)}% → Risque saturation : ${productivityCrash}%`,
+                action: 'Réduis ta charge de tâches de 50%.'
+            });
+        }
+        
+        // PRÉDICTION OBJECTIFS HEBDO
+        const weekWorkouts = workoutLogs?.filter(w => last7Days.includes(w.date)).length || 0;
+        const workoutSuccessProb = Math.min(100, Math.round((weekWorkouts / 6) * 100));
+        predictions.push({
+            type: 'weekly_goals',
+            probability: workoutSuccessProb,
+            horizon: 'cette semaine',
+            message: `Objectifs fitness : ${workoutSuccessProb}% de chances de réussite`,
+            action: workoutSuccessProb < 50 ? 'Planifie 2 séances dans les 3 prochains jours.' : 'Continue comme ça !'
+        });
+        
+        return predictions;
+    },
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DDA (Dynamic Difficulty Adjustment) - Game Design
+    // ═══════════════════════════════════════════════════════════════════════════
+    calculateDDA: (data) => {
+        const { tasks, checkins, workoutLogs } = data;
+        const last3Days = TitanAICouncil.getLast(3).slice(1); // Exclure aujourd'hui
+        
+        const recentTasks = tasks?.filter(t => last3Days.includes(t.due_date)) || [];
+        const completionRate = recentTasks.length > 0 ? recentTasks.filter(t => t.completed).length / recentTasks.length : 0.7;
+        
+        const recentCheckins = last3Days.map(date => checkins?.[date]).filter(Boolean);
+        const avgEnergy = recentCheckins.length > 0 ? recentCheckins.reduce((sum, c) => sum + (c.energy || 3), 0) / recentCheckins.length : 3;
+        const avgMood = recentCheckins.length > 0 ? recentCheckins.reduce((sum, c) => sum + (c.mood || 3), 0) / recentCheckins.length : 3;
+        
+        // Calculer le "Flow Score" (capacité actuelle)
+        const flowScore = (completionRate * 40) + (avgEnergy / 5 * 30) + (avgMood / 5 * 30);
+        
+        if (flowScore < 40) {
+            return {
+                level: 'recovery',
+                flowScore: Math.round(flowScore),
+                message: 'Mode récupération. Ton système dopaminergique est à plat.',
+                recommendations: [
+                    'Limite-toi à 2 tâches max aujourd\'hui',
+                    'Sport léger ou marche uniquement',
+                    'Vise une "victoire facile" pour relancer la machine'
+                ],
+                tasksToKeep: 2,
+                sportIntensity: 'light'
+            };
+        } else if (flowScore < 60) {
+            return {
+                level: 'moderate',
+                flowScore: Math.round(flowScore),
+                message: 'Capacité modérée. On maintient le cap sans forcer.',
+                recommendations: [
+                    'Maximum 4 tâches importantes',
+                    'Sport normal, écoute ton corps',
+                    'Prends des pauses régulières'
+                ],
+                tasksToKeep: 4,
+                sportIntensity: 'normal'
+            };
+        } else {
+            return {
+                level: 'peak',
+                flowScore: Math.round(flowScore),
+                message: 'Zone de Flow ! C\'est le moment de performer.',
+                recommendations: [
+                    'Attaque tes tâches les plus complexes',
+                    'Pousse tes limites au sport',
+                    'Capitalise sur cette énergie'
+                ],
+                tasksToKeep: null,
+                sportIntensity: 'high'
+            };
+        }
+    },
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // DÉTECTEUR DE BIAIS COGNITIFS
+    // ═══════════════════════════════════════════════════════════════════════════
+    detectBiases: (data) => {
+        const { biometrics, tasks } = data;
+        const biases = [];
+        
+        // BIAIS DE NÉGATIVITÉ
+        if (biometrics) {
+            const weights = Object.entries(biometrics).filter(([k, v]) => v.poids).sort((a, b) => new Date(a[0]) - new Date(b[0]));
+            if (weights.length >= 4) {
+                const trend = weights[weights.length - 1][1].poids - weights[Math.max(0, weights.length - 8)][1].poids;
+                if (trend !== 0) {
+                    biases.push({
+                        type: 'negativity_bias',
+                        message: `Tu as ${trend < 0 ? 'perdu' : 'pris'} ${Math.abs(trend).toFixed(1)}kg récemment. Les petits progrès comptent.`,
+                        counter: 'Le biais de négativité te fait ignorer tes victoires.'
+                    });
+                }
+            }
+        }
+        
+        // BIAIS D'ÉVITEMENT
+        if (tasks?.length > 0) {
+            const highPriorityIncomplete = tasks.filter(t => !t.completed && t.priority === 'high');
+            if (highPriorityIncomplete.length >= 3) {
+                biases.push({
+                    type: 'avoidance_bias',
+                    message: `${highPriorityIncomplete.length} tâches haute priorité en attente. Tu évites peut-être quelque chose.`,
+                    counter: 'L\'évitement crée plus d\'anxiété que l\'action.'
+                });
+            }
+        }
+        
+        // ILLUSION DE PRODUCTIVITÉ
+        if (tasks?.length > 0) {
+            const last7Days = TitanAICouncil.getLast(7);
+            const weekTasks = tasks.filter(t => last7Days.includes(t.due_date));
+            const completedLow = weekTasks.filter(t => t.completed && t.priority === 'low').length;
+            const completedHigh = weekTasks.filter(t => t.completed && t.priority === 'high').length;
+            
+            if (completedLow > completedHigh * 2 && completedLow > 3) {
+                biases.push({
+                    type: 'productivity_illusion',
+                    message: 'Tu complètes beaucoup de petites tâches mais évites les importantes.',
+                    counter: 'La vraie productivité = impact, pas volume.'
+                });
+            }
+        }
+        
+        return biases;
+    },
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // INTERROGATOIRE SOCRATIQUE - Questions profondes
+    // ═══════════════════════════════════════════════════════════════════════════
+    generateSocraticQuestion: (data) => {
+        const { tasks, transactions, checkins, workoutLogs } = data;
+        const questions = [];
+        const last7Days = TitanAICouncil.getLast(7);
+        
+        // DISSONANCE 1: Dépenses loisirs élevées
+        const weekTransactions = transactions?.filter(t => last7Days.includes(t.date)) || [];
+        const leisureSpending = weekTransactions.filter(t => ['loisirs', 'jeux_argent', 'repas_ext', 'loisir_ambrine'].includes(t.category)).reduce((sum, t) => sum + (t.amount || 0), 0);
+        const totalSpending = weekTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+        
+        if (totalSpending > 0 && leisureSpending > totalSpending * 0.4 && leisureSpending > 100) {
+            questions.push({
+                type: 'spending_dissonance',
+                severity: 'high',
+                question: `${Math.round(leisureSpending)}€ en loisirs cette semaine (${Math.round(leisureSpending/totalSpending*100)}%). Ces achats t'ont-ils apporté la satisfaction attendue, ou était-ce une fuite ?`,
+                followUp: 'Qu\'est-ce que tu cherchais vraiment à combler ?'
+            });
+        }
+        
+        // DISSONANCE 2: Pas assez de sport
+        const weekWorkouts = workoutLogs?.filter(w => last7Days.includes(w.date)).length || 0;
+        if (weekWorkouts < 2) {
+            questions.push({
+                type: 'fitness_dissonance',
+                severity: 'medium',
+                question: `Seulement ${weekWorkouts} séance(s) cette semaine. Qu'est-ce qui t'en empêche vraiment ?`,
+                followUp: 'Est-ce le temps, l\'énergie, ou autre chose ?'
+            });
+        }
+        
+        // DISSONANCE 3: Énergie basse persistante
+        const recentCheckins = last7Days.map(date => checkins?.[date]).filter(Boolean);
+        const avgEnergy = recentCheckins.length > 0 ? recentCheckins.reduce((sum, c) => sum + (c.energy || 3), 0) / recentCheckins.length : 3;
+        
+        if (avgEnergy < 2.5 && weekWorkouts < 3) {
+            questions.push({
+                type: 'energy_paradox',
+                severity: 'high',
+                question: 'Ton énergie est basse depuis plusieurs jours. Attends-tu que ça passe, ou vas-tu agir ?',
+                followUp: 'Qu\'est-ce qui te redonnerait de l\'énergie maintenant ?'
+            });
+        }
+        
+        return questions.length > 0 ? questions[0] : null;
+    },
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GÉNÉRATION DU RAPPORT CONSEIL COMPLET
+    // ═══════════════════════════════════════════════════════════════════════════
+    generateCouncilReport: (data, userProfile = DEFAULT_USER_PROFILE) => {
+        const correlations = TitanAICouncil.analyzeCorrelations(data);
+        const predictions = TitanAICouncil.predictFuture(data);
+        const dda = TitanAICouncil.calculateDDA(data);
+        const biases = TitanAICouncil.detectBiases(data);
+        const socraticQuestion = TitanAICouncil.generateSocraticQuestion(data);
+        
+        // MÉTA-APPRENTISSAGE
+        const learnedRules = TitanAICouncil.generateLearnedRules(data, userProfile.learnedRules || []);
+        const appSuggestions = TitanAICouncil.analyzeAppUsage(data);
+        const cycles = TitanAICouncil.detectCycles(data);
+        const thresholds = TitanAICouncil.detectThresholds(data);
+        const implicitPreferences = TitanAICouncil.detectImplicitPreferences(data);
+        
+        // État du système
+        let systemState = '';
+        if (dda.flowScore >= 70) systemState = 'Performance haute, tous systèmes optimaux';
+        else if (dda.flowScore >= 50) systemState = 'Fonctionnement nominal, attention à la charge';
+        else if (dda.flowScore >= 30) systemState = 'Capacité réduite, risque de surchauffe';
+        else systemState = 'Mode récupération activé, protection en cours';
+        
+        // Insight profond (priorité aux règles apprises)
+        let deepInsight = null;
+        if (learnedRules.length > 0) {
+            deepInsight = { 
+                source: '📚 Règle Apprise', 
+                text: learnedRules[0].rule, 
+                recommendation: 'Basé sur ton historique personnel.',
+                isLearned: true
+            };
+        } else if (correlations.length > 0) {
+            const strongest = correlations.sort((a, b) => b.strength - a.strength)[0];
+            deepInsight = { source: '🔍 Ingénieur/Psy', text: strongest.insight, recommendation: strongest.recommendation };
+        } else if (biases.length > 0) {
+            deepInsight = { source: '🧠 Psychologue', text: biases[0].message, recommendation: biases[0].counter };
+        }
+        
+        // Protocole d'optimisation (adapté aux cycles détectés)
+        let physioAdvice = dda.sportIntensity === 'light' ? 'Marche 20min ou stretching' : dda.sportIntensity === 'high' ? 'Séance intense - pousse tes limites' : 'Séance normale';
+        if (implicitPreferences.bestMoodAfter?.includes('cardio')) {
+            physioAdvice += ' (le cardio booste ton humeur)';
+        }
+        
+        const protocol = {
+            physiological: physioAdvice,
+            cognitive: dda.tasksToKeep ? `Maximum ${dda.tasksToKeep} tâches` : 'Attaque tes tâches complexes',
+            structural: predictions.find(p => p.type === 'burnout') ? 'Bloque 1h de repos ce soir' : 'Maintiens ta routine'
+        };
+        
+        const weeklyGoals = predictions.find(p => p.type === 'weekly_goals');
+        
+        return {
+            systemState,
+            flowScore: dda.flowScore,
+            ddaLevel: dda.level,
+            ddaMessage: dda.message,
+            deepInsight,
+            protocol,
+            futureSimulation: weeklyGoals ? weeklyGoals.message : 'Données insuffisantes',
+            socraticQuestion,
+            correlations,
+            predictions,
+            biases,
+            recommendations: dda.recommendations,
+            // MÉTA-APPRENTISSAGE
+            meta: {
+                cycles,
+                thresholds,
+                implicitPreferences,
+                learnedRules: [...(userProfile.learnedRules || []), ...learnedRules],
+                appSuggestions,
+                dataQuality: {
+                    checkinsCount: Object.keys(data.checkins || {}).length,
+                    tasksCount: (data.tasks || []).length,
+                    workoutsCount: (data.workoutLogs || []).length,
+                    transactionsCount: (data.transactions || []).length
+                }
+            }
+        };
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MORNING COACH - Système de Coaching Conversationnel (Style Whoop)
+// ═══════════════════════════════════════════════════════════════════════════════
+// Dialogue interactif le matin basé sur les données de la veille
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const MorningCoach = {
+    // Déterminer le contexte du moment
+    getTimeContext: () => {
+        const hour = new Date().getHours();
+        if (hour >= 5 && hour < 12) return 'morning';
+        if (hour >= 12 && hour < 17) return 'afternoon';
+        if (hour >= 17 && hour < 21) return 'evening';
+        return 'night';
+    },
+    
+    // Analyser les données de la veille pour le briefing
+    analyzeYesterday: (data) => {
+        const { whoopData, checkins, workoutLogs, tasks, transactions } = data;
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().split('T')[0];
+        
+        const yesterdayCheckin = checkins?.[yesterdayStr] || {};
+        const yesterdayWorkouts = workoutLogs?.filter(w => w.date === yesterdayStr) || [];
+        const yesterdayTasks = tasks?.filter(t => t.due_date === yesterdayStr) || [];
+        const yesterdayTransactions = transactions?.filter(t => t.date === yesterdayStr) || [];
+        
+        // Calculer les métriques clés
+        const metrics = {
+            // Whoop data
+            recovery: whoopData?.recovery || null,
+            strain: whoopData?.strain || null,
+            sleepScore: whoopData?.sleepScore || null,
+            sleepHours: whoopData?.sleepHours || null,
+            hrv: whoopData?.hrv || null,
+            rhr: whoopData?.rhr || null,
+            
+            // Check-in de la veille
+            energy: yesterdayCheckin.energy || null,
+            mood: yesterdayCheckin.mood || null,
+            sleep: yesterdayCheckin.sleep || null,
+            
+            // Activité
+            workoutsDone: yesterdayWorkouts.length,
+            workoutTypes: yesterdayWorkouts.map(w => w.session || w.type),
+            
+            // Productivité
+            tasksTotal: yesterdayTasks.length,
+            tasksCompleted: yesterdayTasks.filter(t => t.completed).length,
+            taskCompletionRate: yesterdayTasks.length > 0 
+                ? Math.round((yesterdayTasks.filter(t => t.completed).length / yesterdayTasks.length) * 100) 
+                : null,
+            
+            // Finance
+            spending: yesterdayTransactions.reduce((sum, t) => sum + (t.amount || 0), 0),
+            impulsiveCategories: ['jeux_argent', 'loisirs', 'repas_ext'],
+            impulsiveSpending: yesterdayTransactions
+                .filter(t => ['jeux_argent', 'loisirs', 'repas_ext'].includes(t.category))
+                .reduce((sum, t) => sum + (t.amount || 0), 0)
+        };
+        
+        // Déterminer l'état global
+        let overallState = 'neutral';
+        let stateReasons = [];
+        
+        // Analyse Recovery Whoop
+        if (metrics.recovery !== null) {
+            if (metrics.recovery < 33) {
+                overallState = 'low';
+                stateReasons.push('recovery_low');
+            } else if (metrics.recovery > 66) {
+                overallState = 'high';
+                stateReasons.push('recovery_high');
+            } else {
+                stateReasons.push('recovery_medium');
+            }
+        }
+        
+        // Analyse sommeil
+        if (metrics.sleepHours !== null && metrics.sleepHours < 6) {
+            if (overallState !== 'low') overallState = 'concerned';
+            stateReasons.push('sleep_short');
+        } else if (metrics.sleepScore !== null && metrics.sleepScore < 70) {
+            if (overallState !== 'low') overallState = 'concerned';
+            stateReasons.push('sleep_quality_low');
+        }
+        
+        // Analyse énergie check-in
+        if (metrics.energy !== null && metrics.energy <= 2) {
+            if (overallState !== 'low') overallState = 'concerned';
+            stateReasons.push('energy_low');
+        }
+        
+        // Analyse productivité
+        if (metrics.taskCompletionRate !== null && metrics.taskCompletionRate < 50) {
+            stateReasons.push('productivity_low');
+        } else if (metrics.taskCompletionRate !== null && metrics.taskCompletionRate > 80) {
+            stateReasons.push('productivity_high');
+        }
+        
+        // Analyse dépenses
+        if (metrics.impulsiveSpending > 50) {
+            stateReasons.push('impulse_spending');
+        }
+        
+        return { metrics, overallState, stateReasons };
+    },
+    
+    // Générer le message d'accueil personnalisé
+    generateGreeting: (userName, analysis, timeContext) => {
+        const { metrics, overallState, stateReasons } = analysis;
+        const greetings = {
+            morning: ['Bonjour', 'Hey', 'Salut'],
+            afternoon: ['Bon après-midi', 'Hey'],
+            evening: ['Bonsoir', 'Hey'],
+            night: ['Encore debout ?', 'Salut']
+        };
+        
+        const greeting = greetings[timeContext][Math.floor(Math.random() * greetings[timeContext].length)];
+        
+        // Construire le message principal basé sur les données
+        let mainMessage = '';
+        let subMessage = '';
+        
+        // Priorité 1: Données Whoop
+        if (metrics.recovery !== null) {
+            if (metrics.recovery < 33) {
+                mainMessage = `ta récupération est à ${metrics.recovery}%, c'est assez bas.`;
+                if (metrics.sleepHours && metrics.sleepHours < 6) {
+                    subMessage = `Tu n'as dormi que ${metrics.sleepHours.toFixed(1)}h, ça explique beaucoup.`;
+                } else {
+                    subMessage = `Ton corps te demande de lever le pied aujourd'hui.`;
+                }
+            } else if (metrics.recovery < 66) {
+                mainMessage = `ta récupération d'hier était moyenne (${metrics.recovery}%)`;
+                if (metrics.sleepHours) {
+                    subMessage = metrics.sleepHours < 7 
+                        ? `et ton sommeil a été plus court que nécessaire (${metrics.sleepHours.toFixed(1)}h).`
+                        : `mais ton sommeil était correct (${metrics.sleepHours.toFixed(1)}h).`;
+                }
+            } else {
+                mainMessage = `ta récupération est excellente à ${metrics.recovery}% !`;
+                subMessage = `C'est le moment de capitaliser sur cette énergie.`;
+            }
+        }
+        // Fallback sur les check-ins si pas de Whoop
+        else if (metrics.energy !== null || metrics.mood !== null) {
+            if (metrics.energy <= 2) {
+                mainMessage = `tu semblais fatigué hier (énergie ${metrics.energy}/5).`;
+                subMessage = `Comment te sens-tu ce matin ?`;
+            } else if (metrics.mood <= 2) {
+                mainMessage = `ton moral était un peu bas hier.`;
+                subMessage = `J'espère que ça va mieux aujourd'hui.`;
+            } else if (metrics.energy >= 4 && metrics.mood >= 4) {
+                mainMessage = `tu étais en forme hier (énergie ${metrics.energy}/5, humeur ${metrics.mood}/5).`;
+                subMessage = `Voyons comment maintenir cette dynamique !`;
+            } else {
+                mainMessage = `on fait le point sur ta journée d'hier ?`;
+            }
+        }
+        // Fallback sur la productivité
+        else if (metrics.taskCompletionRate !== null) {
+            if (metrics.taskCompletionRate >= 80) {
+                mainMessage = `tu as cartonné hier avec ${metrics.taskCompletionRate}% de tes tâches complétées !`;
+                subMessage = `Comment tu veux aborder aujourd'hui ?`;
+            } else if (metrics.taskCompletionRate < 50 && metrics.tasksTotal > 2) {
+                mainMessage = `hier a été compliqué côté productivité (${metrics.taskCompletionRate}% complété).`;
+                subMessage = `On analyse ce qui s'est passé ?`;
+            }
+        }
+        // Message par défaut
+        else {
+            mainMessage = `prêt pour une nouvelle journée ?`;
+            subMessage = `Je n'ai pas assez de données d'hier pour te faire un briefing complet.`;
+        }
+        
+        return {
+            greeting: `${greeting} ${userName}`,
+            mainMessage,
+            subMessage,
+            overallState
+        };
+    },
+    
+    // Générer les options de conversation
+    generateConversationOptions: (analysis) => {
+        const { metrics, stateReasons } = analysis;
+        const options = [];
+        
+        // Option 1: Explorer (comprendre)
+        if (stateReasons.includes('recovery_low') || stateReasons.includes('recovery_medium')) {
+            options.push({
+                id: 'explore_recovery',
+                label: "Explorer ce qui a pu influencer ta récup",
+                description: "Parfait si tu te demandes \"pourquoi je ne suis pas en vert ?\"",
+                icon: '🔍',
+                type: 'explore'
+            });
+        } else if (stateReasons.includes('energy_low')) {
+            options.push({
+                id: 'explore_energy',
+                label: "Comprendre pourquoi ton énergie est basse",
+                description: "On va identifier les facteurs ensemble",
+                icon: '🔍',
+                type: 'explore'
+            });
+        } else if (stateReasons.includes('productivity_low')) {
+            options.push({
+                id: 'explore_productivity',
+                label: "Analyser ce qui a bloqué hier",
+                description: "Identifier les obstacles pour mieux les éviter",
+                icon: '🔍',
+                type: 'explore'
+            });
+        }
+        
+        // Option 2: Agir (conseils concrets)
+        if (stateReasons.includes('sleep_short') || stateReasons.includes('sleep_quality_low')) {
+            options.push({
+                id: 'action_sleep',
+                label: "Avoir des conseils pour mieux dormir ce soir",
+                description: "Actions simples à mettre en place dès aujourd'hui",
+                icon: '💤',
+                type: 'action'
+            });
+        } else if (stateReasons.includes('recovery_low') || stateReasons.includes('recovery_medium')) {
+            options.push({
+                id: 'action_recovery',
+                label: "Conseils pour optimiser ma journée",
+                description: "Adapter ta journée à ton niveau de récupération",
+                icon: '⚡',
+                type: 'action'
+            });
+        } else if (stateReasons.includes('recovery_high')) {
+            options.push({
+                id: 'action_capitalize',
+                label: "Comment capitaliser sur cette énergie",
+                description: "Maximise cette journée de haute performance",
+                icon: '🚀',
+                type: 'action'
+            });
+        }
+        
+        // Option par défaut si pas assez de contexte
+        if (options.length === 0) {
+            options.push({
+                id: 'daily_plan',
+                label: "Planifier ma journée",
+                description: "Définir mes priorités pour aujourd'hui",
+                icon: '📋',
+                type: 'action'
+            });
+            options.push({
+                id: 'quick_checkin',
+                label: "Faire mon check-in rapide",
+                description: "Enregistrer comment je me sens",
+                icon: '✍️',
+                type: 'explore'
+            });
+        }
+        
+        // Toujours proposer une option "Pas maintenant"
+        options.push({
+            id: 'skip',
+            label: "Pas maintenant",
+            description: "Revenir au dashboard",
+            icon: '⏭️',
+            type: 'skip'
+        });
+        
+        return options;
+    },
+    
+    // Générer les questions de suivi selon l'option choisie
+    generateFollowUp: (optionId, analysis) => {
+        const { metrics } = analysis;
+        
+        const followUps = {
+            explore_recovery: {
+                question: "D'après toi, qu'est-ce qui a pu impacter ta récupération ?",
+                options: [
+                    { id: 'alcohol', label: '🍷 Alcool', impact: 'Même 1-2 verres réduisent significativement la récup' },
+                    { id: 'late_meal', label: '🍕 Repas tard/lourd', impact: 'La digestion perturbe les phases de sommeil profond' },
+                    { id: 'screens', label: '📱 Écrans tard', impact: 'La lumière bleue retarde la mélatonine de 2-3h' },
+                    { id: 'stress', label: '😰 Stress/Anxiété', impact: 'Le cortisol élevé empêche la récupération' },
+                    { id: 'training', label: '🏋️ Entraînement intense', impact: 'Ton corps avait besoin de plus de repos' },
+                    { id: 'unknown', label: '🤷 Je ne sais pas', impact: null }
+                ],
+                nextStep: 'recommendations'
+            },
+            explore_energy: {
+                question: "Qu'est-ce qui pourrait expliquer ta fatigue ?",
+                options: [
+                    { id: 'sleep', label: '😴 Mal dormi', impact: null },
+                    { id: 'overwork', label: '💼 Trop de travail', impact: null },
+                    { id: 'nutrition', label: '🥗 Mal mangé', impact: null },
+                    { id: 'no_sport', label: '🏃 Pas bougé', impact: null },
+                    { id: 'mood', label: '😔 Moral bas', impact: null }
+                ],
+                nextStep: 'recommendations'
+            },
+            explore_productivity: {
+                question: "Qu'est-ce qui t'a bloqué hier ?",
+                options: [
+                    { id: 'overwhelm', label: '😵 Trop de choses à faire', impact: null },
+                    { id: 'distraction', label: '📱 Distractions', impact: null },
+                    { id: 'energy', label: '🔋 Pas d\'énergie', impact: null },
+                    { id: 'unclear', label: '🤔 Priorités floues', impact: null },
+                    { id: 'procrastination', label: '😅 Procrastination', impact: null }
+                ],
+                nextStep: 'recommendations'
+            },
+            action_sleep: {
+                title: "🌙 Plan Sommeil Optimisé",
+                recommendations: [
+                    { time: '2h avant coucher', action: 'Dernier repas léger', icon: '🥗' },
+                    { time: '1h30 avant', action: 'Mode nuit sur tous les écrans', icon: '📱' },
+                    { time: '1h avant', action: 'Lumières tamisées, pas d\'écran', icon: '💡' },
+                    { time: '30min avant', action: 'Lecture ou méditation', icon: '📖' },
+                    { time: 'Au lit', action: 'Chambre fraîche (18-19°C)', icon: '❄️' }
+                ],
+                targetBedtime: '22:30'
+            },
+            action_recovery: {
+                title: metrics.recovery < 33 ? "🔋 Plan Mode Récupération" : "⚡ Plan Journée Équilibrée",
+                recommendations: metrics.recovery < 33 ? [
+                    { priority: 'high', action: 'Pas d\'entraînement intense aujourd\'hui', icon: '🚫' },
+                    { priority: 'high', action: 'Maximum 3 tâches importantes', icon: '📋' },
+                    { priority: 'medium', action: 'Marche légère 20-30min', icon: '🚶' },
+                    { priority: 'medium', action: 'Sieste 20min si possible', icon: '😴' },
+                    { priority: 'low', action: 'Couché 30min plus tôt ce soir', icon: '🌙' }
+                ] : [
+                    { priority: 'high', action: 'Séance sport modérée OK', icon: '🏋️' },
+                    { priority: 'medium', action: 'Maximum 5 tâches', icon: '📋' },
+                    { priority: 'medium', action: 'Pauses régulières', icon: '☕' },
+                    { priority: 'low', action: 'Respecte ton heure de coucher', icon: '🌙' }
+                ]
+            },
+            action_capitalize: {
+                title: "🚀 Plan Performance Maximale",
+                recommendations: [
+                    { priority: 'high', action: 'Attaque ta tâche la plus difficile ce matin', icon: '🎯' },
+                    { priority: 'high', action: 'Entraînement intense recommandé', icon: '🔥' },
+                    { priority: 'medium', action: 'Profite de ce flow pour avancer sur tes projets', icon: '💪' },
+                    { priority: 'medium', action: 'Tu peux te permettre de pousser un peu plus', icon: '⚡' },
+                    { priority: 'low', action: 'Mais n\'oublie pas de maintenir ton sommeil', icon: '🌙' }
+                ]
+            }
+        };
+        
+        return followUps[optionId] || null;
+    },
+    
+    // Générer les recommandations basées sur les réponses
+    generateRecommendations: (optionId, answerId, analysis) => {
+        const { metrics } = analysis;
+        
+        const recommendations = {
+            alcohol: [
+                "L'alcool fragmente ton sommeil profond et REM",
+                "Même 1-2 verres = récupération -15 à 30%",
+                "💡 Si tu bois ce soir, arrête 3-4h avant de dormir"
+            ],
+            late_meal: [
+                "La digestion active ton système pendant que tu dors",
+                "Évite les repas lourds après 20h",
+                "💡 Ce soir : repas léger avant 20h, pas de sucre"
+            ],
+            screens: [
+                "La lumière bleue supprime la mélatonine",
+                "Ton cerveau pense qu'il fait encore jour",
+                "💡 Ce soir : mode nuit dès 21h, pas d'écran après 22h"
+            ],
+            stress: [
+                "Le cortisol élevé empêche ton corps de récupérer",
+                "Même en dormant 8h, la qualité est réduite",
+                "💡 Essaie 10min de respiration ou méditation avant de dormir"
+            ],
+            training: [
+                `Avec ${metrics.strain ? `un strain de ${metrics.strain}` : 'ton entraînement intense'}, ton corps avait besoin de plus`,
+                "Le surentraînement nuit à la progression",
+                "💡 Aujourd'hui : repos actif ou séance légère max"
+            ],
+            unknown: [
+                "Pas de souci, on va observer les prochains jours",
+                "Continue à tracker tes habitudes",
+                "💡 Note ce soir ce que tu as fait différemment"
+            ]
+        };
+        
+        return recommendations[answerId] || [
+            "Continue à observer tes patterns",
+            "Plus tu tracks, plus je pourrai t'aider",
+            "💡 Fais ton check-in ce soir pour compléter les données"
+        ];
+    },
+    
+    // Point d'entrée principal
+    generateMorningBriefing: (data, userName = 'Theo') => {
+        const timeContext = MorningCoach.getTimeContext();
+        const analysis = MorningCoach.analyzeYesterday(data);
+        const greeting = MorningCoach.generateGreeting(userName, analysis, timeContext);
+        const options = MorningCoach.generateConversationOptions(analysis);
+        
+        return {
+            timeContext,
+            greeting,
+            options,
+            analysis,
+            isMorning: timeContext === 'morning'
+        };
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FONCTION PRINCIPALE D'ANALYSE (Compatible avec l'ancien système)
 // ═══════════════════════════════════════════════════════════════════════════════
 const analyzeAllData = (data) => {
-    const { checkins, workoutLogs, biometrics, whoopData, supplementLogs } = data;
+    const { checkins, workoutLogs, biometrics, whoopData, supplementLogs, tasks, transactions } = data;
     const insights = [];
     const questions = [];
     
-    // Analyse Whoop
+    // Générer le rapport du conseil
+    const councilReport = TitanAICouncil.generateCouncilReport(data);
+    
+    // Générer le briefing du matin
+    const morningBriefing = MorningCoach.generateMorningBriefing(data);
+    
+    // Analyse Whoop (garder l'existant)
+    const councilReport = TitanAICouncil.generateCouncilReport(data);
+    
+    // Analyse Whoop (garder l'existant)
     if (whoopData?.recovery) {
         if (whoopData.recovery < 33) {
             insights.push({
@@ -1024,7 +2098,7 @@ const analyzeAllData = (data) => {
             });
             questions.push({
                 id: 'low_recovery',
-                text: 'Pourquoi ton recovery est bas ? (Alcool, stress, couché tard...)',
+                text: 'Pourquoi ton recovery est bas ?',
                 options: ['Alcool', 'Stress travail', 'Couché tard', 'Mauvais sommeil', 'Autre']
             });
         } else if (whoopData.recovery > 66) {
@@ -1052,7 +2126,7 @@ const analyzeAllData = (data) => {
                 type: 'warning',
                 category: 'sleep',
                 title: 'Sommeil insuffisant',
-                message: `Score sommeil ${whoopData.sleepScore}% - Ton sommeil impacte ta récupération.`,
+                message: `Score sommeil ${whoopData.sleepScore}%`,
                 action: 'Couche-toi plus tôt ce soir.'
             });
             questions.push({
@@ -1061,6 +2135,61 @@ const analyzeAllData = (data) => {
                 options: ['Écrans tard', 'Stress', 'Repas lourd', 'Bruit', 'Autre']
             });
         }
+    }
+    
+    // Convertir DDA en insight prioritaire
+    if (councilReport.ddaLevel === 'recovery') {
+        insights.unshift({
+            type: 'warning',
+            category: 'system',
+            title: `⚡ ${councilReport.ddaMessage}`,
+            message: `Flow Score: ${councilReport.flowScore}%`,
+            action: councilReport.recommendations[0]
+        });
+    } else if (councilReport.ddaLevel === 'peak') {
+        insights.unshift({
+            type: 'success',
+            category: 'system',
+            title: `🚀 ${councilReport.ddaMessage}`,
+            message: `Flow Score: ${councilReport.flowScore}%`,
+            action: councilReport.recommendations[0]
+        });
+    }
+    
+    // Ajouter l'insight profond
+    if (councilReport.deepInsight) {
+        insights.push({
+            type: 'info',
+            category: 'correlation',
+            title: councilReport.deepInsight.source,
+            message: councilReport.deepInsight.text,
+            action: councilReport.deepInsight.recommendation
+        });
+    }
+    
+    // Convertir question socratique
+    if (councilReport.socraticQuestion) {
+        questions.unshift({
+            id: 'socratic',
+            text: councilReport.socraticQuestion.question,
+            followUp: councilReport.socraticQuestion.followUp,
+            isSocratic: true
+        });
+    }
+    
+    // Questions quotidiennes par défaut (rotation)
+    const dailyQuestions = [
+        { id: 'day_goal', text: 'Quel est ton objectif principal aujourd\'hui ?', options: null },
+        { id: 'energy_source', text: 'Qu\'est-ce qui t\'a donné de l\'énergie récemment ?', options: ['Sport', 'Sommeil', 'Alimentation', 'Social', 'Autre'] },
+        { id: 'blocker', text: 'Qu\'est-ce qui te bloque en ce moment ?', options: ['Temps', 'Énergie', 'Motivation', 'Clarté', 'Rien'] },
+        { id: 'gratitude', text: 'Pour quoi es-tu reconnaissant aujourd\'hui ?', options: null },
+        { id: 'improvement', text: 'Qu\'est-ce que tu aurais pu mieux faire hier ?', options: null },
+        { id: 'priority', text: 'Si tu ne devais faire qu\'une chose aujourd\'hui, ce serait ?', options: null },
+        { id: 'stress', text: 'Ton niveau de stress actuel ?', options: ['Zen', 'Léger', 'Modéré', 'Élevé', 'Critique'] }
+    ];
+    const dayOfWeek = new Date().getDay();
+    if (questions.length === 0 || !questions.some(q => q.isSocratic)) {
+        questions.push(dailyQuestions[dayOfWeek % dailyQuestions.length]);
     }
     
     // Analyse poids (tendance)
@@ -1097,7 +2226,6 @@ const analyzeAllData = (data) => {
         });
         
         const muscuCount = thisWeek.filter(l => l.type === 'Muscu').length;
-        const cardioCount = thisWeek.filter(l => l.type === 'Cardio').length;
         
         if (muscuCount < 3) {
             insights.push({
@@ -1120,34 +2248,7 @@ const analyzeAllData = (data) => {
         }
     }
     
-    // Analyse check-ins (tendance humeur/énergie)
-    if (checkins?.length >= 3) {
-        const recent = checkins.slice(-7);
-        const avgEnergy = recent.reduce((sum, c) => sum + (c.energy || 3), 0) / recent.length;
-        const avgMood = recent.reduce((sum, c) => sum + (c.mood || 3), 0) / recent.length;
-        
-        if (avgEnergy < 2.5) {
-            insights.push({
-                type: 'warning',
-                category: 'wellbeing',
-                title: 'Énergie en baisse',
-                message: 'Ta moyenne d\'énergie est basse ces derniers jours.',
-                action: 'Vérifie ton sommeil, nutrition et stress.'
-            });
-        }
-        
-        if (avgMood < 2.5) {
-            insights.push({
-                type: 'warning',
-                category: 'wellbeing',
-                title: 'Moral en baisse',
-                message: 'Ton humeur semble impactée récemment.',
-                action: 'Prends du temps pour toi.'
-            });
-        }
-    }
-    
-    return { insights, questions };
+    return { insights, questions, councilReport, morningBriefing, MorningCoach };
 };
 
 const EXPENSE_CATEGORIES = [
@@ -4890,9 +5991,17 @@ const Dashboard = ({ setView, userId }) => {
     const [dailyCheckins, setDailyCheckins] = useLocalStorage(`titan_checkins_${userId}`, {});
     const [supplementLogs, setSupplementLogs] = useLocalStorage(`titan_supplements_${userId}`, {});
     const [workoutLogs] = useLocalStorage(`titan_workouts_${userId}`, []);
+    const [tasks, setTasks] = useLocalStorage(`titan_tasks_${userId}`, []);
+    const [transactions] = useLocalStorage(`titan_transactions_${userId}`, []);
     const [showAiQuestion, setShowAiQuestion] = useState(false);
     const [questionAnswer, setQuestionAnswer] = useState('');
     const [aiNotes, setAiNotes] = useLocalStorage(`titan_ai_notes_${userId}`, []);
+    
+    // Morning Coach States
+    const [coachStep, setCoachStep] = useState('greeting'); // greeting, followup, recommendations, done
+    const [coachDismissed, setCoachDismissed] = useLocalStorage(`titan_coach_dismissed_${userId}`, null);
+    const [selectedOption, setSelectedOption] = useState(null);
+    const [selectedAnswer, setSelectedAnswer] = useState(null);
     
     const todayStr = new Date().toISOString().split('T')[0];
     const todayCheckin = dailyCheckins[todayStr] || {};
@@ -4916,16 +6025,31 @@ const Dashboard = ({ setView, userId }) => {
         }));
     };
     
-    // Analyse IA centralisée
+    // Analyse IA centralisée (TITAN COUNCIL)
     const aiAnalysis = useMemo(() => {
         return analyzeAllData({
             checkins: dailyCheckins,
             workoutLogs,
             biometrics,
             whoopData: null,
-            supplementLogs
+            supplementLogs,
+            tasks,
+            transactions
         });
-    }, [dailyCheckins, workoutLogs, biometrics, supplementLogs]);
+    }, [dailyCheckins, workoutLogs, biometrics, supplementLogs, tasks, transactions]);
+    
+    // Tâches du jour
+    const todayTasks = useMemo(() => {
+        return tasks.filter(t => t.due_date === todayStr).sort((a, b) => {
+            if (a.completed !== b.completed) return a.completed ? 1 : -1;
+            const priorityOrder = { high: 0, medium: 1, low: 2 };
+            return (priorityOrder[a.priority] || 1) - (priorityOrder[b.priority] || 1);
+        });
+    }, [tasks, todayStr]);
+    
+    const toggleTaskFromDashboard = (taskId) => {
+        setTasks(prev => prev.map(t => t.id === taskId ? { ...t, completed: !t.completed } : t));
+    };
     
     const addAiNote = (note) => {
         setAiNotes(prev => [...prev, { ...note, timestamp: new Date().toISOString() }]);
@@ -4979,13 +6103,323 @@ const Dashboard = ({ setView, userId }) => {
                 <div className="text-sm text-white italic">"{dailyQuote}"</div>
             </div>
             
+            {/* ═══════════════════════════════════════════════════════════════════════ */}
+            {/* MORNING COACH - Coaching Conversationnel Style Whoop */}
+            {/* ═══════════════════════════════════════════════════════════════════════ */}
+            {aiAnalysis.morningBriefing && coachDismissed !== todayStr && coachStep !== 'done' && (
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+                    {/* Header avec logo */}
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-white font-black text-xs">
+                                T
+                            </div>
+                            <span className="text-xs text-gray-400 font-medium">TITAN Coach • Bêta v10</span>
+                        </div>
+                        <button 
+                            onClick={() => { setCoachDismissed(todayStr); setCoachStep('done'); }}
+                            className="text-gray-500 hover:text-gray-300"
+                        >
+                            <X size={16}/>
+                        </button>
+                    </div>
+                    
+                    {/* ÉTAPE 1: Greeting */}
+                    {coachStep === 'greeting' && (
+                        <>
+                            <div className="mb-4">
+                                <p className="text-white text-lg font-medium mb-1">
+                                    {aiAnalysis.morningBriefing.greeting.greeting} 👋
+                                </p>
+                                <p className="text-gray-300">
+                                    {aiAnalysis.morningBriefing.greeting.mainMessage}
+                                </p>
+                                {aiAnalysis.morningBriefing.greeting.subMessage && (
+                                    <p className="text-gray-400 text-sm mt-1">
+                                        {aiAnalysis.morningBriefing.greeting.subMessage}
+                                    </p>
+                                )}
+                            </div>
+                            
+                            {/* Question principale */}
+                            <p className="text-white text-sm mb-3">Tu préfères qu'on commence par quoi ?</p>
+                            
+                            {/* Options */}
+                            <div className="space-y-2">
+                                {aiAnalysis.morningBriefing.options.filter(o => o.id !== 'skip').map((option) => (
+                                    <button
+                                        key={option.id}
+                                        onClick={() => {
+                                            if (option.type === 'skip') {
+                                                setCoachDismissed(todayStr);
+                                                setCoachStep('done');
+                                            } else {
+                                                setSelectedOption(option);
+                                                setCoachStep('followup');
+                                            }
+                                        }}
+                                        className="w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/30 transition-all text-left"
+                                    >
+                                        <div className="flex items-start gap-3">
+                                            <span className="text-xl">{option.icon}</span>
+                                            <div className="flex-1">
+                                                <div className="text-white font-medium text-sm">{option.label}</div>
+                                                <div className="text-gray-400 text-xs mt-0.5">→ {option.description}</div>
+                                            </div>
+                                            <ChevronRight size={16} className="text-gray-500 mt-1"/>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                            
+                            {/* Skip button */}
+                            <button 
+                                onClick={() => { setCoachDismissed(todayStr); setCoachStep('done'); }}
+                                className="w-full mt-3 py-2 text-gray-500 hover:text-gray-400 text-xs transition-colors"
+                            >
+                                Pas maintenant
+                            </button>
+                        </>
+                    )}
+                    
+                    {/* ÉTAPE 2: Follow-up (Explorer) */}
+                    {coachStep === 'followup' && selectedOption && (
+                        <>
+                            {(() => {
+                                const followUp = aiAnalysis.MorningCoach.generateFollowUp(selectedOption.id, aiAnalysis.morningBriefing.analysis);
+                                if (!followUp) {
+                                    setCoachStep('recommendations');
+                                    return null;
+                                }
+                                
+                                // Si c'est une action avec des recommandations directes
+                                if (followUp.recommendations) {
+                                    return (
+                                        <>
+                                            <div className="mb-4">
+                                                <button 
+                                                    onClick={() => { setCoachStep('greeting'); setSelectedOption(null); }}
+                                                    className="text-xs text-gray-500 hover:text-gray-400 mb-2"
+                                                >
+                                                    ← Retour
+                                                </button>
+                                                <h3 className="text-white font-bold text-lg">{followUp.title}</h3>
+                                            </div>
+                                            
+                                            <div className="space-y-2 mb-4">
+                                                {followUp.recommendations.map((rec, i) => (
+                                                    <div key={i} className={`flex items-start gap-3 p-3 rounded-xl ${
+                                                        rec.priority === 'high' ? 'bg-red-500/10 border border-red-500/20' :
+                                                        rec.priority === 'medium' ? 'bg-yellow-500/10 border border-yellow-500/20' :
+                                                        rec.time ? 'bg-cyan-500/10 border border-cyan-500/20' :
+                                                        'bg-white/5 border border-white/10'
+                                                    }`}>
+                                                        <span className="text-lg">{rec.icon}</span>
+                                                        <div className="flex-1">
+                                                            {rec.time && <span className="text-xs text-cyan-400 font-medium">{rec.time}</span>}
+                                                            <p className="text-white text-sm">{rec.action}</p>
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            
+                                            {followUp.targetBedtime && (
+                                                <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 mb-4">
+                                                    <p className="text-white text-sm text-center">
+                                                        🎯 Objectif coucher ce soir : <span className="font-bold">{followUp.targetBedtime}</span>
+                                                    </p>
+                                                </div>
+                                            )}
+                                            
+                                            <button 
+                                                onClick={() => { setCoachDismissed(todayStr); setCoachStep('done'); }}
+                                                className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-sm transition-all"
+                                            >
+                                                C'est noté ! 👍
+                                            </button>
+                                        </>
+                                    );
+                                }
+                                
+                                // Si c'est une exploration avec des questions
+                                return (
+                                    <>
+                                        <button 
+                                            onClick={() => { setCoachStep('greeting'); setSelectedOption(null); }}
+                                            className="text-xs text-gray-500 hover:text-gray-400 mb-3"
+                                        >
+                                            ← Retour
+                                        </button>
+                                        
+                                        <p className="text-white font-medium mb-4">{followUp.question}</p>
+                                        
+                                        <div className="grid grid-cols-2 gap-2 mb-4">
+                                            {followUp.options.map((opt) => (
+                                                <button
+                                                    key={opt.id}
+                                                    onClick={() => {
+                                                        setSelectedAnswer(opt);
+                                                        setCoachStep('recommendations');
+                                                    }}
+                                                    className={`p-3 rounded-xl text-sm transition-all ${
+                                                        selectedAnswer?.id === opt.id 
+                                                            ? 'bg-cyan-500 text-white' 
+                                                            : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10'
+                                                    }`}
+                                                >
+                                                    {opt.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </>
+                                );
+                            })()}
+                        </>
+                    )}
+                    
+                    {/* ÉTAPE 3: Recommandations personnalisées */}
+                    {coachStep === 'recommendations' && selectedOption && selectedAnswer && (
+                        <>
+                            <button 
+                                onClick={() => { setCoachStep('followup'); setSelectedAnswer(null); }}
+                                className="text-xs text-gray-500 hover:text-gray-400 mb-3"
+                            >
+                                ← Retour
+                            </button>
+                            
+                            <div className="mb-4">
+                                <p className="text-white font-medium mb-2">
+                                    💡 Ce qu'il faut savoir sur "{selectedAnswer.label.replace(/^[^\s]+\s/, '')}"
+                                </p>
+                                
+                                {selectedAnswer.impact && (
+                                    <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 mb-3">
+                                        <p className="text-yellow-300 text-sm">{selectedAnswer.impact}</p>
+                                    </div>
+                                )}
+                                
+                                <div className="space-y-2">
+                                    {aiAnalysis.MorningCoach.generateRecommendations(
+                                        selectedOption.id, 
+                                        selectedAnswer.id, 
+                                        aiAnalysis.morningBriefing.analysis
+                                    ).map((rec, i) => (
+                                        <div key={i} className={`p-3 rounded-xl ${
+                                            rec.startsWith('💡') ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-white/5 border border-white/10'
+                                        }`}>
+                                            <p className="text-gray-300 text-sm">{rec}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                            
+                            <button 
+                                onClick={() => { 
+                                    // Sauvegarder la réponse
+                                    setAiNotes(prev => [...prev, {
+                                        type: 'coach_insight',
+                                        option: selectedOption.id,
+                                        answer: selectedAnswer.id,
+                                        timestamp: new Date().toISOString()
+                                    }]);
+                                    setCoachDismissed(todayStr); 
+                                    setCoachStep('done'); 
+                                }}
+                                className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-sm transition-all"
+                            >
+                                Merci, j'ai compris ! 🙌
+                            </button>
+                        </>
+                    )}
+                </div>
+            )}
+            
             {/* WHOOP WIDGET */}
             <WhoopWidget userId={userId} />
             
-            {/* AI INSIGHTS */}
+            {/* ═══════════════════════════════════════════════════════════════════════ */}
+            {/* TITAN AI COUNCIL - RAPPORT SYSTÈME */}
+            {/* ═══════════════════════════════════════════════════════════════════════ */}
+            
+            {aiAnalysis.councilReport && (
+                <>
+                    {/* ÉTAT DU SYSTÈME */}
+                    <div className={`p-4 rounded-xl border-2 ${
+                        aiAnalysis.councilReport.ddaLevel === 'peak' ? 'border-green-500/50 bg-gradient-to-r from-green-500/10 to-emerald-500/10' :
+                        aiAnalysis.councilReport.ddaLevel === 'moderate' ? 'border-blue-500/50 bg-gradient-to-r from-blue-500/10 to-cyan-500/10' :
+                        'border-orange-500/50 bg-gradient-to-r from-orange-500/10 to-red-500/10'
+                    }`}>
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <div className={`w-3 h-3 rounded-full animate-pulse ${
+                                    aiAnalysis.councilReport.ddaLevel === 'peak' ? 'bg-green-500' :
+                                    aiAnalysis.councilReport.ddaLevel === 'moderate' ? 'bg-blue-500' : 'bg-orange-500'
+                                }`}/>
+                                <span className="text-xs font-bold text-gray-400">📊 ÉTAT DU SYSTÈME</span>
+                            </div>
+                            <span className={`text-lg font-black ${
+                                aiAnalysis.councilReport.ddaLevel === 'peak' ? 'text-green-400' :
+                                aiAnalysis.councilReport.ddaLevel === 'moderate' ? 'text-blue-400' : 'text-orange-400'
+                            }`}>{aiAnalysis.councilReport.flowScore}%</span>
+                        </div>
+                        <div className="text-white font-bold mb-1">
+                            {aiAnalysis.councilReport.ddaLevel === 'peak' ? '🚀' : aiAnalysis.councilReport.ddaLevel === 'moderate' ? '⚡' : '🔋'} {aiAnalysis.councilReport.ddaMessage}
+                        </div>
+                        <div className="text-xs text-gray-400">{aiAnalysis.councilReport.systemState}</div>
+                        {/* Progress bar */}
+                        <div className="mt-2 h-2 bg-white/10 rounded-full overflow-hidden">
+                            <div className={`h-full rounded-full transition-all ${
+                                aiAnalysis.councilReport.ddaLevel === 'peak' ? 'bg-gradient-to-r from-green-500 to-emerald-400' :
+                                aiAnalysis.councilReport.ddaLevel === 'moderate' ? 'bg-gradient-to-r from-blue-500 to-cyan-400' :
+                                'bg-gradient-to-r from-orange-500 to-yellow-400'
+                            }`} style={{ width: `${aiAnalysis.councilReport.flowScore}%` }}/>
+                        </div>
+                    </div>
+                    
+                    {/* INSIGHT PROFOND */}
+                    {aiAnalysis.councilReport.deepInsight && (
+                        <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5">
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="text-xs font-bold text-purple-400">{aiAnalysis.councilReport.deepInsight.source}</span>
+                            </div>
+                            <p className="text-sm text-white mb-1">{aiAnalysis.councilReport.deepInsight.text}</p>
+                            <p className="text-xs text-gray-400 italic">→ {aiAnalysis.councilReport.deepInsight.recommendation}</p>
+                        </div>
+                    )}
+                    
+                    {/* PROTOCOLE D'OPTIMISATION */}
+                    <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
+                        <div className="text-xs font-bold text-gray-400 mb-3">🛠️ PROTOCOLE D'OPTIMISATION</div>
+                        <div className="space-y-2">
+                            <div className="flex items-start gap-2">
+                                <span className="text-lg">🏋️</span>
+                                <div><span className="text-xs text-gray-500">CORPS</span><p className="text-sm text-white">{aiAnalysis.councilReport.protocol.physiological}</p></div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <span className="text-lg">🧠</span>
+                                <div><span className="text-xs text-gray-500">TÊTE</span><p className="text-sm text-white">{aiAnalysis.councilReport.protocol.cognitive}</p></div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <span className="text-lg">🎯</span>
+                                <div><span className="text-xs text-gray-500">ENV</span><p className="text-sm text-white">{aiAnalysis.councilReport.protocol.structural}</p></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* SIMULATION FUTURE */}
+                    <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500/10 to-purple-500/10 border border-indigo-500/20">
+                        <div className="flex items-center gap-2">
+                            <span className="text-lg">🔮</span>
+                            <span className="text-sm text-white">{aiAnalysis.councilReport.futureSimulation}</span>
+                        </div>
+                    </div>
+                </>
+            )}
+            
+            {/* AI INSIGHTS (autres alertes) */}
             {aiAnalysis.insights.length > 0 && (
                 <div className="space-y-2">
-                    {aiAnalysis.insights.slice(0, 2).map((insight, i) => (
+                    {aiAnalysis.insights.slice(0, 3).map((insight, i) => (
                         <div 
                             key={i}
                             className={`p-3 rounded-xl border ${
@@ -5015,28 +6449,75 @@ const Dashboard = ({ setView, userId }) => {
                 </div>
             )}
             
+            {/* TÂCHES DU JOUR */}
+            {todayTasks.length > 0 && (
+                <div className="p-4 rounded-xl border border-white/10 bg-white/[0.02]">
+                    <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-bold text-white">✅ Tâches du jour</span>
+                        <span className="text-xs text-gray-500">{todayTasks.filter(t => t.completed).length}/{todayTasks.length}</span>
+                    </div>
+                    <div className="space-y-2">
+                        {todayTasks.slice(0, 4).map(task => (
+                            <div key={task.id} className="flex items-center gap-3">
+                                <button 
+                                    onClick={() => toggleTaskFromDashboard(task.id)}
+                                    className={`w-5 h-5 rounded-md flex items-center justify-center transition-all ${
+                                        task.completed ? 'bg-emerald-500' : 'border-2 border-gray-600 hover:border-emerald-500'
+                                    }`}
+                                >
+                                    {task.completed && <Check size={12} className="text-white"/>}
+                                </button>
+                                <span className={`flex-1 text-sm ${task.completed ? 'text-gray-500 line-through' : 'text-white'}`}>
+                                    {task.priority === 'high' && '🔥 '}{task.title}
+                                </span>
+                            </div>
+                        ))}
+                        {todayTasks.length > 4 && (
+                            <button onClick={() => setView('tasks')} className="text-xs text-indigo-400 hover:text-indigo-300">
+                                +{todayTasks.length - 4} autres →
+                            </button>
+                        )}
+                    </div>
+                </div>
+            )}
+            
             {/* AI QUESTION */}
             {aiAnalysis.questions.length > 0 && !showAiQuestion && (
                 <button
                     onClick={() => setShowAiQuestion(true)}
-                    className="w-full p-3 rounded-xl border border-purple-500/30 bg-purple-500/10 flex items-center gap-3"
+                    className={`w-full p-3 rounded-xl border flex items-center gap-3 ${
+                        aiAnalysis.questions[0].isSocratic 
+                            ? 'border-red-500/30 bg-red-500/10' 
+                            : 'border-purple-500/30 bg-purple-500/10'
+                    }`}
                 >
-                    <MessageCircle size={18} className="text-purple-400" />
+                    <MessageCircle size={18} className={aiAnalysis.questions[0].isSocratic ? 'text-red-400' : 'text-purple-400'} />
                     <div className="flex-1 text-left">
-                        <div className="text-sm font-medium text-white">Question du jour</div>
+                        <div className="text-sm font-medium text-white">
+                            {aiAnalysis.questions[0].isSocratic ? '⚠️ Deep Dive' : 'Question du jour'}
+                        </div>
                         <div className="text-xs text-gray-400 truncate">{aiAnalysis.questions[0].text}</div>
                     </div>
-                    <ChevronRight size={16} className="text-purple-400" />
+                    <ChevronRight size={16} className={aiAnalysis.questions[0].isSocratic ? 'text-red-400' : 'text-purple-400'} />
                 </button>
             )}
             
             {showAiQuestion && aiAnalysis.questions.length > 0 && (
-                <div className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5">
+                <div className={`p-4 rounded-xl border ${
+                    aiAnalysis.questions[0].isSocratic 
+                        ? 'border-red-500/30 bg-red-500/5' 
+                        : 'border-purple-500/30 bg-purple-500/5'
+                }`}>
                     <div className="flex items-center gap-2 mb-3">
-                        <Brain size={16} className="text-purple-400" />
-                        <span className="text-xs font-bold text-purple-400">TITAN veut comprendre</span>
+                        <Brain size={16} className={aiAnalysis.questions[0].isSocratic ? 'text-red-400' : 'text-purple-400'} />
+                        <span className={`text-xs font-bold ${aiAnalysis.questions[0].isSocratic ? 'text-red-400' : 'text-purple-400'}`}>
+                            {aiAnalysis.questions[0].isSocratic ? '⚠️ INTERROGATOIRE SOCRATIQUE' : 'TITAN veut comprendre'}
+                        </span>
                     </div>
                     <p className="text-sm text-white mb-3">{aiAnalysis.questions[0].text}</p>
+                    {aiAnalysis.questions[0].followUp && (
+                        <p className="text-xs text-gray-400 mb-3 italic">{aiAnalysis.questions[0].followUp}</p>
+                    )}
                     {aiAnalysis.questions[0].options ? (
                         <div className="flex flex-wrap gap-2 mb-3">
                             {aiAnalysis.questions[0].options.map(opt => (
@@ -5045,7 +6526,7 @@ const Dashboard = ({ setView, userId }) => {
                                     onClick={() => setQuestionAnswer(opt)}
                                     className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
                                         questionAnswer === opt 
-                                            ? 'bg-purple-500 text-white' 
+                                            ? aiAnalysis.questions[0].isSocratic ? 'bg-red-500 text-white' : 'bg-purple-500 text-white'
                                             : 'bg-white/5 text-gray-400 hover:bg-white/10'
                                     }`}
                                 >
@@ -5054,12 +6535,12 @@ const Dashboard = ({ setView, userId }) => {
                             ))}
                         </div>
                     ) : (
-                        <input
-                            type="text"
+                        <textarea
                             value={questionAnswer}
                             onChange={e => setQuestionAnswer(e.target.value)}
-                            placeholder="Ta réponse..."
-                            className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm mb-3"
+                            placeholder={aiAnalysis.questions[0].isSocratic ? "Réponds honnêtement..." : "Ta réponse..."}
+                            className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm mb-3 resize-none"
+                            rows={3}
                         />
                     )}
                     <div className="flex gap-2">
@@ -5072,7 +6553,9 @@ const Dashboard = ({ setView, userId }) => {
                         <button 
                             onClick={submitQuestionAnswer}
                             disabled={!questionAnswer}
-                            className="flex-1 py-2 bg-purple-600 text-white rounded-lg text-xs font-bold disabled:opacity-50"
+                            className={`flex-1 py-2 text-white rounded-lg text-xs font-bold disabled:opacity-50 ${
+                                aiAnalysis.questions[0].isSocratic ? 'bg-red-600' : 'bg-purple-600'
+                            }`}
                         >
                             Enregistrer
                         </button>
@@ -5147,6 +6630,113 @@ const Dashboard = ({ setView, userId }) => {
                     ))}
                 </div>
             </div>
+            
+            {/* ═══════════════════════════════════════════════════════════════════════ */}
+            {/* MÉTA-APPRENTISSAGE - Ce que TITAN a appris sur toi */}
+            {/* ═══════════════════════════════════════════════════════════════════════ */}
+            
+            {aiAnalysis.councilReport?.meta && (
+                <>
+                    {/* Règles Apprises */}
+                    {aiAnalysis.councilReport.meta.learnedRules?.length > 0 && (
+                        <div className="p-4 rounded-xl border-l-4 border-l-purple-500 bg-purple-500/5">
+                            <div className="flex items-center gap-2 mb-3">
+                                <BookOpen className="text-purple-400" size={16}/>
+                                <span className="text-xs font-bold text-purple-400">📚 RÈGLES APPRISES SUR TOI</span>
+                            </div>
+                            <div className="space-y-2">
+                                {aiAnalysis.councilReport.meta.learnedRules.slice(0, 3).map((rule, i) => (
+                                    <div key={i} className="flex items-start gap-2 text-sm">
+                                        <div className={`w-2 h-2 rounded-full mt-1.5 ${
+                                            rule.confidence >= 80 ? 'bg-green-500' : 
+                                            rule.confidence >= 60 ? 'bg-yellow-500' : 'bg-orange-500'
+                                        }`}/>
+                                        <div>
+                                            <p className="text-white">{rule.rule}</p>
+                                            <p className="text-xs text-gray-500">Confiance: {rule.confidence}%</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Patterns Détectés */}
+                    {(aiAnalysis.councilReport.meta.cycles?.bestDays?.length > 0 || aiAnalysis.councilReport.meta.implicitPreferences?.bestMoodAfter?.length > 0) && (
+                        <div className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5">
+                            <div className="flex items-center gap-2 mb-3">
+                                <Activity className="text-cyan-400" size={16}/>
+                                <span className="text-xs font-bold text-cyan-400">🔄 TES PATTERNS DÉTECTÉS</span>
+                            </div>
+                            <div className="space-y-2 text-sm">
+                                {aiAnalysis.councilReport.meta.cycles?.bestDays?.length > 0 && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-green-400">✓</span>
+                                        <span className="text-gray-300">
+                                            Meilleurs jours : <span className="text-white font-medium capitalize">{aiAnalysis.councilReport.meta.cycles.bestDays.join(', ')}</span>
+                                        </span>
+                                    </div>
+                                )}
+                                {aiAnalysis.councilReport.meta.cycles?.worstDays?.length > 0 && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-red-400">!</span>
+                                        <span className="text-gray-300">
+                                            Jours difficiles : <span className="text-white font-medium capitalize">{aiAnalysis.councilReport.meta.cycles.worstDays.join(', ')}</span>
+                                        </span>
+                                    </div>
+                                )}
+                                {aiAnalysis.councilReport.meta.implicitPreferences?.bestMoodAfter?.length > 0 && (
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-yellow-400">★</span>
+                                        <span className="text-gray-300">
+                                            Boost humeur : <span className="text-white font-medium">{aiAnalysis.councilReport.meta.implicitPreferences.bestMoodAfter.join(', ')}</span>
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Qualité des données */}
+                    {aiAnalysis.councilReport.meta.dataQuality && (
+                        <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-xs font-bold text-gray-400">📊 QUALITÉ DES DONNÉES</span>
+                                <span className="text-[10px] text-gray-500">Plus de data = IA + intelligente</span>
+                            </div>
+                            <div className="grid grid-cols-4 gap-2 text-center">
+                                <div>
+                                    <div className="text-lg font-bold text-white">{aiAnalysis.councilReport.meta.dataQuality.checkinsCount}</div>
+                                    <div className="text-[10px] text-gray-500">Check-ins</div>
+                                </div>
+                                <div>
+                                    <div className="text-lg font-bold text-white">{aiAnalysis.councilReport.meta.dataQuality.workoutsCount}</div>
+                                    <div className="text-[10px] text-gray-500">Workouts</div>
+                                </div>
+                                <div>
+                                    <div className="text-lg font-bold text-white">{aiAnalysis.councilReport.meta.dataQuality.tasksCount}</div>
+                                    <div className="text-[10px] text-gray-500">Tâches</div>
+                                </div>
+                                <div>
+                                    <div className="text-lg font-bold text-white">{aiAnalysis.councilReport.meta.dataQuality.transactionsCount}</div>
+                                    <div className="text-[10px] text-gray-500">€</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    
+                    {/* Suggestions d'amélioration (IA Product Manager) */}
+                    {aiAnalysis.councilReport.meta.appSuggestions?.filter(s => s.priority === 'high').length > 0 && (
+                        <div className="p-3 rounded-xl border-l-4 border-l-orange-500 bg-orange-500/5">
+                            <div className="flex items-center gap-2 mb-2">
+                                <Wrench className="text-orange-400" size={14}/>
+                                <span className="text-xs font-bold text-orange-400">💡 SUGGESTION D'AMÉLIORATION</span>
+                            </div>
+                            <p className="text-sm text-gray-300">{aiAnalysis.councilReport.meta.appSuggestions.find(s => s.priority === 'high')?.reason}</p>
+                        </div>
+                    )}
+                </>
+            )}
             
             {/* Biometric Reminder */}
             {(needsWeighIn || isMonday) && (
