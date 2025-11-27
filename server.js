@@ -12,8 +12,8 @@ app.use(cors());
 app.use(express.json());
 
 // Configuration Whoop
-const WHOOP_CLIENT_ID = '168b9cac-6454-43e8-aa4a-b1a85937b533';
-const WHOOP_CLIENT_SECRET = '99a10f9a930c122ff460915082b91a23ad5ab35ad8daca554d233d8077b98962';
+const WHOOP_CLIENT_ID = 'e38dc3c1-9ff6-454b-bf05-f19cae9cd20a';
+const WHOOP_CLIENT_SECRET = '7fa1859710a7f5b4375049d8cde3d66e422059f3a65415aec3b20ecea4d145ca';
 const BASE_URL = process.env.RAILWAY_PUBLIC_DOMAIN 
     ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}`
     : 'https://titan-os-production.up.railway.app';
