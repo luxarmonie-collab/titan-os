@@ -1,6 +1,7 @@
 {
   "name": "titan-os",
   "version": "10.0.0",
+  "type": "module",
   "description": "TITAN.OS - Personal Life Operating System with Whoop Integration",
   "main": "server.js",
   "scripts": {
