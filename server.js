@@ -37,7 +37,8 @@ app.get('/api/health', (req, res) => {
 // Step 1: Initiate OAuth - redirect to Whoop
 app.get('/api/whoop/auth', (req, res) => {
     const userId = req.query.user_id || 'default';
-    const scopes = 'read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement';
+  const scopes = 'offline read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement';
+
     
     const authUrl = `https://api.prod.whoop.com/oauth/oauth2/auth?` +
         `client_id=${WHOOP_CLIENT_ID}` +
