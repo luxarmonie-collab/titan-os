@@ -2084,9 +2084,6 @@ const analyzeAllData = (data) => {
     const morningBriefing = MorningCoach.generateMorningBriefing(data);
     
     // Analyse Whoop (garder l'existant)
-    const councilReport = TitanAICouncil.generateCouncilReport(data);
-    
-    // Analyse Whoop (garder l'existant)
     if (whoopData?.recovery) {
         if (whoopData.recovery < 33) {
             insights.push({
