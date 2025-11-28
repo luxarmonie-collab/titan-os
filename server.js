@@ -227,31 +227,17 @@ app.get('/api/whoop/data', async (req, res) => {
             profile: profileRes.status
         });
         
-        // If any request failed, log the error
-        if (!recoveryRes.ok || !cycleRes.ok || !sleepRes.ok || !profileRes.ok) {
-            const errorTexts = await Promise.all([
-                !recoveryRes.ok ? recoveryRes.text() : Promise.resolve('ok'),
-                !cycleRes.ok ? cycleRes.text() : Promise.resolve('ok'),
-                !sleepRes.ok ? sleepRes.text() : Promise.resolve('ok'),
-                !profileRes.ok ? profileRes.text() : Promise.resolve('ok'),
-            ]);
-            console.error('Whoop API errors:', errorTexts);
-            
-            // If 401, token might be invalid
-            if (recoveryRes.status === 401 || cycleRes.status === 401) {
-                await supabase.from('whoop_tokens').delete().eq('user_id', userId);
-                return res.status(401).json({ error: 'Token invalid, please reconnect', connected: false });
-            }
-            
-            return res.status(500).json({ error: 'Whoop API error', details: errorTexts, connected: true });
+        // If 401, token is invalid
+        if (recoveryRes.status === 401 || cycleRes.status === 401 || profileRes.status === 401) {
+            await supabase.from('whoop_tokens').delete().eq('user_id', userId);
+            return res.status(401).json({ error: 'Token invalid, please reconnect', connected: false });
         }
         
-        const [recovery, cycle, sleep, profile] = await Promise.all([
-            recoveryRes.json(),
-            cycleRes.json(),
-            sleepRes.json(),
-            profileRes.json(),
-        ]);
+        // Parse responses (404 = no data, which is OK)
+        const recovery = recoveryRes.ok ? await recoveryRes.json() : { records: [] };
+        const cycle = cycleRes.ok ? await cycleRes.json() : { records: [] };
+        const sleep = sleepRes.ok ? await sleepRes.json() : { records: [] };
+        const profile = profileRes.ok ? await profileRes.json() : {};
         
         console.log('Whoop API responses:', { 
             recovery: recovery.records?.length || 0, 
