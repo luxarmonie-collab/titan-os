@@ -40,12 +40,15 @@ app.get('/api/whoop/auth', (req, res) => {
     // AJOUT DU SCOPE OFFLINE POUR LE REFRESH TOKEN
     const scopes = 'offline read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement';
     
+    // State must be at least 8 characters per Whoop docs
+    const state = `titan_${userId}`.padEnd(8, '_');
+    
     const authUrl = `https://api.prod.whoop.com/oauth/oauth2/auth?` +
         `client_id=${WHOOP_CLIENT_ID}` +
         `&redirect_uri=${encodeURIComponent(WHOOP_REDIRECT_URI)}` +
         `&response_type=code` +
         `&scope=${encodeURIComponent(scopes)}` +
-        `&state=${userId}`;
+        `&state=${encodeURIComponent(state)}`;
     
     console.log('Redirecting to Whoop auth:', authUrl);
     res.redirect(authUrl);
@@ -53,9 +56,12 @@ app.get('/api/whoop/auth', (req, res) => {
 
 // Step 2: OAuth Callback - exchange code for tokens
 app.get('/api/whoop/callback', async (req, res) => {
-    const { code, state: userId, error: authError } = req.query;
+    const { code, state, error: authError } = req.query;
     
-    console.log('Callback received:', { code: !!code, userId, error: authError });
+    // Extract userId from state (format: titan_userId)
+    const userId = state ? state.replace('titan_', '').replace(/_+$/, '') : 'default';
+    
+    console.log('Callback received:', { code: !!code, state, userId, error: authError });
     
     if (authError) {
         return res.redirect(`${BASE_URL}?whoop_error=${authError}`);
