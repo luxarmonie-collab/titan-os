@@ -11,7 +11,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuration Whoop
+// Configuration Whoop - NOUVEAUX CREDENTIALS
 const WHOOP_CLIENT_ID = 'e38dc3c1-9ff6-454b-bf05-f19cae9cd20a';
 const WHOOP_CLIENT_SECRET = '7fa1859710a7f5b4375049d8cde3d66e422059f3a65415aec3b20ecea4d145ca';
 const BASE_URL = process.env.RAILWAY_PUBLIC_DOMAIN 
@@ -37,8 +37,8 @@ app.get('/api/health', (req, res) => {
 // Step 1: Initiate OAuth - redirect to Whoop
 app.get('/api/whoop/auth', (req, res) => {
     const userId = req.query.user_id || 'default';
-  const scopes = 'offline read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement';
-
+    // AJOUT DU SCOPE OFFLINE POUR LE REFRESH TOKEN
+    const scopes = 'offline read:recovery read:cycles read:sleep read:workout read:profile read:body_measurement';
     
     const authUrl = `https://api.prod.whoop.com/oauth/oauth2/auth?` +
         `client_id=${WHOOP_CLIENT_ID}` +
@@ -82,7 +82,7 @@ app.get('/api/whoop/callback', async (req, res) => {
         });
         
         const tokens = await tokenResponse.json();
-        console.log('Token response:', { success: !!tokens.access_token, error: tokens.error });
+        console.log('Token response:', { success: !!tokens.access_token, has_refresh: !!tokens.refresh_token, error: tokens.error });
         
         if (tokens.error) {
             console.error('Token error:', tokens);
@@ -108,7 +108,7 @@ app.get('/api/whoop/callback', async (req, res) => {
             return res.redirect(`${BASE_URL}?whoop_error=db_error`);
         }
         
-        console.log('Whoop connected successfully for user:', userId);
+        console.log('Whoop connected successfully for user:', userId, 'with refresh_token:', !!tokens.refresh_token);
         res.redirect(`${BASE_URL}?whoop_connected=true`);
         
     } catch (error) {
@@ -163,6 +163,12 @@ app.get('/api/whoop/data', async (req, res) => {
         if (new Date(tokenData.expires_at) < new Date()) {
             console.log('Token expired, refreshing...');
             
+            if (!tokenData.refresh_token) {
+                console.error('No refresh token available');
+                await supabase.from('whoop_tokens').delete().eq('user_id', userId);
+                return res.status(401).json({ error: 'No refresh token, please reconnect', connected: false });
+            }
+            
             const refreshResponse = await fetch('https://api.prod.whoop.com/oauth/oauth2/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -171,6 +177,7 @@ app.get('/api/whoop/data', async (req, res) => {
                     refresh_token: tokenData.refresh_token,
                     client_id: WHOOP_CLIENT_ID,
                     client_secret: WHOOP_CLIENT_SECRET,
+                    scope: 'offline',
                 }),
             });
             
@@ -188,7 +195,7 @@ app.get('/api/whoop/data', async (req, res) => {
             // Update tokens in DB
             await supabase.from('whoop_tokens').update({
                 access_token: newTokens.access_token,
-                refresh_token: newTokens.refresh_token,
+                refresh_token: newTokens.refresh_token || tokenData.refresh_token,
                 expires_at: new Date(Date.now() + newTokens.expires_in * 1000).toISOString(),
                 updated_at: new Date().toISOString()
             }).eq('user_id', userId);
@@ -212,6 +219,13 @@ app.get('/api/whoop/data', async (req, res) => {
             sleepRes.json(),
             profileRes.json(),
         ]);
+        
+        console.log('Whoop API responses:', { 
+            recovery: recovery.records?.length || 0, 
+            cycle: cycle.records?.length || 0, 
+            sleep: sleep.records?.length || 0,
+            profile: !!profile.first_name 
+        });
         
         // Format response
         const latestRecovery = recovery.records?.[0];
