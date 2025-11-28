@@ -219,6 +219,33 @@ app.get('/api/whoop/data', async (req, res) => {
             fetch('https://api.prod.whoop.com/developer/v1/user/profile/basic', { headers }),
         ]);
         
+        // Check for HTTP errors
+        console.log('Whoop API status codes:', {
+            recovery: recoveryRes.status,
+            cycle: cycleRes.status,
+            sleep: sleepRes.status,
+            profile: profileRes.status
+        });
+        
+        // If any request failed, log the error
+        if (!recoveryRes.ok || !cycleRes.ok || !sleepRes.ok || !profileRes.ok) {
+            const errorTexts = await Promise.all([
+                !recoveryRes.ok ? recoveryRes.text() : Promise.resolve('ok'),
+                !cycleRes.ok ? cycleRes.text() : Promise.resolve('ok'),
+                !sleepRes.ok ? sleepRes.text() : Promise.resolve('ok'),
+                !profileRes.ok ? profileRes.text() : Promise.resolve('ok'),
+            ]);
+            console.error('Whoop API errors:', errorTexts);
+            
+            // If 401, token might be invalid
+            if (recoveryRes.status === 401 || cycleRes.status === 401) {
+                await supabase.from('whoop_tokens').delete().eq('user_id', userId);
+                return res.status(401).json({ error: 'Token invalid, please reconnect', connected: false });
+            }
+            
+            return res.status(500).json({ error: 'Whoop API error', details: errorTexts, connected: true });
+        }
+        
         const [recovery, cycle, sleep, profile] = await Promise.all([
             recoveryRes.json(),
             cycleRes.json(),
