@@ -1357,7 +1357,7 @@ const TitanAICouncil = {
     // SIMULATION MONTE-CARLO - Prédictions futures
     // ═══════════════════════════════════════════════════════════════════════════
     predictFuture: (data) => {
-        const { checkins, workoutLogs, tasks, transactions } = data;
+        const { checkins, workoutLogs, tasks, transactions, whoopData } = data;
         const predictions = [];
         const last7Days = TitanAICouncil.getLast(7);
         
