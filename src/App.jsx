@@ -9,7 +9,7 @@ import {
   CircleDollarSign, Timer, Zap, Star, Check, FileText, Film, Wine, Mic, Image,
   Award, User, MapPin, Clock3, Grape, Thermometer, Eye, Edit3, Trash2, Save,
   Search, Loader2, AlertCircle, MessageCircle, Cloud, CloudOff, RefreshCw,
-  ClipboardList, CalendarDays, Square, CheckSquare, StickyNote, Layers
+  ClipboardList, CalendarDays, Square, CheckSquare, StickyNote, Layers, Utensils
 } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -4516,32 +4516,78 @@ const FitnessCalendar = ({ onSelectDay, workoutLogs, addLog, removeLog }) => {
                             <div className="flex gap-3 items-center">
                                 {/* Quick checkbox for Musculation */}
                                 {d.type === 'Training' && d.seance && (
-                                    <button 
-                                        onClick={(e) => quickToggleMuscu(e, d, muscuLog)}
-                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                                            muscuLog 
-                                                ? 'bg-emerald-500 hover:bg-emerald-600' 
-                                                : 'bg-white/5 border-2 border-gray-600 hover:border-cyan-500'
-                                        }`}
-                                    >
-                                        {muscuLog ? <Check size={16} className="text-white"/> : <Dumbbell size={14} className="text-gray-500"/>}
-                                    </button>
+                                    <>
+                                        <button 
+                                            onClick={(e) => quickToggleMuscu(e, d, muscuLog)}
+                                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                                muscuLog 
+                                                    ? 'bg-emerald-500 hover:bg-emerald-600' 
+                                                    : 'bg-white/5 border-2 border-gray-600 hover:border-cyan-500'
+                                            }`}
+                                            title="J'ai fait ma séance"
+                                        >
+                                            {muscuLog ? <Check size={16} className="text-white"/> : <Dumbbell size={14} className="text-gray-500"/>}
+                                        </button>
+                                        {/* Bouton Skip */}
+                                        {!muscuLog && (
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    addLog({ 
+                                                        date: d.dateStr, 
+                                                        session: d.seance, 
+                                                        type: 'Muscu', 
+                                                        status: 'skipped',
+                                                        reason: 'Pas fait',
+                                                        timestamp: new Date().toISOString() 
+                                                    });
+                                                }}
+                                                className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border-2 border-dashed border-red-600/30 hover:border-red-500 transition-all"
+                                                title="Pas fait aujourd'hui"
+                                            >
+                                                <Ban size={14} className="text-red-500/70"/>
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                                 {/* Quick checkbox for Cardio (obligatoire ou optionnel) */}
                                 {(d.cardio || d.cardioOpt) && (
-                                    <button 
-                                        onClick={(e) => quickToggleCardio(e, d, cardioLog)}
-                                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                                            cardioLog 
-                                                ? 'bg-orange-500 hover:bg-orange-600' 
-                                                : d.cardioOpt && !d.cardio
-                                                    ? 'bg-white/5 border-2 border-dashed border-gray-600 hover:border-orange-500'
-                                                    : 'bg-white/5 border-2 border-gray-600 hover:border-orange-500'
-                                        }`}
-                                        title={d.cardioOpt && !d.cardio ? `${d.cardioOpt} (optionnel)` : 'Cardio'}
-                                    >
-                                        {cardioLog ? <Check size={16} className="text-white"/> : <Heart size={14} className={d.cardioOpt && !d.cardio ? "text-gray-600" : "text-gray-500"}/>}
-                                    </button>
+                                    <>
+                                        <button 
+                                            onClick={(e) => quickToggleCardio(e, d, cardioLog)}
+                                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                                                cardioLog 
+                                                    ? 'bg-orange-500 hover:bg-orange-600' 
+                                                    : d.cardioOpt && !d.cardio
+                                                        ? 'bg-white/5 border-2 border-dashed border-gray-600 hover:border-orange-500'
+                                                        : 'bg-white/5 border-2 border-gray-600 hover:border-orange-500'
+                                            }`}
+                                            title={d.cardioOpt && !d.cardio ? `${d.cardioOpt} (optionnel)` : 'Cardio'}
+                                        >
+                                            {cardioLog ? <Check size={16} className="text-white"/> : <Heart size={14} className={d.cardioOpt && !d.cardio ? "text-gray-600" : "text-gray-500"}/>}
+                                        </button>
+                                        {/* Bouton Skip cardio */}
+                                        {!cardioLog && d.cardio && (
+                                            <button 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    addLog({ 
+                                                        date: d.dateStr, 
+                                                        session: 'CARDIO', 
+                                                        type: 'Cardio',
+                                                        cardioType: d.cardio,
+                                                        status: 'skipped',
+                                                        reason: 'Pas fait',
+                                                        timestamp: new Date().toISOString() 
+                                                    });
+                                                }}
+                                                className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border-2 border-dashed border-red-600/30 hover:border-red-500 transition-all"
+                                                title="Cardio pas fait"
+                                            >
+                                                <Ban size={14} className="text-red-500/70"/>
+                                            </button>
+                                        )}
+                                    </>
                                 )}
                             </div>
                         </Card>
@@ -5367,8 +5413,16 @@ const TransactionForm = ({ initialData, onSubmit, onDelete }) => {
                 <label className="text-xs text-gray-500 uppercase block mb-2 font-semibold">Catégorie</label>
                 <div className="grid grid-cols-4 gap-2">
                     {EXPENSE_CATEGORIES.map(cat => { const CatIcon = cat.Icon; return (
-                        <button key={cat.id} onClick={() => setForm({...form, category: cat.id})} className={`p-3 rounded-xl ${form.category === cat.id ? 'ring-2 ring-yellow-500' : 'bg-white/5'}`} style={{backgroundColor: form.category === cat.id ? cat.color + '30' : ''}} title={cat.name}>
-                            <CatIcon size={18} style={{color: form.category === cat.id ? cat.color : '#6B7280'}} className="mx-auto" />
+                        <button 
+                            key={cat.id} 
+                            onClick={() => setForm({...form, category: cat.id})} 
+                            className={`p-3 rounded-xl flex flex-col items-center gap-1 ${form.category === cat.id ? 'ring-2 ring-yellow-500' : 'bg-white/5'}`} 
+                            style={{backgroundColor: form.category === cat.id ? cat.color + '30' : ''}}
+                        >
+                            <CatIcon size={18} style={{color: form.category === cat.id ? cat.color : '#6B7280'}} />
+                            <span className={`text-[10px] font-medium text-center ${form.category === cat.id ? 'text-white' : 'text-gray-500'}`}>
+                                {cat.name}
+                            </span>
                         </button>
                     ); })}
                 </div>
@@ -5394,6 +5448,173 @@ const TransactionForm = ({ initialData, onSubmit, onDelete }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // LIFESTYLE MODULE (Films & Vins)
 // ═══════════════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODULE REPAS - Planning hebdomadaire des repas
+// ═══════════════════════════════════════════════════════════════════════════════
+const MealsView = ({ userId }) => {
+    const [meals, setMeals] = useLocalStorage(`titan_meals_${userId}`, {});
+    const [weekOffset, setWeekOffset] = useState(0);
+    
+    // Générer les dates de la semaine
+    const getWeekDates = (offset = 0) => {
+        const today = new Date();
+        const currentDay = today.getDay();
+        const diff = today.getDate() - currentDay + (currentDay === 0 ? -6 : 1) + (offset * 7);
+        const monday = new Date(today.setDate(diff));
+        
+        const days = [];
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + i);
+            days.push({
+                date: date.toISOString().split('T')[0],
+                dayName: ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'][date.getDay()],
+                dayNum: date.getDate(),
+                month: date.toLocaleString('fr-FR', { month: 'short' })
+            });
+        }
+        return days;
+    };
+    
+    const weekDays = getWeekDates(weekOffset);
+    const weekNumber = Math.ceil((new Date(weekDays[0].date).getDate() + 6 - new Date(weekDays[0].date).getDay() + 1) / 7);
+    
+    const mealPeriods = [
+        { id: 'matin', label: 'Matin', icon: '🌅', color: 'bg-amber-500/10 border-amber-500/30' },
+        { id: 'midi', label: 'Midi', icon: '☀️', color: 'bg-orange-500/10 border-orange-500/30' },
+        { id: 'gouter', label: 'Goûter', icon: '🍪', color: 'bg-yellow-500/10 border-yellow-500/30' },
+        { id: 'soir', label: 'Soir', icon: '🌙', color: 'bg-indigo-500/10 border-indigo-500/30' }
+    ];
+    
+    const updateMeal = (date, period, value) => {
+        setMeals(prev => ({
+            ...prev,
+            [date]: {
+                ...prev[date],
+                [period]: value
+            }
+        }));
+    };
+    
+    const getMeal = (date, period) => {
+        return meals[date]?.[period] || '';
+    };
+    
+    const clearWeek = () => {
+        if (confirm('Effacer tous les repas de cette semaine ?')) {
+            const newMeals = { ...meals };
+            weekDays.forEach(day => {
+                delete newMeals[day.date];
+            });
+            setMeals(newMeals);
+        }
+    };
+    
+    const duplicateLastWeek = () => {
+        const lastWeekDays = getWeekDates(weekOffset - 1);
+        const newMeals = { ...meals };
+        weekDays.forEach((day, idx) => {
+            const lastWeekDate = lastWeekDays[idx].date;
+            if (meals[lastWeekDate]) {
+                newMeals[day.date] = { ...meals[lastWeekDate] };
+            }
+        });
+        setMeals(newMeals);
+    };
+    
+    return (
+        <div className="space-y-4 p-4">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-2xl font-black text-white">🍽️ Mes Repas</h1>
+                    <p className="text-sm text-gray-400 mt-1">Planning hebdomadaire</p>
+                </div>
+            </div>
+            
+            {/* Navigation semaine */}
+            <div className="flex items-center justify-between bg-white/5 rounded-xl p-3 border border-white/10">
+                <button 
+                    onClick={() => setWeekOffset(prev => prev - 1)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                    <ChevronLeft size={20} className="text-gray-400" />
+                </button>
+                <div className="text-center">
+                    <div className="text-white font-bold">Semaine {weekNumber}</div>
+                    <div className="text-xs text-gray-400">
+                        {weekDays[0].dayNum} {weekDays[0].month} - {weekDays[6].dayNum} {weekDays[6].month}
+                    </div>
+                </div>
+                <button 
+                    onClick={() => setWeekOffset(prev => prev + 1)}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                >
+                    <ChevronRight size={20} className="text-gray-400" />
+                </button>
+            </div>
+            
+            {/* Actions rapides */}
+            <div className="flex gap-2">
+                <button 
+                    onClick={duplicateLastWeek}
+                    className="flex-1 px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 text-sm font-medium hover:bg-blue-500/20 transition-colors"
+                >
+                    📋 Dupliquer semaine précédente
+                </button>
+                <button 
+                    onClick={clearWeek}
+                    className="px-3 py-2 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm font-medium hover:bg-red-500/20 transition-colors"
+                >
+                    🗑️ Effacer
+                </button>
+            </div>
+            
+            {/* Planning */}
+            <div className="space-y-3">
+                {weekDays.map(day => {
+                    const isToday = day.date === new Date().toISOString().split('T')[0];
+                    return (
+                        <div 
+                            key={day.date}
+                            className={`bg-white/5 rounded-xl border ${isToday ? 'border-cyan-500/50' : 'border-white/10'} overflow-hidden`}
+                        >
+                            {/* Header jour */}
+                            <div className={`px-4 py-3 ${isToday ? 'bg-cyan-500/10' : 'bg-white/5'} border-b border-white/10`}>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-white font-bold">{day.dayName} {day.dayNum}</span>
+                                        {isToday && <span className="text-xs bg-cyan-500 text-white px-2 py-0.5 rounded-full">Aujourd'hui</span>}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            {/* Repas du jour */}
+                            <div className="p-3 space-y-2">
+                                {mealPeriods.map(period => (
+                                    <div key={period.id} className={`p-3 rounded-lg border ${period.color}`}>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-lg">{period.icon}</span>
+                                            <span className="text-sm font-bold text-gray-400 uppercase">{period.label}</span>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            value={getMeal(day.date, period.id)}
+                                            onChange={(e) => updateMeal(day.date, period.id, e.target.value)}
+                                            placeholder="Aucun repas prévu..."
+                                            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm placeholder-gray-600 focus:outline-none focus:border-cyan-500/50 transition-colors"
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+        </div>
+    );
+};
 
 const LifestyleView = ({ userId }) => {
     const [view, setView] = useState('devperso');
@@ -6273,6 +6494,7 @@ const Layout = ({ children, view, setView }) => {
                     <NavItem id="routine" icon={ListTodo} label="Routine" />
                     <NavItem id="tasks" icon={ClipboardList} label="Tâches" />
                     <NavItem id="finance" icon={Wallet} label="Finance" />
+                    <NavItem id="meals" icon={Utensils} label="Repas" />
                     <NavItem id="lifestyle" icon={Clapperboard} label="Lifestyle" />
                 </div>
             </div>
@@ -6302,6 +6524,7 @@ const Layout = ({ children, view, setView }) => {
                         <NavItem id="routine" icon={ListTodo} label="Routine" />
                         <NavItem id="tasks" icon={ClipboardList} label="Tâches" />
                         <NavItem id="finance" icon={Wallet} label="Finance" />
+                        <NavItem id="meals" icon={Utensils} label="Repas" />
                         <NavItem id="lifestyle" icon={Clapperboard} label="Lifestyle" />
                     </div>
                 )}
@@ -6317,8 +6540,8 @@ const Layout = ({ children, view, setView }) => {
                         <MobileNavItem id="dashboard" icon={LayoutDashboard} label="Accueil" />
                         <MobileNavItem id="fitness" icon={Dumbbell} label="Fitness" />
                         <MobileNavItem id="tasks" icon={ClipboardList} label="Tâches" />
+                        <MobileNavItem id="meals" icon={Utensils} label="Repas" />
                         <MobileNavItem id="finance" icon={Wallet} label="Finance" />
-                        <MobileNavItem id="lifestyle" icon={Clapperboard} label="Plus" />
                     </div>
                 </div>
             </div>
@@ -7676,6 +7899,7 @@ export default function App() {
             {view === 'routine' && <RoutineView userId={userId} />}
             {view === 'tasks' && <TasksView userId={userId} />}
             {view === 'finance' && <FinanceView userId={userId} />}
+            {view === 'meals' && <MealsView userId={userId} />}
             {view === 'lifestyle' && <LifestyleView userId={userId} />}
         </Layout>
     );
