@@ -1423,7 +1423,8 @@ const TitanAICouncil = {
             
             // Bonus énergie check-in
             let energyBonus = 0;
-            const todayCheckin = checkins?.[TitanAICouncil.getToday()];
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayCheckin = checkins?.[todayStr];
             if (todayCheckin?.energy >= 4) energyBonus = 15;
             else if (todayCheckin?.energy >= 3) energyBonus = 5;
             else if (todayCheckin?.energy) energyBonus = -5;
