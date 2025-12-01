@@ -52,7 +52,7 @@ const AuthScreen = ({ onAuthenticated }) => {
   const [loading, setLoading] = useState(false);
   const [showBiometricButton, setShowBiometricButton] = useState(false);
 
-  // Check Face ID availability on mount
+  // Check Face ID availability on mount (mais ne pas auto-trigger)
   useEffect(() => {
     const checkBiometric = async () => {
       try {
@@ -60,10 +60,10 @@ const AuthScreen = ({ onAuthenticated }) => {
           const available = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
           setShowBiometricButton(available);
           
-          // Auto-trigger Face ID on load
-          if (available) {
-            tryFaceID();
-          }
+          // NE PLUS AUTO-TRIGGER - L'utilisateur choisit
+          // if (available) {
+          //   tryFaceID();
+          // }
         }
       } catch (e) {
         console.log('Biometric check failed:', e);
