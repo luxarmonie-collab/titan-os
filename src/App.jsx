@@ -2447,6 +2447,21 @@ const analyzeAllData = (data) => {
         }
     }
     
+    // Ajouter les prédictions aux insights
+    councilReport.predictions.forEach(pred => {
+        if (pred.type === 'weekly_goals') {
+            insights.push({
+                type: pred.probability >= 70 ? 'success' : pred.probability >= 40 ? 'info' : 'warning',
+                category: 'fitness',
+                priority: 1,
+                title: '🏋️ ' + pred.message,
+                message: pred.details ? `${pred.details.done}/${pred.details.target} séances (${pred.details.daysLeft} jours restants)` : '',
+                action: pred.action,
+                dataSource: 'Prédiction IA'
+            });
+        }
+    });
+    
     return { insights, questions, councilReport, morningBriefing, MorningCoach };
 };
 
@@ -3344,6 +3359,19 @@ const WhoopWidget = ({ userId, onDataUpdate }) => {
                 </div>
             </div>
             
+            {/* Message informatif si données manquantes */}
+            {(!whoopData?.recovery?.score || !whoopData?.sleep) && (
+                <div className="mt-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
+                    <div className="flex items-start gap-2">
+                        <AlertCircle size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
+                        <div className="text-xs text-blue-300">
+                            <span className="font-bold">Recovery et Sommeil calculés au réveil</span>
+                            <p className="text-blue-400/70 mt-1">Whoop analyse tes données nocturnes et les rend disponibles le matin. Strain disponible en temps réel.</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
             {/* Sleep Stats */}
             {whoopData?.sleep && (
                 <div className="mt-4 pt-4 border-t border-white/5">
@@ -4016,17 +4044,22 @@ const SecondBrainDashboard = ({
                 </div>
             )}
             
-            {/* TODAY'S CARDIO */}
-            {todayData.cardio && todayData.cardio !== 'Non' && (
-                <div className="p-4 rounded-xl border border-orange-500/30 bg-orange-500/5">
+            {/* TODAY'S CARDIO - Obligatoire OU optionnel */}
+            {(todayData.cardio || todayData.cardioOpt) && (
+                <div className={`p-4 rounded-xl border ${todayData.cardioOpt && !todayData.cardio ? 'border-orange-500/20 border-dashed bg-orange-500/[0.03]' : 'border-orange-500/30 bg-orange-500/5'}`}>
                     {(() => {
                         const cardioAlreadyDone = workoutLogs.some(log => log.date === todayStr && log.type === 'Cardio');
+                        const cardioType = todayData.cardio || todayData.cardioOpt;
+                        const isOptional = todayData.cardioOpt && !todayData.cardio;
                         return (
                             <>
                                 <div className="flex items-center justify-between mb-3">
                                     <div>
-                                        <div className="text-xs text-orange-400 font-bold">🏃 CARDIO</div>
-                                        <div className="text-lg font-bold text-white">{todayData.cardio}</div>
+                                        <div className="text-xs text-orange-400 font-bold flex items-center gap-2">
+                                            🏃 CARDIO
+                                            {isOptional && <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300">OPTIONNEL</span>}
+                                        </div>
+                                        <div className="text-lg font-bold text-white">{cardioType}</div>
                                     </div>
                                     {cardioAlreadyDone ? (
                                         <div className="px-4 py-2 bg-green-500/20 text-green-400 font-bold rounded-xl text-sm">
@@ -6559,6 +6592,7 @@ const Dashboard = ({ setView, userId }) => {
     const [showAiQuestion, setShowAiQuestion] = useState(false);
     const [questionAnswer, setQuestionAnswer] = useState('');
     const [aiNotes, setAiNotes] = useLocalStorage(`titan_ai_notes_${userId}`, []);
+    const [showFlowDetails, setShowFlowDetails] = useState(false);
     
     // Morning Coach States
     const [coachStep, setCoachStep] = useState('greeting'); // greeting, followup, recommendations, done
@@ -7016,10 +7050,19 @@ const Dashboard = ({ setView, userId }) => {
                                 }`}/>
                                 <span className="text-xs font-bold text-gray-400">📊 ÉTAT DU SYSTÈME</span>
                             </div>
-                            <span className={`text-lg font-black ${
-                                aiAnalysis.councilReport.ddaLevel === 'peak' ? 'text-green-400' :
-                                aiAnalysis.councilReport.ddaLevel === 'moderate' ? 'text-blue-400' : 'text-orange-400'
-                            }`}>{aiAnalysis.councilReport.flowScore}%</span>
+                            <div className="flex items-center gap-2">
+                                <button 
+                                    onClick={() => setShowFlowDetails(!showFlowDetails)}
+                                    className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+                                    title="Voir le calcul"
+                                >
+                                    <AlertCircle size={14} className="text-gray-400" />
+                                </button>
+                                <span className={`text-lg font-black ${
+                                    aiAnalysis.councilReport.ddaLevel === 'peak' ? 'text-green-400' :
+                                    aiAnalysis.councilReport.ddaLevel === 'moderate' ? 'text-blue-400' : 'text-orange-400'
+                                }`}>{aiAnalysis.councilReport.flowScore}%</span>
+                            </div>
                         </div>
                         <div className="text-white font-bold mb-1">
                             {aiAnalysis.councilReport.ddaLevel === 'peak' ? '🚀' : aiAnalysis.councilReport.ddaLevel === 'moderate' ? '⚡' : '🔋'} {aiAnalysis.councilReport.ddaMessage}
@@ -7033,6 +7076,66 @@ const Dashboard = ({ setView, userId }) => {
                                 'bg-gradient-to-r from-orange-500 to-yellow-400'
                             }`} style={{ width: `${aiAnalysis.councilReport.flowScore}%` }}/>
                         </div>
+                        
+                        {/* Détails du calcul */}
+                        {showFlowDetails && aiAnalysis.councilReport.whoopData && (
+                            <div className="mt-3 p-3 rounded-lg bg-white/5 border border-white/10">
+                                <div className="text-xs font-bold text-cyan-400 mb-2">🔬 CALCUL DU FLOW SCORE</div>
+                                <div className="space-y-2 text-xs">
+                                    {/* Whoop Recovery */}
+                                    {aiAnalysis.councilReport.whoopData.recovery !== null && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Whoop Recovery (35%)</span>
+                                            <span className="text-white font-mono">
+                                                {aiAnalysis.councilReport.whoopData.recovery}% × 0.35 = {Math.round((aiAnalysis.councilReport.whoopData.recovery / 100) * 35)}pts
+                                            </span>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Tâches complétées */}
+                                    <div className="flex justify-between">
+                                        <span className="text-gray-400">Tâches complétées (25%)</span>
+                                        <span className="text-white font-mono">
+                                            {Math.round((tasks.filter(t => t.completed).length / Math.max(1, tasks.length)) * 100)}% × 0.25 = {Math.round((tasks.filter(t => t.completed).length / Math.max(1, tasks.length)) * 25)}pts
+                                        </span>
+                                    </div>
+                                    
+                                    {/* Énergie check-in */}
+                                    {todayCheckin.energy && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Énergie check-in (20%)</span>
+                                            <span className="text-white font-mono">
+                                                {todayCheckin.energy}/5 × 0.20 = {Math.round((todayCheckin.energy / 5) * 20)}pts
+                                            </span>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Humeur check-in */}
+                                    {todayCheckin.mood && (
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-400">Humeur check-in (20%)</span>
+                                            <span className="text-white font-mono">
+                                                {todayCheckin.mood}/5 × 0.20 = {Math.round((todayCheckin.mood / 5) * 20)}pts
+                                            </span>
+                                        </div>
+                                    )}
+                                    
+                                    <div className="pt-2 border-t border-white/10 flex justify-between font-bold">
+                                        <span className="text-cyan-400">TOTAL</span>
+                                        <span className="text-cyan-400">{aiAnalysis.councilReport.flowScore}%</span>
+                                    </div>
+                                    
+                                    {/* Bonus/Malus */}
+                                    <div className="pt-2 border-t border-white/10 text-[10px] text-gray-500">
+                                        <div className="font-bold text-gray-400 mb-1">BONUS/MALUS APPLIQUÉS:</div>
+                                        {aiAnalysis.councilReport.whoopData.recovery >= 67 && <div>✓ Recovery élevée: +5pts</div>}
+                                        {aiAnalysis.councilReport.whoopData.recovery < 33 && <div>✗ Recovery basse: -10pts</div>}
+                                        {aiAnalysis.councilReport.whoopData.sleep >= 7 && <div>✓ Bon sommeil (≥7h): +3pts</div>}
+                                        {aiAnalysis.councilReport.whoopData.sleep < 5 && <div>✗ Manque sommeil (<5h): -5pts</div>}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
                     </div>
                     
                     {/* INSIGHT PROFOND */}
