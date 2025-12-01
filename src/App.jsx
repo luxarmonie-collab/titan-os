@@ -6771,7 +6771,7 @@ const Dashboard = ({ setView, userId }) => {
             )}
             
             {/* WHOOP WIDGET */}
-            <WhoopWidget userId={userId} onDataUpdate={setWhoopData} />
+            <WhoopWidget userId={userId} />
             
             {/* ═══════════════════════════════════════════════════════════════════════ */}
             {/* TITAN AI COUNCIL - RAPPORT SYSTÈME */}
