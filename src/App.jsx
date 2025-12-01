@@ -1394,15 +1394,61 @@ const TitanAICouncil = {
             });
         }
         
-        // PRÉDICTION OBJECTIFS HEBDO
+        // PRÉDICTION OBJECTIFS HEBDO FITNESS - Calcul intelligent
         const weekWorkouts = workoutLogs?.filter(w => last7Days.includes(w.date)).length || 0;
-        const workoutSuccessProb = Math.min(100, Math.round((weekWorkouts / 6) * 100));
+        const targetWorkouts = 6; // Objectif hebdo
+        const daysLeftInWeek = 7 - new Date().getDay();
+        const workoutsNeeded = targetWorkouts - weekWorkouts;
+        
+        // Facteurs de calcul
+        let workoutSuccessProb = 0;
+        
+        if (weekWorkouts >= targetWorkouts) {
+            // Objectif déjà atteint
+            workoutSuccessProb = 100;
+        } else if (workoutsNeeded > daysLeftInWeek) {
+            // Impossible mathématiquement
+            workoutSuccessProb = Math.round((weekWorkouts / targetWorkouts) * 100);
+        } else {
+            // Base: progression actuelle
+            const baseProb = (weekWorkouts / targetWorkouts) * 50;
+            
+            // Bonus récupération Whoop
+            let whoopBonus = 0;
+            if (whoopData?.recovery?.score) {
+                if (whoopData.recovery.score >= 67) whoopBonus = 20;
+                else if (whoopData.recovery.score >= 33) whoopBonus = 10;
+                else whoopBonus = -10;
+            }
+            
+            // Bonus énergie check-in
+            let energyBonus = 0;
+            const todayCheckin = checkins?.[TitanAICouncil.getToday()];
+            if (todayCheckin?.energy >= 4) energyBonus = 15;
+            else if (todayCheckin?.energy >= 3) energyBonus = 5;
+            else if (todayCheckin?.energy) energyBonus = -5;
+            
+            // Bonus jours restants (plus facile si beaucoup de temps)
+            const timeBonus = Math.round((daysLeftInWeek / 7) * 15);
+            
+            workoutSuccessProb = Math.min(100, Math.max(0, Math.round(baseProb + whoopBonus + energyBonus + timeBonus)));
+        }
+        
         predictions.push({
             type: 'weekly_goals',
             probability: workoutSuccessProb,
             horizon: 'cette semaine',
             message: `Objectifs fitness : ${workoutSuccessProb}% de chances de réussite`,
-            action: workoutSuccessProb < 50 ? 'Planifie 2 séances dans les 3 prochains jours.' : 'Continue comme ça !'
+            details: {
+                done: weekWorkouts,
+                target: targetWorkouts,
+                remaining: Math.max(0, workoutsNeeded),
+                daysLeft: daysLeftInWeek
+            },
+            action: workoutSuccessProb >= 80 ? 'Tu es sur la bonne voie ! 💪' :
+                    workoutSuccessProb >= 50 ? `Planifie ${workoutsNeeded} séances d'ici dimanche.` :
+                    workoutSuccessProb > 0 ? 'Focus sur la régularité la semaine prochaine.' :
+                    'Recommence la semaine prochaine avec un objectif réaliste.'
         });
         
         return predictions;
@@ -1410,33 +1456,89 @@ const TitanAICouncil = {
     
     // ═══════════════════════════════════════════════════════════════════════════
     // DDA (Dynamic Difficulty Adjustment) - Game Design
+    // Intègre TOUTES les sources de données: Whoop, Check-ins, Tasks, Workouts
     // ═══════════════════════════════════════════════════════════════════════════
     calculateDDA: (data) => {
-        const { tasks, checkins, workoutLogs } = data;
+        const { tasks, checkins, workoutLogs, whoopData } = data;
         const last3Days = TitanAICouncil.getLast(3).slice(1); // Exclure aujourd'hui
         
+        // === DONNÉES TÂCHES ===
         const recentTasks = tasks?.filter(t => last3Days.includes(t.due_date)) || [];
-        const completionRate = recentTasks.length > 0 ? recentTasks.filter(t => t.completed).length / recentTasks.length : 0.7;
+        const completionRate = recentTasks.length > 0 ? recentTasks.filter(t => t.completed).length / recentTasks.length : 0.5;
         
+        // === DONNÉES CHECK-INS ===
         const recentCheckins = last3Days.map(date => checkins?.[date]).filter(Boolean);
         const avgEnergy = recentCheckins.length > 0 ? recentCheckins.reduce((sum, c) => sum + (c.energy || 3), 0) / recentCheckins.length : 3;
         const avgMood = recentCheckins.length > 0 ? recentCheckins.reduce((sum, c) => sum + (c.mood || 3), 0) / recentCheckins.length : 3;
         
-        // Calculer le "Flow Score" (capacité actuelle)
-        const flowScore = (completionRate * 40) + (avgEnergy / 5 * 30) + (avgMood / 5 * 30);
+        // === DONNÉES WHOOP ===
+        const whoopRecovery = whoopData?.recovery?.score || null;
+        const whoopStrain = whoopData?.strain?.score || null;
+        const whoopSleep = whoopData?.sleep?.duration || null;
+        const whoopHRV = whoopData?.recovery?.hrv || null;
+        
+        // === CALCUL DU FLOW SCORE INTELLIGENT ===
+        // Pondération dynamique selon les données disponibles
+        let flowScore = 0;
+        let totalWeight = 0;
+        
+        // Composante Whoop Recovery (poids: 35%)
+        if (whoopRecovery !== null) {
+            flowScore += (whoopRecovery / 100) * 35;
+            totalWeight += 35;
+        }
+        
+        // Composante Tâches completées (poids: 25%)
+        flowScore += completionRate * 25;
+        totalWeight += 25;
+        
+        // Composante Énergie check-in (poids: 20%)
+        flowScore += (avgEnergy / 5) * 20;
+        totalWeight += 20;
+        
+        // Composante Humeur check-in (poids: 20%)
+        flowScore += (avgMood / 5) * 20;
+        totalWeight += 20;
+        
+        // Normaliser le score
+        flowScore = (flowScore / totalWeight) * 100;
+        
+        // Bonus/Malus basés sur Whoop
+        if (whoopRecovery !== null) {
+            if (whoopRecovery >= 67) flowScore = Math.min(100, flowScore + 5); // Bonus récup haute
+            if (whoopRecovery < 33) flowScore = Math.max(0, flowScore - 10); // Malus récup basse
+        }
+        
+        if (whoopSleep !== null) {
+            if (whoopSleep >= 7) flowScore = Math.min(100, flowScore + 3); // Bonus bon sommeil
+            if (whoopSleep < 5) flowScore = Math.max(0, flowScore - 5); // Malus manque sommeil
+        }
+        
+        // Déterminer le niveau et les recommandations
+        const dataSourcesUsed = {
+            whoop: whoopRecovery !== null,
+            checkins: recentCheckins.length > 0,
+            tasks: recentTasks.length > 0,
+            workouts: workoutLogs?.length > 0
+        };
+        
+        const dataSources = Object.entries(dataSourcesUsed).filter(([k, v]) => v).map(([k]) => k);
         
         if (flowScore < 40) {
             return {
                 level: 'recovery',
                 flowScore: Math.round(flowScore),
-                message: 'Mode récupération. Ton système dopaminergique est à plat.',
+                message: 'Mode récupération. Ton corps et ton esprit ont besoin de repos.',
                 recommendations: [
                     'Limite-toi à 2 tâches max aujourd\'hui',
-                    'Sport léger ou marche uniquement',
-                    'Vise une "victoire facile" pour relancer la machine'
-                ],
+                    whoopRecovery !== null && whoopRecovery < 33 ? 'Pas de sport intense (recovery Whoop basse)' : 'Sport léger ou marche uniquement',
+                    'Vise une "victoire facile" pour relancer la machine',
+                    whoopSleep !== null && whoopSleep < 6 ? `Tu as dormi ${whoopSleep}h - couche-toi plus tôt ce soir` : null
+                ].filter(Boolean),
                 tasksToKeep: 2,
-                sportIntensity: 'light'
+                sportIntensity: 'light',
+                dataSources,
+                whoopData: { recovery: whoopRecovery, strain: whoopStrain, sleep: whoopSleep, hrv: whoopHRV }
             };
         } else if (flowScore < 60) {
             return {
@@ -1446,10 +1548,13 @@ const TitanAICouncil = {
                 recommendations: [
                     'Maximum 4 tâches importantes',
                     'Sport normal, écoute ton corps',
-                    'Prends des pauses régulières'
-                ],
+                    'Prends des pauses régulières',
+                    whoopRecovery !== null ? `Recovery Whoop: ${whoopRecovery}% - respecte ton corps` : null
+                ].filter(Boolean),
                 tasksToKeep: 4,
-                sportIntensity: 'normal'
+                sportIntensity: 'normal',
+                dataSources,
+                whoopData: { recovery: whoopRecovery, strain: whoopStrain, sleep: whoopSleep, hrv: whoopHRV }
             };
         } else {
             return {
@@ -1458,11 +1563,14 @@ const TitanAICouncil = {
                 message: 'Zone de Flow ! C\'est le moment de performer.',
                 recommendations: [
                     'Attaque tes tâches les plus complexes',
-                    'Pousse tes limites au sport',
-                    'Capitalise sur cette énergie'
-                ],
+                    whoopRecovery !== null && whoopRecovery >= 67 ? 'Recovery au vert - pousse tes limites !' : 'Pousse tes limites au sport',
+                    'Capitalise sur cette énergie',
+                    whoopHRV !== null ? `HRV: ${whoopHRV}ms - ton système nerveux est prêt` : null
+                ].filter(Boolean),
                 tasksToKeep: null,
-                sportIntensity: 'high'
+                sportIntensity: 'high',
+                dataSources,
+                whoopData: { recovery: whoopRecovery, strain: whoopStrain, sleep: whoopSleep, hrv: whoopHRV }
             };
         }
     },
@@ -2002,6 +2110,29 @@ const MorningCoach = {
                     { priority: 'medium', action: 'Tu peux te permettre de pousser un peu plus', icon: '⚡' },
                     { priority: 'low', action: 'Mais n\'oublie pas de maintenir ton sommeil', icon: '🌙' }
                 ]
+            },
+            daily_plan: {
+                title: "📋 Planifier ta journée",
+                type: 'navigate',
+                navigateTo: 'tasks',
+                message: "Je t'emmène vers tes tâches pour planifier ta journée !",
+                recommendations: [
+                    { priority: 'high', action: 'Définis ta tâche prioritaire #1', icon: '🎯' },
+                    { priority: 'medium', action: 'Bloque du temps pour tes tâches importantes', icon: '📅' },
+                    { priority: 'low', action: 'Prévois des pauses régulières', icon: '☕' }
+                ]
+            },
+            quick_checkin: {
+                title: "✍️ Check-in rapide",
+                type: 'checkin',
+                message: "Comment tu te sens ce matin ?",
+                quickOptions: [
+                    { id: 'great', label: '🔥 En forme', energy: 5, mood: 5 },
+                    { id: 'good', label: '👍 Ça va', energy: 4, mood: 4 },
+                    { id: 'ok', label: '😐 Moyen', energy: 3, mood: 3 },
+                    { id: 'tired', label: '😴 Fatigué', energy: 2, mood: 2 },
+                    { id: 'bad', label: '😞 Pas top', energy: 1, mood: 2 }
+                ]
             }
         };
         
@@ -2071,6 +2202,7 @@ const MorningCoach = {
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // FONCTION PRINCIPALE D'ANALYSE (Compatible avec l'ancien système)
+// Intègre: Whoop API, Check-ins, Tasks, Workouts, Finance, Biométrie
 // ═══════════════════════════════════════════════════════════════════════════════
 const analyzeAllData = (data) => {
     const { checkins, workoutLogs, biometrics, whoopData, supplementLogs, tasks, transactions } = data;
@@ -2083,53 +2215,114 @@ const analyzeAllData = (data) => {
     // Générer le briefing du matin
     const morningBriefing = MorningCoach.generateMorningBriefing(data);
     
-    // Analyse Whoop (garder l'existant)
-    if (whoopData?.recovery) {
-        if (whoopData.recovery < 33) {
+    // === ANALYSE WHOOP (Données API automatiques) ===
+    // Récupère les données soit de l'API soit manuelles
+    const recovery = whoopData?.recovery?.score ?? whoopData?.recovery ?? null;
+    const strain = whoopData?.strain?.score ?? whoopData?.strain ?? null;
+    const sleepHours = whoopData?.sleep?.duration ?? whoopData?.sleepHours ?? null;
+    const sleepScore = whoopData?.sleep?.score ?? whoopData?.sleepScore ?? null;
+    const hrv = whoopData?.recovery?.hrv ?? whoopData?.hrv ?? null;
+    const rhr = whoopData?.recovery?.rhr ?? whoopData?.rhr ?? null;
+    
+    if (recovery !== null) {
+        if (recovery < 33) {
             insights.push({
                 type: 'warning',
                 category: 'recovery',
-                title: 'Récupération critique',
-                message: `Recovery ${whoopData.recovery}% - Ton corps a besoin de repos.`,
-                action: 'Considère une séance légère ou repos complet.'
+                priority: 1,
+                title: '🔴 Récupération critique',
+                message: `Recovery ${recovery}% - Ton corps a besoin de repos.`,
+                action: 'Considère une séance légère ou repos complet.',
+                dataSource: 'Whoop'
             });
             questions.push({
                 id: 'low_recovery',
                 text: 'Pourquoi ton recovery est bas ?',
                 options: ['Alcool', 'Stress travail', 'Couché tard', 'Mauvais sommeil', 'Autre']
             });
-        } else if (whoopData.recovery > 66) {
+        } else if (recovery >= 67) {
             insights.push({
                 type: 'success',
                 category: 'recovery',
-                title: 'Forme optimale',
-                message: `Recovery ${whoopData.recovery}% - C'est le moment de performer !`,
-                action: 'Pousse tes limites aujourd\'hui.'
+                priority: 1,
+                title: '🟢 Forme optimale',
+                message: `Recovery ${recovery}% - C'est le moment de performer !`,
+                action: 'Pousse tes limites aujourd\'hui.',
+                dataSource: 'Whoop'
+            });
+        } else {
+            insights.push({
+                type: 'info',
+                category: 'recovery',
+                priority: 2,
+                title: '🟡 Récupération modérée',
+                message: `Recovery ${recovery}% - Écoute ton corps.`,
+                action: 'Adapte l\'intensité de ta journée.',
+                dataSource: 'Whoop'
             });
         }
-        
-        if (whoopData.strain > 18) {
+    }
+    
+    if (strain !== null && strain > 18) {
+        insights.push({
+            type: 'warning',
+            category: 'strain',
+            priority: 2,
+            title: '⚡ Strain élevé',
+            message: `Strain ${strain} - Tu as beaucoup sollicité ton corps.`,
+            action: 'Prévois une récupération adaptée.',
+            dataSource: 'Whoop'
+        });
+    }
+    
+    if (sleepHours !== null && sleepHours < 6) {
+        insights.push({
+            type: 'warning',
+            category: 'sleep',
+            priority: 1,
+            title: '😴 Sommeil insuffisant',
+            message: `${sleepHours}h de sommeil - en dessous de l'optimal.`,
+            action: 'Couche-toi plus tôt ce soir.',
+            dataSource: 'Whoop'
+        });
+        questions.push({
+            id: 'bad_sleep',
+            text: 'Qu\'est-ce qui a perturbé ton sommeil ?',
+            options: ['Écrans tard', 'Stress', 'Repas lourd', 'Bruit', 'Autre']
+        });
+    } else if (sleepHours !== null && sleepHours >= 7.5) {
+        insights.push({
+            type: 'success',
+            category: 'sleep',
+            priority: 3,
+            title: '✨ Bon sommeil',
+            message: `${sleepHours}h de sommeil - bien joué !`,
+            action: 'Continue comme ça.',
+            dataSource: 'Whoop'
+        });
+    }
+    
+    // HRV analysis
+    if (hrv !== null) {
+        if (hrv < 30) {
             insights.push({
                 type: 'warning',
-                category: 'strain',
-                title: 'Strain élevé',
-                message: `Strain ${whoopData.strain} - Tu as beaucoup sollicité ton corps.`,
-                action: 'Prévois une récupération adaptée.'
+                category: 'hrv',
+                priority: 2,
+                title: '💓 HRV bas',
+                message: `HRV ${hrv}ms - Système nerveux sous pression.`,
+                action: 'Techniques de respiration recommandées.',
+                dataSource: 'Whoop'
             });
-        }
-        
-        if (whoopData.sleepScore < 70) {
+        } else if (hrv > 70) {
             insights.push({
-                type: 'warning',
-                category: 'sleep',
-                title: 'Sommeil insuffisant',
-                message: `Score sommeil ${whoopData.sleepScore}%`,
-                action: 'Couche-toi plus tôt ce soir.'
-            });
-            questions.push({
-                id: 'bad_sleep',
-                text: 'Qu\'est-ce qui a perturbé ton sommeil ?',
-                options: ['Écrans tard', 'Stress', 'Repas lourd', 'Bruit', 'Autre']
+                type: 'success',
+                category: 'hrv',
+                priority: 3,
+                title: '💓 HRV excellent',
+                message: `HRV ${hrv}ms - Système nerveux en forme.`,
+                action: 'Parfait pour un effort intense.',
+                dataSource: 'Whoop'
             });
         }
     }
@@ -2961,7 +3154,7 @@ const WhoopManualEntry = ({ userId, onDataUpdate, onConnect }) => {
 // WHOOP WIDGET - Données temps réel
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const WhoopWidget = ({ userId }) => {
+const WhoopWidget = ({ userId, onDataUpdate }) => {
     const [whoopData, setWhoopData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -2992,6 +3185,10 @@ const WhoopWidget = ({ userId }) => {
             if (data.connected) {
                 setConnected(true);
                 setWhoopData(data);
+                // Remonter les données au parent pour l'analyse IA
+                if (onDataUpdate) {
+                    onDataUpdate(data);
+                }
             } else {
                 setConnected(false);
             }
@@ -4317,7 +4514,7 @@ const FitnessCalendar = ({ onSelectDay, workoutLogs, addLog, removeLog }) => {
                             </div>
                             <div className="flex gap-3 items-center">
                                 {/* Quick checkbox for Musculation */}
-                                {d.type === 'Training' && (
+                                {d.type === 'Training' && d.seance && (
                                     <button 
                                         onClick={(e) => quickToggleMuscu(e, d, muscuLog)}
                                         className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
@@ -4329,17 +4526,20 @@ const FitnessCalendar = ({ onSelectDay, workoutLogs, addLog, removeLog }) => {
                                         {muscuLog ? <Check size={16} className="text-white"/> : <Dumbbell size={14} className="text-gray-500"/>}
                                     </button>
                                 )}
-                                {/* Quick checkbox for Cardio */}
-                                {d.cardio !== 'Non' && (
+                                {/* Quick checkbox for Cardio (obligatoire ou optionnel) */}
+                                {(d.cardio || d.cardioOpt) && (
                                     <button 
                                         onClick={(e) => quickToggleCardio(e, d, cardioLog)}
                                         className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
                                             cardioLog 
                                                 ? 'bg-orange-500 hover:bg-orange-600' 
-                                                : 'bg-white/5 border-2 border-gray-600 hover:border-orange-500'
+                                                : d.cardioOpt && !d.cardio
+                                                    ? 'bg-white/5 border-2 border-dashed border-gray-600 hover:border-orange-500'
+                                                    : 'bg-white/5 border-2 border-gray-600 hover:border-orange-500'
                                         }`}
+                                        title={d.cardioOpt && !d.cardio ? `${d.cardioOpt} (optionnel)` : 'Cardio'}
                                     >
-                                        {cardioLog ? <Check size={16} className="text-white"/> : <Heart size={14} className="text-gray-500"/>}
+                                        {cardioLog ? <Check size={16} className="text-white"/> : <Heart size={14} className={d.cardioOpt && !d.cardio ? "text-gray-600" : "text-gray-500"}/>}
                                     </button>
                                 )}
                             </div>
@@ -6327,8 +6527,104 @@ const Dashboard = ({ setView, userId }) => {
                             {(() => {
                                 const followUp = aiAnalysis.MorningCoach.generateFollowUp(selectedOption.id, aiAnalysis.morningBriefing.analysis);
                                 if (!followUp) {
-                                    setCoachStep('recommendations');
-                                    return null;
+                                    // Pas de follow-up défini, revenir au greeting
+                                    return (
+                                        <div className="text-center py-4">
+                                            <p className="text-gray-400 mb-4">Cette fonctionnalité arrive bientôt !</p>
+                                            <button 
+                                                onClick={() => { setCoachStep('greeting'); setSelectedOption(null); }}
+                                                className="text-cyan-400 text-sm"
+                                            >
+                                                ← Retour
+                                            </button>
+                                        </div>
+                                    );
+                                }
+                                
+                                // Type: Navigation vers une autre vue
+                                if (followUp.type === 'navigate') {
+                                    return (
+                                        <>
+                                            <div className="mb-4">
+                                                <button 
+                                                    onClick={() => { setCoachStep('greeting'); setSelectedOption(null); }}
+                                                    className="text-xs text-gray-500 hover:text-gray-400 mb-2"
+                                                >
+                                                    ← Retour
+                                                </button>
+                                                <h3 className="text-white font-bold text-lg">{followUp.title}</h3>
+                                                <p className="text-gray-400 text-sm mt-1">{followUp.message}</p>
+                                            </div>
+                                            
+                                            {followUp.recommendations && (
+                                                <div className="space-y-2 mb-4">
+                                                    {followUp.recommendations.map((rec, i) => (
+                                                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                                                            <span className="text-lg">{rec.icon}</span>
+                                                            <p className="text-white text-sm">{rec.action}</p>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                            
+                                            <button 
+                                                onClick={() => { 
+                                                    setCoachDismissed(todayStr); 
+                                                    setCoachStep('done');
+                                                    if (followUp.navigateTo === 'tasks') setView('tasks');
+                                                }}
+                                                className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-sm transition-all"
+                                            >
+                                                📋 Aller à mes tâches
+                                            </button>
+                                        </>
+                                    );
+                                }
+                                
+                                // Type: Quick check-in
+                                if (followUp.type === 'checkin') {
+                                    return (
+                                        <>
+                                            <div className="mb-4">
+                                                <button 
+                                                    onClick={() => { setCoachStep('greeting'); setSelectedOption(null); }}
+                                                    className="text-xs text-gray-500 hover:text-gray-400 mb-2"
+                                                >
+                                                    ← Retour
+                                                </button>
+                                                <h3 className="text-white font-bold text-lg">{followUp.title}</h3>
+                                                <p className="text-gray-400 text-sm mt-1">{followUp.message}</p>
+                                            </div>
+                                            
+                                            <div className="space-y-2 mb-4">
+                                                {followUp.quickOptions.map((opt) => (
+                                                    <button
+                                                        key={opt.id}
+                                                        onClick={() => {
+                                                            // Sauvegarder le check-in rapide
+                                                            const today = new Date().toISOString().split('T')[0];
+                                                            setCheckins(prev => ({
+                                                                ...prev,
+                                                                [today]: { 
+                                                                    ...prev[today],
+                                                                    energy: opt.energy, 
+                                                                    mood: opt.mood,
+                                                                    quickCheckin: true,
+                                                                    timestamp: new Date().toISOString()
+                                                                }
+                                                            }));
+                                                            setCoachDismissed(todayStr);
+                                                            setCoachStep('done');
+                                                        }}
+                                                        className="w-full p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/30 transition-all text-left flex items-center gap-3"
+                                                    >
+                                                        <span className="text-2xl">{opt.label.split(' ')[0]}</span>
+                                                        <span className="text-white font-medium">{opt.label.split(' ').slice(1).join(' ')}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </>
+                                    );
                                 }
                                 
                                 // Si c'est une action avec des recommandations directes
@@ -6474,7 +6770,7 @@ const Dashboard = ({ setView, userId }) => {
             )}
             
             {/* WHOOP WIDGET */}
-            <WhoopWidget userId={userId} />
+            <WhoopWidget userId={userId} onDataUpdate={setWhoopData} />
             
             {/* ═══════════════════════════════════════════════════════════════════════ */}
             {/* TITAN AI COUNCIL - RAPPORT SYSTÈME */}
