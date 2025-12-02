@@ -7131,7 +7131,7 @@ const Dashboard = ({ setView, userId }) => {
                                         {aiAnalysis.councilReport.whoopData.recovery >= 67 && <div>✓ Recovery élevée: +5pts</div>}
                                         {aiAnalysis.councilReport.whoopData.recovery < 33 && <div>✗ Recovery basse: -10pts</div>}
                                         {aiAnalysis.councilReport.whoopData.sleep >= 7 && <div>✓ Bon sommeil (≥7h): +3pts</div>}
-                                        {aiAnalysis.councilReport.whoopData.sleep < 5 && <div>✗ Manque sommeil (<5h): -5pts</div>}
+                                        {aiAnalysis.councilReport.whoopData.sleep < 5 && <div>✗ Manque sommeil (&lt;5h): -5pts</div>}
                                     </div>
                                 </div>
                             </div>
