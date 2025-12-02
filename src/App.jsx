@@ -3779,6 +3779,10 @@ const FitnessModule = ({ userId }) => {
     const [whoopData, setWhoopData] = useLocalStorage(`titan_whoop_${userId}`, null);
     const [supplementLogs, setSupplementLogs] = useLocalStorage(`titan_supplements_${userId}`, {});
     const [aiNotes, setAiNotes] = useLocalStorage(`titan_ainotes_${userId}`, []);
+    const [showQuickMuscu, setShowQuickMuscu] = useState(false);
+    const [showQuickCardio, setShowQuickCardio] = useState(false);
+    const [cardioForm, setCardioForm] = useState({ duration: '', calories: '' });
+    const [form, setForm] = useState({ duration: '', calories: '' });
     
     const todayStr = new Date().toISOString().split('T')[0];
     const todayData = useMemo(() => getCalendarForDate(todayStr), [todayStr]);
@@ -4070,16 +4074,7 @@ const SecondBrainDashboard = ({
                                         </div>
                                     ) : (
                                         <button
-                                            onClick={() => {
-                                                addLog({ 
-                                                    date: todayStr, 
-                                                    session: 'CARDIO', 
-                                                    cardioType: todayData.cardio, 
-                                                    type: 'Cardio', 
-                                                    status: 'completed', 
-                                                    timestamp: new Date().toISOString() 
-                                                });
-                                            }}
+                                            onClick={() => setShowQuickCardio(true)}
                                             className="px-4 py-2 bg-orange-500/20 text-orange-400 font-bold rounded-xl text-sm hover:bg-orange-500/30 transition-all"
                                         >
                                             Marquer fait
@@ -4087,9 +4082,19 @@ const SecondBrainDashboard = ({
                                     )}
                                 </div>
                                 <div className="text-xs text-gray-400">
-                                    {cardioType?.includes('LISS') && '25-45 min • Zone 2 (60-70% FCmax)'}
-                                    {cardioType?.includes('HIIT') && '15-25 min • Intervalles haute intensité'}
-                                    {cardioType?.includes('Course') && '10km • Allure modérée'}
+                                    {CARDIO_DETAILS[cardioType] ? (
+                                        <>
+                                            <div className="font-medium text-gray-300">{CARDIO_DETAILS[cardioType].title}</div>
+                                            <div className="mt-1">{CARDIO_DETAILS[cardioType].desc} • {CARDIO_DETAILS[cardioType].duration}</div>
+                                            <div className="text-gray-500">{CARDIO_DETAILS[cardioType].intensity}</div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            {cardioType?.includes('LISS') && '25-45 min • Zone 2 (60-70% FCmax)'}
+                                            {cardioType?.includes('HIIT') && '15-25 min • Intervalles haute intensité'}
+                                            {cardioType?.includes('Course') && '10km • Allure modérée'}
+                                        </>
+                                    )}
                                 </div>
                             </>
                         );
@@ -4128,6 +4133,51 @@ const SecondBrainDashboard = ({
                         <div className="flex gap-2">
                             <button onClick={() => setShowQuickMuscu(false)} className="flex-1 py-3 bg-white/10 text-white rounded-xl">Annuler</button>
                             <button onClick={validateMuscu} className="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl">Valider</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+            {/* Quick Cardio Modal */}
+            {showQuickCardio && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-gray-900 rounded-2xl border border-white/10 p-6 w-full max-w-md">
+                        <h3 className="font-bold text-white mb-4">✓ Valider Cardio - {todayData.cardio || todayData.cardioOpt}</h3>
+                        <input
+                            type="number"
+                            placeholder="Durée (min)"
+                            value={cardioForm.duration}
+                            onChange={e => setCardioForm(f => ({...f, duration: e.target.value}))}
+                            className="w-full p-3 mb-2 bg-white/5 border border-white/10 rounded-xl text-white"
+                        />
+                        <input
+                            type="number"
+                            placeholder="Calories brûlées"
+                            value={cardioForm.calories}
+                            onChange={e => setCardioForm(f => ({...f, calories: e.target.value}))}
+                            className="w-full p-3 mb-4 bg-white/5 border border-white/10 rounded-xl text-white"
+                        />
+                        <div className="flex gap-2">
+                            <button onClick={() => setShowQuickCardio(false)} className="flex-1 py-3 bg-white/10 text-white rounded-xl">Annuler</button>
+                            <button 
+                                onClick={() => {
+                                    addLog({ 
+                                        date: todayStr, 
+                                        session: 'CARDIO', 
+                                        cardioType: todayData.cardio || todayData.cardioOpt,
+                                        type: 'Cardio', 
+                                        duration: cardioForm.duration || 30,
+                                        calories: cardioForm.calories || 200,
+                                        status: 'completed', 
+                                        timestamp: new Date().toISOString() 
+                                    });
+                                    setShowQuickCardio(false);
+                                    setCardioForm({ duration: '', calories: '' });
+                                }}
+                                className="flex-1 py-3 bg-orange-600 text-white font-bold rounded-xl"
+                            >
+                                Valider
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -4546,7 +4596,7 @@ const FitnessCalendar = ({ onSelectDay, workoutLogs, addLog, removeLog }) => {
                                 <div className="text-gray-500 text-xs mt-1">
                                     {d.seance || "Repos"}
                                     {d.cardio && <span className="text-orange-400"> + Cardio</span>}
-                                    {d.cardioOpt && !d.cardio && <span className="text-gray-600"> (+ {d.cardioOpt} optionnel)</span>}
+                                    {d.cardioOpt && !d.cardio && <span className="text-orange-400/70"> (+ {d.cardioOpt} optionnel)</span>}
                                 </div>
                             </div>
                             <div className="flex gap-3 items-center">
