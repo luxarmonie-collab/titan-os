@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, createContext, useContext } from 'react';
+import { analyzeWithGemini } from './services/ai.js';
 import { createClient } from '@supabase/supabase-js';
 import { 
   Dumbbell, CheckCircle, Clock, Flame, ChevronRight, ArrowLeft, X, Scale, Wallet,
@@ -1632,55 +1633,51 @@ const TitanAICouncil = {
     // ═══════════════════════════════════════════════════════════════════════════
     // INTERROGATOIRE SOCRATIQUE - Questions profondes
     // ═══════════════════════════════════════════════════════════════════════════
-    generateSocraticQuestion: (data) => {
-        const { tasks, transactions, checkins, workoutLogs } = data;
-        const questions = [];
-        const last7Days = TitanAICouncil.getLast(7);
-        
-        // DISSONANCE 1: Dépenses loisirs élevées
-        const weekTransactions = transactions?.filter(t => last7Days.includes(t.date)) || [];
-        const leisureSpending = weekTransactions.filter(t => ['loisirs', 'jeux_argent', 'repas_ext', 'loisir_ambrine'].includes(t.category)).reduce((sum, t) => sum + (t.amount || 0), 0);
-        const totalSpending = weekTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-        
-        if (totalSpending > 0 && leisureSpending > totalSpending * 0.4 && leisureSpending > 100) {
-            questions.push({
-                type: 'spending_dissonance',
-                severity: 'high',
-                isSocratic: true,
-                question: `${Math.round(leisureSpending)}€ en loisirs cette semaine (${Math.round(leisureSpending/totalSpending*100)}%). Ces achats t'ont-ils apporté la satisfaction attendue, ou était-ce une fuite ?`,
-                followUp: 'Qu\'est-ce que tu cherchais vraiment à combler ?'
-            });
-        }
-        
-        // DISSONANCE 2: Pas assez de sport
-        const weekWorkouts = workoutLogs?.filter(w => last7Days.includes(w.date)).length || 0;
-        if (weekWorkouts < 2) {
-            questions.push({
-                type: 'fitness_dissonance',
-                severity: 'medium',
-                isSocratic: true,
-                question: `Seulement ${weekWorkouts} séance(s) cette semaine. Qu'est-ce qui t'en empêche vraiment ?`,
-                followUp: 'Est-ce le temps, l\'énergie, ou autre chose ?'
-            });
-        }
-        
-        // DISSONANCE 3: Énergie basse persistante
-        const recentCheckins = last7Days.map(date => checkins?.[date]).filter(Boolean);
-        const avgEnergy = recentCheckins.length > 0 ? recentCheckins.reduce((sum, c) => sum + (c.energy || 3), 0) / recentCheckins.length : 3;
-        
-        if (avgEnergy < 2.5 && weekWorkouts < 3) {
-            questions.push({
-                type: 'energy_paradox',
-                severity: 'high',
-                isSocratic: true,
-                question: 'Ton énergie est basse depuis plusieurs jours. Attends-tu que ça passe, ou vas-tu agir ?',
-                followUp: 'Qu\'est-ce qui te redonnerait de l\'énergie maintenant ?'
-            });
-        }
-        
-        return questions.length > 0 ? questions[0] : null;
-    },
+   const socraticQuestion = await (async () => {
+    const last7Days = TitanAICouncil.getLast(7);
     
+    // Collecter TOUTES les données pour l'IA
+    const weekWorkouts = workoutLogs?.filter(w => last7Days.includes(w.date)).length || 0;
+    const weekTransactions = transactions?.filter(t => last7Days.includes(t.date)) || [];
+    const leisureSpending = weekTransactions.filter(t => 
+        ['loisirs', 'jeux_argent', 'repas_ext', 'loisir_ambrine'].includes(t.category)
+    ).reduce((sum, t) => sum + (t.amount || 0), 0);
+    const totalSpending = weekTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+    
+    const recentCheckins = last7Days.map(date => checkins?.[date]).filter(Boolean);
+    const avgEnergy = recentCheckins.length > 0 
+        ? recentCheckins.reduce((sum, c) => sum + (c.energy || 3), 0) / recentCheckins.length 
+        : 3;
+    const avgSleep = recentCheckins.length > 0 
+        ? recentCheckins.reduce((sum, c) => sum + (c.sleep || 7), 0) / recentCheckins.length 
+        : 7;
+    
+    // Dernière séance
+    const sortedWorkouts = [...(workoutLogs || [])].sort((a, b) => 
+        new Date(b.date) - new Date(a.date)
+    );
+    const lastWorkout = sortedWorkouts[0];
+    const daysSinceLastWorkout = lastWorkout 
+        ? Math.floor((new Date() - new Date(lastWorkout.date)) / (1000 * 60 * 60 * 24))
+        : null;
+    
+    // 🚀 APPEL GEMINI avec toutes les données
+    const aiQuestion = await analyzeWithGemini({
+        weekWorkouts,
+        avgEnergy,
+        avgSleep,
+        whoopRecovery: data.whoopData?.recovery?.score || null,
+        whoopStrain: data.whoopData?.strain?.score || null,
+        whoopHRV: data.whoopData?.recovery?.hrv || null,
+        tasksCompleted: tasks.filter(t => t.completed).length,
+        totalTasks: tasks.length,
+        leisureSpending,
+        totalSpending,
+        daysSinceLastWorkout
+    });
+    
+    return aiQuestion;
+})();
     // ═══════════════════════════════════════════════════════════════════════════
     // GÉNÉRATION DU RAPPORT CONSEIL COMPLET
     // ═══════════════════════════════════════════════════════════════════════════
@@ -2208,7 +2205,7 @@ const MorningCoach = {
 // FONCTION PRINCIPALE D'ANALYSE (Compatible avec l'ancien système)
 // Intègre: Whoop API, Check-ins, Tasks, Workouts, Finance, Biométrie
 // ═══════════════════════════════════════════════════════════════════════════════
-const analyzeAllData = (data) => {
+const analyzeAllData = async (data) => {
     const { checkins, workoutLogs, biometrics, whoopData, supplementLogs, tasks, transactions } = data;
     const insights = [];
     const questions = [];
