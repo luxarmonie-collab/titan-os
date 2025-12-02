@@ -1646,6 +1646,7 @@ const TitanAICouncil = {
             questions.push({
                 type: 'spending_dissonance',
                 severity: 'high',
+                isSocratic: true,
                 question: `${Math.round(leisureSpending)}€ en loisirs cette semaine (${Math.round(leisureSpending/totalSpending*100)}%). Ces achats t'ont-ils apporté la satisfaction attendue, ou était-ce une fuite ?`,
                 followUp: 'Qu\'est-ce que tu cherchais vraiment à combler ?'
             });
@@ -1657,6 +1658,7 @@ const TitanAICouncil = {
             questions.push({
                 type: 'fitness_dissonance',
                 severity: 'medium',
+                isSocratic: true,
                 question: `Seulement ${weekWorkouts} séance(s) cette semaine. Qu'est-ce qui t'en empêche vraiment ?`,
                 followUp: 'Est-ce le temps, l\'énergie, ou autre chose ?'
             });
@@ -1670,6 +1672,7 @@ const TitanAICouncil = {
             questions.push({
                 type: 'energy_paradox',
                 severity: 'high',
+                isSocratic: true,
                 question: 'Ton énergie est basse depuis plusieurs jours. Attends-tu que ça passe, ou vas-tu agir ?',
                 followUp: 'Qu\'est-ce qui te redonnerait de l\'énergie maintenant ?'
             });
@@ -4084,9 +4087,9 @@ const SecondBrainDashboard = ({
                                     )}
                                 </div>
                                 <div className="text-xs text-gray-400">
-                                    {todayData.cardio.includes('LISS') && '25-45 min • Zone 2 (60-70% FCmax)'}
-                                    {todayData.cardio.includes('HIIT') && '15-25 min • Intervalles haute intensité'}
-                                    {todayData.cardio.includes('Course') && '10km • Allure modérée'}
+                                    {cardioType?.includes('LISS') && '25-45 min • Zone 2 (60-70% FCmax)'}
+                                    {cardioType?.includes('HIIT') && '15-25 min • Intervalles haute intensité'}
+                                    {cardioType?.includes('Course') && '10km • Allure modérée'}
                                 </div>
                             </>
                         );
@@ -6589,6 +6592,7 @@ const Dashboard = ({ setView, userId }) => {
     const [workoutLogs] = useLocalStorage(`titan_workouts_${userId}`, []);
     const [tasks, setTasks] = useLocalStorage(`titan_tasks_${userId}`, []);
     const [transactions] = useLocalStorage(`titan_transactions_${userId}`, []);
+    const [whoopData] = useLocalStorage(`titan_whoop_${userId}`, null);
     const [showAiQuestion, setShowAiQuestion] = useState(false);
     const [questionAnswer, setQuestionAnswer] = useState('');
     const [aiNotes, setAiNotes] = useLocalStorage(`titan_ai_notes_${userId}`, []);
@@ -6628,12 +6632,12 @@ const Dashboard = ({ setView, userId }) => {
             checkins: dailyCheckins,
             workoutLogs,
             biometrics,
-            whoopData: null,
+            whoopData,
             supplementLogs,
             tasks,
             transactions
         });
-    }, [dailyCheckins, workoutLogs, biometrics, supplementLogs, tasks, transactions]);
+    }, [dailyCheckins, workoutLogs, biometrics, whoopData, supplementLogs, tasks, transactions]);
     
     // Tâches du jour
     const todayTasks = useMemo(() => {
@@ -6655,8 +6659,8 @@ const Dashboard = ({ setView, userId }) => {
     const submitQuestionAnswer = () => {
         if (aiAnalysis.questions.length > 0 && questionAnswer) {
             addAiNote({
-                questionId: aiAnalysis.questions[0].id,
-                question: aiAnalysis.questions[0].text,
+                questionId: aiAnalysis.questions[0].id || aiAnalysis.questions[0].type,
+                question: aiAnalysis.questions[0].question,
                 answer: questionAnswer
             });
             setShowAiQuestion(false);
@@ -7258,7 +7262,7 @@ const Dashboard = ({ setView, userId }) => {
                         <div className="text-sm font-medium text-white">
                             {aiAnalysis.questions[0].isSocratic ? '⚠️ Deep Dive' : 'Question du jour'}
                         </div>
-                        <div className="text-xs text-gray-400 truncate">{aiAnalysis.questions[0].text}</div>
+                        <div className="text-xs text-gray-400 truncate">{aiAnalysis.questions[0].question}</div>
                     </div>
                     <ChevronRight size={16} className={aiAnalysis.questions[0].isSocratic ? 'text-red-400' : 'text-purple-400'} />
                 </button>
@@ -7276,7 +7280,7 @@ const Dashboard = ({ setView, userId }) => {
                             {aiAnalysis.questions[0].isSocratic ? '⚠️ INTERROGATOIRE SOCRATIQUE' : 'TITAN veut comprendre'}
                         </span>
                     </div>
-                    <p className="text-sm text-white mb-3">{aiAnalysis.questions[0].text}</p>
+                    <p className="text-sm text-white mb-3">{aiAnalysis.questions[0].question}</p>
                     {aiAnalysis.questions[0].followUp && (
                         <p className="text-xs text-gray-400 mb-3 italic">{aiAnalysis.questions[0].followUp}</p>
                     )}
