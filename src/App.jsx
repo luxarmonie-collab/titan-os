@@ -2981,6 +2981,66 @@ const useSupabaseHabits = (userId) => {
     return [data, setData, toggleHabit];
 };
 
+// Hook pour sync Whoop metrics
+const useWhoopData = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_whoop_${userId}`, null);
+    const [syncing, setSyncing] = useState(false);
+    
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const today = new Date().toISOString().split('T')[0];
+                const { data: rows, error } = await supabase
+                    .from('whoop_metrics')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .eq('date', today)
+                    .single();
+                
+                if (!error && rows) {
+                    setData({
+                        recovery: { score: rows.recovery_score, hrv: rows.hrv, rhr: rows.rhr },
+                        strain: { score: rows.strain_score },
+                        sleep: { hours: rows.sleep_hours, score: rows.sleep_score }
+                    });
+                }
+            } catch (e) {
+                console.log('Pas de données Whoop aujourd\'hui');
+            }
+        };
+        
+        loadFromCloud();
+    }, [userId]);
+    
+    const updateWhoopData = async (newData) => {
+        try {
+            setSyncing(true);
+            setData(newData);
+            
+            const today = new Date().toISOString().split('T')[0];
+            await supabase.from('whoop_metrics').upsert({
+                user_id: userId,
+                date: today,
+                recovery_score: newData.recovery?.score || null,
+                hrv: newData.recovery?.hrv || null,
+                rhr: newData.recovery?.rhr || null,
+                strain_score: newData.strain?.score || null,
+                sleep_hours: newData.sleep?.hours || null,
+                sleep_score: newData.sleep?.score || null
+            }, { onConflict: 'user_id,date' });
+            
+            console.log('✅ Whoop data saved to Supabase');
+        } catch (e) {
+            console.error('❌ Erreur save Whoop:', e);
+        } finally {
+            setSyncing(false);
+        }
+    };
+    
+    return [data, updateWhoopData, syncing];
+};
+
+
 // Indicateur de sync cloud
 const CloudSyncIndicator = ({ syncing = false }) => {
     const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -3168,237 +3228,156 @@ const WhoopManualEntry = ({ userId, onDataUpdate, onConnect }) => {
 // WHOOP WIDGET - Données temps réel
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const WhoopWidget = ({ userId, onDataUpdate }) => {
-    const [whoopData, setWhoopData] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [connected, setConnected] = useState(false);
-    
-    // Check URL params for connection status
+const WhoopWidget = ({ userId }) => {
+    const [data, updateData, syncing] = useWhoopData(userId);
+    const [isEditing, setIsEditing] = useState(false);
+    const [formData, setFormData] = useState({
+        recovery: data?.recovery?.score || 0,
+        hrv: data?.recovery?.hrv || 0,
+        rhr: data?.recovery?.rhr || 0,
+        strain: data?.strain?.score || 0,
+        sleep: data?.sleep?.hours || 0
+    });
+
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        if (params.get('whoop_connected') === 'true') {
-            // Clear URL params
-            window.history.replaceState({}, document.title, window.location.pathname);
-            fetchWhoopData();
+        if (data) {
+            setFormData({
+                recovery: data.recovery?.score || 0,
+                hrv: data.recovery?.hrv || 0,
+                rhr: data.recovery?.rhr || 0,
+                strain: data.strain?.score || 0,
+                sleep: data.sleep?.hours || 0
+            });
         }
-        if (params.get('whoop_error')) {
-            setError(params.get('whoop_error'));
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-    }, []);
-    
-    // Fetch Whoop data
-    const fetchWhoopData = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const response = await fetch(`/api/whoop/data?user_id=${userId}`);
-            const data = await response.json();
-            
-            if (data.connected) {
-                setConnected(true);
-                setWhoopData(data);
-                // Remonter les données au parent pour l'analyse IA
-                if (onDataUpdate) {
-                    onDataUpdate(data);
-                }
-            } else {
-                setConnected(false);
-            }
-        } catch (e) {
-            console.error('Whoop fetch error:', e);
-            setConnected(false);
-        }
-        setLoading(false);
-    };
-    
-    // Check connection status on mount
-    useEffect(() => {
-        const checkStatus = async () => {
-            try {
-                const response = await fetch(`/api/whoop/status?user_id=${userId}`);
-                const data = await response.json();
-                if (data.connected) {
-                    fetchWhoopData();
-                } else {
-                    setLoading(false);
-                    setConnected(false);
-                }
-            } catch (e) {
-                setLoading(false);
-                setConnected(false);
-            }
+    }, [data]);
+
+    const handleSave = async () => {
+        const newData = {
+            recovery: { 
+                score: parseFloat(formData.recovery), 
+                hrv: parseFloat(formData.hrv), 
+                rhr: parseFloat(formData.rhr) 
+            },
+            strain: { score: parseFloat(formData.strain) },
+            sleep: { hours: parseFloat(formData.sleep) }
         };
-        checkStatus();
-    }, [userId]);
-    
-    // Connect to Whoop
-    const connectWhoop = () => {
-        window.location.href = `/api/whoop/auth?user_id=${userId}`;
+        await updateData(newData);
+        setIsEditing(false);
     };
-    
-    // Disconnect from Whoop
-    const disconnectWhoop = async () => {
-        await fetch(`/api/whoop/disconnect?user_id=${userId}`, { method: 'POST' });
-        setConnected(false);
-        setWhoopData(null);
-    };
-    
-    // Recovery color based on score
+
     const getRecoveryColor = (score) => {
-        if (!score) return 'gray';
-        if (score >= 67) return 'green';
-        if (score >= 34) return 'yellow';
-        return 'red';
+        if (score >= 67) return '#22c55e';
+        if (score >= 34) return '#eab308';
+        return '#ef4444';
     };
-    
-    // Recovery Ring Component
-    const RecoveryRing = ({ score }) => {
-        const color = getRecoveryColor(score);
-        const colors = {
-            green: { ring: '#22c55e', bg: 'rgba(34, 197, 94, 0.1)' },
-            yellow: { ring: '#eab308', bg: 'rgba(234, 179, 8, 0.1)' },
-            red: { ring: '#ef4444', bg: 'rgba(239, 68, 68, 0.1)' },
-            gray: { ring: '#6b7280', bg: 'rgba(107, 114, 128, 0.1)' }
-        };
-        const percentage = score || 0;
-        const circumference = 2 * Math.PI * 45;
-        const offset = circumference - (percentage / 100) * circumference;
-        
+
+    if (isEditing) {
         return (
-            <div className="relative w-28 h-28">
-                <svg className="w-full h-full transform -rotate-90">
-                    <circle cx="56" cy="56" r="45" fill="none" stroke={colors[color].bg} strokeWidth="8" />
-                    <circle 
-                        cx="56" cy="56" r="45" fill="none" 
-                        stroke={colors[color].ring} strokeWidth="8"
-                        strokeDasharray={circumference}
-                        strokeDashoffset={offset}
-                        strokeLinecap="round"
-                        className="transition-all duration-1000"
-                    />
-                </svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                    <span className="text-2xl font-black text-white">{score || '--'}%</span>
-                    <span className="text-[10px] text-gray-500 uppercase font-bold">Recovery</span>
+            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-800">
+                <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-white">📝 Modifier Whoop</h3>
+                    <button onClick={() => setIsEditing(false)} className="text-gray-400 hover:text-white">✕</button>
                 </div>
-            </div>
-        );
-    };
-    
-    if (loading) {
-        return (
-            <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/5">
-                <div className="flex items-center justify-center gap-2 py-4">
-                    <Loader2 size={20} className="animate-spin text-gray-400" />
-                    <span className="text-sm text-gray-400">Chargement Whoop...</span>
-                </div>
-            </div>
-        );
-    }
-    
-    if (!connected) {
-        return (
-            <WhoopManualEntry userId={userId} onDataUpdate={setWhoopData} onConnect={connectWhoop} />
-        );
-    }
-    
-    // Connected - show data
-    return (
-        <div className="p-4 rounded-2xl bg-gradient-to-br from-[#0a0a0a] to-[#111] border border-white/5">
-            {/* Header */}
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#1DB954] to-[#0d8a3e] flex items-center justify-center">
-                        <Activity size={16} className="text-white" />
+                
+                <div className="space-y-4">
+                    <div>
+                        <label className="text-sm text-gray-400 block mb-2">Recovery (%)</label>
+                        <input 
+                            type="number" 
+                            value={formData.recovery} 
+                            onChange={(e) => setFormData({...formData, recovery: e.target.value})} 
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white" 
+                        />
                     </div>
                     <div>
-                        <div className="font-bold text-white text-sm">WHOOP</div>
-                        <div className="text-[10px] text-gray-500">
-                            {whoopData?.profile?.firstName || 'Connecté'}
-                        </div>
+                        <label className="text-sm text-gray-400 block mb-2">HRV (ms)</label>
+                        <input 
+                            type="number" 
+                            value={formData.hrv} 
+                            onChange={(e) => setFormData({...formData, hrv: e.target.value})} 
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white" 
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm text-gray-400 block mb-2">RHR (bpm)</label>
+                        <input 
+                            type="number" 
+                            value={formData.rhr} 
+                            onChange={(e) => setFormData({...formData, rhr: e.target.value})} 
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white" 
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm text-gray-400 block mb-2">Strain (/21)</label>
+                        <input 
+                            type="number" 
+                            step="0.1"
+                            value={formData.strain} 
+                            onChange={(e) => setFormData({...formData, strain: e.target.value})} 
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white" 
+                        />
+                    </div>
+                    <div>
+                        <label className="text-sm text-gray-400 block mb-2">Sommeil (h)</label>
+                        <input 
+                            type="number" 
+                            step="0.5"
+                            value={formData.sleep} 
+                            onChange={(e) => setFormData({...formData, sleep: e.target.value})} 
+                            className="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2 text-white" 
+                        />
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={fetchWhoopData} className="p-1.5 hover:bg-white/5 rounded-lg">
-                        <RefreshCw size={14} className="text-gray-400" />
-                    </button>
-                    <button onClick={disconnectWhoop} className="p-1.5 hover:bg-white/5 rounded-lg">
-                        <X size={14} className="text-gray-400" />
-                    </button>
+
+                <button 
+                    onClick={handleSave} 
+                    disabled={syncing}
+                    className="w-full mt-6 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 rounded-lg hover:opacity-90 disabled:opacity-50">
+                    {syncing ? '💾 Sauvegarde...' : '💾 Sauvegarder'}
+                </button>
+            </div>
+        );
+    }
+
+    return (
+        <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+                <h3 className="text-xl font-bold text-white">💚 Whoop Metrics</h3>
+                <button onClick={() => setIsEditing(true)} className="text-gray-400 hover:text-white transition-colors">
+                    ✏️
+                </button>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+                <div className="text-center">
+                    <div className="text-3xl font-bold mb-2" style={{ color: getRecoveryColor(formData.recovery) }}>
+                        {formData.recovery}%
+                    </div>
+                    <div className="text-sm text-gray-400">Recovery</div>
+                </div>
+                <div className="text-center">
+                    <div className="text-3xl font-bold text-blue-400 mb-2">{formData.hrv}</div>
+                    <div className="text-sm text-gray-400">HRV (ms)</div>
+                </div>
+                <div className="text-center">
+                    <div className="text-3xl font-bold text-purple-400 mb-2">{formData.strain.toFixed(1)}</div>
+                    <div className="text-sm text-gray-400">Strain</div>
                 </div>
             </div>
-            
-            {/* Main Stats */}
-            <div className="flex items-center gap-4">
-                {/* Recovery Ring */}
-                <RecoveryRing score={whoopData?.recovery?.score} />
-                
-                {/* Side Stats */}
-                <div className="flex-1 space-y-2">
-                    {/* HRV */}
-                    <div className="flex justify-between items-center p-2 rounded-lg bg-white/5">
-                        <span className="text-xs text-gray-400">HRV</span>
-                        <span className="font-bold text-white">{whoopData?.recovery?.hrv || '--'} ms</span>
-                    </div>
-                    
-                    {/* RHR */}
-                    <div className="flex justify-between items-center p-2 rounded-lg bg-white/5">
-                        <span className="text-xs text-gray-400">RHR</span>
-                        <span className="font-bold text-white">{whoopData?.recovery?.rhr || '--'} bpm</span>
-                    </div>
-                    
-                    {/* Strain */}
-                    <div className="flex justify-between items-center p-2 rounded-lg bg-white/5">
-                        <span className="text-xs text-gray-400">Strain</span>
-                        <span className="font-bold text-blue-400">{whoopData?.strain?.score || '--'}</span>
-                    </div>
-                </div>
+
+            <div className="mt-4 pt-4 border-t border-gray-800 text-center">
+                <div className="text-sm text-gray-400">RHR: <span className="text-white font-semibold">{formData.rhr} bpm</span></div>
+                <div className="text-sm text-gray-400 mt-1">Sommeil: <span className="text-white font-semibold">{formData.sleep}h</span></div>
             </div>
             
-            {/* Message informatif si données manquantes */}
-            {(!whoopData?.recovery?.score || !whoopData?.sleep) && (
-                <div className="mt-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                    <div className="flex items-start gap-2">
-                        <AlertCircle size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
-                        <div className="text-xs text-blue-300">
-                            <span className="font-bold">Recovery et Sommeil calculés au réveil</span>
-                            <p className="text-blue-400/70 mt-1">Whoop analyse tes données nocturnes et les rend disponibles le matin. Strain disponible en temps réel.</p>
-                        </div>
-                    </div>
-                </div>
-            )}
-            
-            {/* Sleep Stats */}
-            {whoopData?.sleep && (
-                <div className="mt-4 pt-4 border-t border-white/5">
-                    <div className="text-xs text-gray-500 mb-2">SOMMEIL</div>
-                    <div className="grid grid-cols-3 gap-2">
-                        <div className="text-center p-2 rounded-lg bg-white/5">
-                            <div className="text-lg font-bold text-white">{whoopData.sleep.duration || '--'}h</div>
-                            <div className="text-[10px] text-gray-500">Durée</div>
-                        </div>
-                        <div className="text-center p-2 rounded-lg bg-white/5">
-                            <div className="text-lg font-bold text-purple-400">{whoopData.sleep.rem || '--'}</div>
-                            <div className="text-[10px] text-gray-500">REM (min)</div>
-                        </div>
-                        <div className="text-center p-2 rounded-lg bg-white/5">
-                            <div className="text-lg font-bold text-blue-400">{whoopData.sleep.deep || '--'}</div>
-                            <div className="text-[10px] text-gray-500">Deep (min)</div>
-                        </div>
-                    </div>
+            {syncing && (
+                <div className="mt-4 text-center text-sm text-blue-400">
+                    🔄 Synchronisation...
                 </div>
             )}
         </div>
     );
 };
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// FINANCE WIDGET - Connexion bancaire Bridge
-// ═══════════════════════════════════════════════════════════════════════════════
-
-const FinanceWidget = ({ userId }) => {
     const [loading, setLoading] = useState(true);
     const [connected, setConnected] = useState(false);
     const [accounts, setAccounts] = useState([]);
@@ -3776,7 +3755,7 @@ const FitnessModule = ({ userId }) => {
     const [aiNotes, setAiNotes] = useLocalStorage(`titan_ainotes_${userId}`, []);
     const [showQuickMuscu, setShowQuickMuscu] = useState(false);
     const [showQuickCardio, setShowQuickCardio] = useState(false);
-    const [cardioForm, setCardioForm] = useState({ duration: '', calories: '' });
+    const [cardioForm, setCardioForm] = useState({ type: 'course', duration: '', calories: '' });
     const [form, setForm] = useState({ duration: '', calories: '' });
     
     const todayStr = new Date().toISOString().split('T')[0];
@@ -4133,45 +4112,89 @@ const SecondBrainDashboard = ({
                 </div>
             )}
             
-            {/* Quick Cardio Modal */}
+            {/* Quick Cardio Modal - Amélioré avec type */}
             {showQuickCardio && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <div className="bg-gray-900 rounded-2xl border border-white/10 p-6 w-full max-w-md">
-                        <h3 className="font-bold text-white mb-4">✓ Valider Cardio - {todayData.cardio || todayData.cardioOpt}</h3>
-                        <input
-                            type="number"
-                            placeholder="Durée (min)"
-                            value={cardioForm.duration}
-                            onChange={e => setCardioForm(f => ({...f, duration: e.target.value}))}
-                            className="w-full p-3 mb-2 bg-white/5 border border-white/10 rounded-xl text-white"
-                        />
-                        <input
-                            type="number"
-                            placeholder="Calories brûlées"
-                            value={cardioForm.calories}
-                            onChange={e => setCardioForm(f => ({...f, calories: e.target.value}))}
-                            className="w-full p-3 mb-4 bg-white/5 border border-white/10 rounded-xl text-white"
-                        />
-                        <div className="flex gap-2">
-                            <button onClick={() => setShowQuickCardio(false)} className="flex-1 py-3 bg-white/10 text-white rounded-xl">Annuler</button>
+                        <h3 className="font-bold text-white mb-6 text-xl">✓ Détails de ta séance cardio</h3>
+                        
+                        {/* Type de cardio */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                                Type de cardio
+                            </label>
+                            <select 
+                                value={cardioForm.type || 'course'} 
+                                onChange={e => setCardioForm(f => ({...f, type: e.target.value}))}
+                                className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white"
+                            >
+                                <option value="course">🏃 Course / Footing</option>
+                                <option value="escaliers">🪜 Escaliers</option>
+                                <option value="velo">🚴 Vélo</option>
+                                <option value="natation">🏊 Natation</option>
+                                <option value="rameur">🚣 Rameur</option>
+                                <option value="elliptique">⚙️ Elliptique</option>
+                                <option value="autre">➕ Autre</option>
+                            </select>
+                        </div>
+                        
+                        {/* Durée */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                                Durée (minutes)
+                            </label>
+                            <input
+                                type="number"
+                                placeholder="Ex: 30"
+                                value={cardioForm.duration}
+                                onChange={e => setCardioForm(f => ({...f, duration: e.target.value}))}
+                                className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500"
+                            />
+                        </div>
+                        
+                        {/* Calories */}
+                        <div className="mb-6">
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                                Calories brûlées
+                            </label>
+                            <input
+                                type="number"
+                                placeholder="Ex: 350"
+                                value={cardioForm.calories}
+                                onChange={e => setCardioForm(f => ({...f, calories: e.target.value}))}
+                                className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500"
+                            />
+                        </div>
+                        
+                        {/* Boutons */}
+                        <div className="flex gap-3">
+                            <button 
+                                onClick={() => {
+                                    setShowQuickCardio(false);
+                                    setCardioForm({ type: 'course', duration: '', calories: '' });
+                                }}
+                                className="flex-1 py-3 bg-gray-800 text-white font-bold rounded-xl hover:bg-gray-700"
+                            >
+                                Annuler
+                            </button>
                             <button 
                                 onClick={() => {
                                     addLog({ 
                                         date: todayStr, 
                                         session: 'CARDIO', 
-                                        cardioType: todayData.cardio || todayData.cardioOpt,
+                                        cardioType: cardioForm.type || 'course',
                                         type: 'Cardio', 
-                                        duration: cardioForm.duration || 30,
-                                        calories: cardioForm.calories || 200,
+                                        duration: parseInt(cardioForm.duration) || 30,
+                                        calories: parseInt(cardioForm.calories) || 200,
                                         status: 'completed', 
                                         timestamp: new Date().toISOString() 
                                     });
                                     setShowQuickCardio(false);
-                                    setCardioForm({ duration: '', calories: '' });
+                                    setCardioForm({ type: 'course', duration: '', calories: '' });
                                 }}
-                                className="flex-1 py-3 bg-orange-600 text-white font-bold rounded-xl"
+                                className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl"
                             >
-                                Valider
+                                ✓ Valider
                             </button>
                         </div>
                     </div>
