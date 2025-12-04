@@ -1631,54 +1631,6 @@ const TitanAICouncil = {
     },
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // INTERROGATOIRE SOCRATIQUE - Questions profondes
-    // ═══════════════════════════════════════════════════════════════════════════
-   const socraticQuestion = await (async () => {
-    const last7Days = TitanAICouncil.getLast(7);
-    
-    // Collecter TOUTES les données pour l'IA
-    const weekWorkouts = workoutLogs?.filter(w => last7Days.includes(w.date)).length || 0;
-    const weekTransactions = transactions?.filter(t => last7Days.includes(t.date)) || [];
-    const leisureSpending = weekTransactions.filter(t => 
-        ['loisirs', 'jeux_argent', 'repas_ext', 'loisir_ambrine'].includes(t.category)
-    ).reduce((sum, t) => sum + (t.amount || 0), 0);
-    const totalSpending = weekTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
-    
-    const recentCheckins = last7Days.map(date => checkins?.[date]).filter(Boolean);
-    const avgEnergy = recentCheckins.length > 0 
-        ? recentCheckins.reduce((sum, c) => sum + (c.energy || 3), 0) / recentCheckins.length 
-        : 3;
-    const avgSleep = recentCheckins.length > 0 
-        ? recentCheckins.reduce((sum, c) => sum + (c.sleep || 7), 0) / recentCheckins.length 
-        : 7;
-    
-    // Dernière séance
-    const sortedWorkouts = [...(workoutLogs || [])].sort((a, b) => 
-        new Date(b.date) - new Date(a.date)
-    );
-    const lastWorkout = sortedWorkouts[0];
-    const daysSinceLastWorkout = lastWorkout 
-        ? Math.floor((new Date() - new Date(lastWorkout.date)) / (1000 * 60 * 60 * 24))
-        : null;
-    
-    // 🚀 APPEL GEMINI avec toutes les données
-    const aiQuestion = await analyzeWithGemini({
-        weekWorkouts,
-        avgEnergy,
-        avgSleep,
-        whoopRecovery: data.whoopData?.recovery?.score || null,
-        whoopStrain: data.whoopData?.strain?.score || null,
-        whoopHRV: data.whoopData?.recovery?.hrv || null,
-        tasksCompleted: tasks.filter(t => t.completed).length,
-        totalTasks: tasks.length,
-        leisureSpending,
-        totalSpending,
-        daysSinceLastWorkout
-    });
-    
-    return aiQuestion;
-})();
-    // ═══════════════════════════════════════════════════════════════════════════
     // GÉNÉRATION DU RAPPORT CONSEIL COMPLET
     // ═══════════════════════════════════════════════════════════════════════════
     generateCouncilReport: (data, userProfile = DEFAULT_USER_PROFILE) => {
@@ -2210,6 +2162,55 @@ const analyzeAllData = async (data) => {
     const insights = [];
     const questions = [];
     
+    // ═══════════════════════════════════════════════════════════════════════════
+    // 🚀 APPEL GEMINI - Question socratique ultra-profonde
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    const last7Days = TitanAICouncil.getLast(7);
+    
+    // Collecter TOUTES les données pour l'IA
+    const weekWorkouts = workoutLogs?.filter(w => last7Days.includes(w.date)).length || 0;
+    const weekTransactions = transactions?.filter(t => last7Days.includes(t.date)) || [];
+    const leisureSpending = weekTransactions.filter(t => 
+        ['loisirs', 'jeux_argent', 'repas_ext', 'loisir_ambrine'].includes(t.category)
+    ).reduce((sum, t) => sum + (t.amount || 0), 0);
+    const totalSpending = weekTransactions.reduce((sum, t) => sum + (t.amount || 0), 0);
+    
+    const recentCheckins = last7Days.map(date => checkins?.[date]).filter(Boolean);
+    const avgEnergy = recentCheckins.length > 0 
+        ? recentCheckins.reduce((sum, c) => sum + (c.energy || 3), 0) / recentCheckins.length 
+        : 3;
+    const avgSleep = recentCheckins.length > 0 
+        ? recentCheckins.reduce((sum, c) => sum + (c.sleep || 7), 0) / recentCheckins.length 
+        : 7;
+    
+    // Dernière séance
+    const sortedWorkouts = [...(workoutLogs || [])].sort((a, b) => 
+        new Date(b.date) - new Date(a.date)
+    );
+    const lastWorkout = sortedWorkouts[0];
+    const daysSinceLastWorkout = lastWorkout 
+        ? Math.floor((new Date() - new Date(lastWorkout.date)) / (1000 * 60 * 60 * 24))
+        : null;
+    
+    // 🧠 APPEL GEMINI avec toutes les données
+    const socraticQuestion = await analyzeWithGemini({
+        weekWorkouts,
+        avgEnergy,
+        avgSleep,
+        whoopRecovery: whoopData?.recovery?.score || null,
+        whoopStrain: whoopData?.strain?.score || null,
+        whoopHRV: whoopData?.recovery?.hrv || null,
+        tasksCompleted: tasks?.filter(t => t.completed).length || 0,
+        totalTasks: tasks?.length || 0,
+        leisureSpending,
+        totalSpending,
+        daysSinceLastWorkout
+    });
+    
+    console.log('🧠 Question IA Gemini générée:', socraticQuestion);
+    
+    
     // Générer le rapport du conseil
     const councilReport = TitanAICouncil.generateCouncilReport(data);
     
@@ -2359,11 +2360,10 @@ const analyzeAllData = async (data) => {
     }
     
     // Convertir question socratique
-    if (councilReport.socraticQuestion) {
+    if (socraticQuestion) {
         questions.unshift({
             id: 'socratic',
-            text: councilReport.socraticQuestion.question,
-            followUp: councilReport.socraticQuestion.followUp,
+            text: socraticQuestion,
             isSocratic: true
         });
     }
