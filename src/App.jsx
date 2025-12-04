@@ -3378,6 +3378,8 @@ const WhoopWidget = ({ userId }) => {
         </div>
     );
 };
+
+const FinanceWidget = ({ userId }) => {
     const [loading, setLoading] = useState(true);
     const [connected, setConnected] = useState(false);
     const [accounts, setAccounts] = useState([]);
