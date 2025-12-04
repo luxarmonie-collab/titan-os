@@ -1638,7 +1638,6 @@ const TitanAICouncil = {
         const predictions = TitanAICouncil.predictFuture(data);
         const dda = TitanAICouncil.calculateDDA(data);
         const biases = TitanAICouncil.detectBiases(data);
-        const socraticQuestion = TitanAICouncil.generateSocraticQuestion(data);
         
         // MÉTA-APPRENTISSAGE
         const learnedRules = TitanAICouncil.generateLearnedRules(data, userProfile.learnedRules || []);
@@ -1692,7 +1691,6 @@ const TitanAICouncil = {
             deepInsight,
             protocol,
             futureSimulation: weeklyGoals ? weeklyGoals.message : 'Données insuffisantes',
-            socraticQuestion,
             correlations,
             predictions,
             biases,
