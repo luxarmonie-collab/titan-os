@@ -8034,7 +8034,114 @@ const TasksView = ({ userId }) => {
 };
 
 // --- MAIN APP ---
-export default function App() {
+
+// ═══════════════════════════════════════════════════════════════════════════
+// 🛡️ ERROR BOUNDARY GLOBALE - Empêche l'écran noir
+// ═══════════════════════════════════════════════════════════════════════════
+
+class AppErrorBoundary extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = { hasError: false, error: null };
+    }
+
+    static getDerivedStateFromError(error) {
+        return { hasError: true, error };
+    }
+
+    componentDidCatch(error, errorInfo) {
+        console.error('🔴 ERREUR GLOBALE APP:', error);
+        console.error('📍 Stack:', errorInfo);
+    }
+
+    render() {
+        if (this.state.hasError) {
+            return (
+                <div style={{
+                    minHeight: '100vh',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#1a202c',
+                    color: 'white',
+                    padding: '20px',
+                    textAlign: 'center',
+                    fontFamily: 'system-ui, -apple-system, sans-serif'
+                }}>
+                    <div style={{ maxWidth: '500px' }}>
+                        <div style={{ fontSize: '80px', marginBottom: '20px' }}>💥</div>
+                        <h1 style={{ 
+                            fontSize: '32px', 
+                            fontWeight: 'bold',
+                            marginBottom: '15px',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            WebkitBackgroundClip: 'text',
+                            WebkitTextFillColor: 'transparent'
+                        }}>
+                            Erreur détectée
+                        </h1>
+                        <p style={{ 
+                            marginBottom: '20px', 
+                            opacity: 0.8,
+                            fontSize: '16px',
+                            lineHeight: '1.6'
+                        }}>
+                            L'application a rencontré une erreur. Cliquez ci-dessous pour recharger.
+                        </p>
+                        <details style={{ 
+                            marginBottom: '25px', 
+                            textAlign: 'left',
+                            background: 'rgba(255,255,255,0.05)',
+                            padding: '15px',
+                            borderRadius: '10px'
+                        }}>
+                            <summary style={{ 
+                                cursor: 'pointer', 
+                                fontWeight: 'bold',
+                                marginBottom: '10px',
+                                color: '#f56565'
+                            }}>
+                                Détails techniques
+                            </summary>
+                            <pre style={{ 
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                fontFamily: 'monospace',
+                                fontSize: '12px',
+                                opacity: 0.8
+                            }}>
+                                {this.state.error?.toString()}
+                            </pre>
+                        </details>
+                        <button
+                            onClick={() => window.location.reload()}
+                            style={{
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                color: 'white',
+                                padding: '15px 40px',
+                                borderRadius: '10px',
+                                border: 'none',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                transition: 'transform 0.2s',
+                                boxShadow: '0 4px 15px rgba(102, 126, 234, 0.4)'
+                            }}
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        >
+                            🔄 Recharger l'application
+                        </button>
+                    </div>
+                </div>
+            );
+        }
+        return this.props.children;
+    }
+}
+
+// --- MAIN APP CONTENT ---
+function AppContent() {
     const [view, setView] = useState('dashboard');
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const userId = 'demo-user';
@@ -8054,5 +8161,14 @@ export default function App() {
             {view === 'meals' && <MealsView userId={userId} />}
             {view === 'lifestyle' && <LifestyleView userId={userId} />}
         </Layout>
+    );
+}
+
+// --- MAIN APP WITH ERROR BOUNDARY ---
+export default function App() {
+    return (
+        <AppErrorBoundary>
+            <AppContent />
+        </AppErrorBoundary>
     );
 }
