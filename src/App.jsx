@@ -1260,7 +1260,7 @@ const TitanAICouncil = {
         
         // Suggérer des automatisations
         if (workoutLogs?.length >= 10) {
-            const sessions = workoutLogs.map(w => w.session);
+            const sessions = (workoutLogs || []).map(w => w.session);
             const counts = {};
             sessions.forEach(s => { counts[s] = (counts[s] || 0) + 1; });
             const mostCommon = Object.entries(counts).sort((a, b) => b[1] - a[1])[0];
@@ -6671,22 +6671,46 @@ const Dashboard = ({ setView, userId }) => {
         }));
     };
     
+    
     // Analyse IA centralisée (TITAN COUNCIL)
-    const aiAnalysis = useMemo(() => {
-        return analyzeAllData({
-            checkins: dailyCheckins,
-            workoutLogs,
-            biometrics,
-            whoopData,
-            supplementLogs,
-            tasks,
-            transactions
-        });
+    const [aiAnalysis, setAiAnalysis] = useState({
+        insights: [],
+        questions: [],
+        councilReport: null,
+        morningBriefing: null
+    });
+
+    useEffect(() => {
+        const runAnalysis = async () => {
+            try {
+                const result = await analyzeAllData({
+                    checkins: dailyCheckins || {},
+                    workoutLogs: workoutLogs || [],
+                    biometrics: biometrics || {},
+                    whoopData,
+                    supplementLogs: supplementLogs || {},
+                    tasks: tasks || [],
+                    transactions: transactions || []
+                });
+                setAiAnalysis(result);
+            } catch (error) {
+                console.error('❌ Erreur analyse IA:', error);
+                setAiAnalysis({
+                    insights: [],
+                    questions: [],
+                    councilReport: null,
+                    morningBriefing: null
+                });
+            }
+        };
+        
+        runAnalysis();
     }, [dailyCheckins, workoutLogs, biometrics, whoopData, supplementLogs, tasks, transactions]);
+    
     
     // Tâches du jour
     const todayTasks = useMemo(() => {
-        return tasks.filter(t => t.due_date === todayStr).sort((a, b) => {
+        return (tasks || []).filter(t => t.due_date === todayStr).sort((a, b) => {
             if (a.completed !== b.completed) return a.completed ? 1 : -1;
             const priorityOrder = { high: 0, medium: 1, low: 2 };
             return (priorityOrder[a.priority] || 1) - (priorityOrder[b.priority] || 1);
