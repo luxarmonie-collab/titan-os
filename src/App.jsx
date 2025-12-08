@@ -2445,15 +2445,15 @@ const analyzeAllData = async (data) => {
         }
     }
     
-    // Ajouter les prédictions aux insights
+    // Ajouter les prédictions aux insights (sauf weekly_goals qui est déjà dans futureSimulation)
     councilReport.predictions.forEach(pred => {
-        if (pred.type === 'weekly_goals') {
+        if (pred.type === 'burnout' || pred.type === 'energy_crash') {
             insights.push({
-                type: pred.probability >= 70 ? 'success' : pred.probability >= 40 ? 'info' : 'warning',
-                category: 'fitness',
+                type: 'warning',
+                category: 'health',
                 priority: 1,
-                title: '🏋️ ' + pred.message,
-                message: pred.details ? `${pred.details.done}/${pred.details.target} séances (${pred.details.daysLeft} jours restants)` : '',
+                title: '⚠️ ' + pred.message,
+                message: pred.details || '',
                 action: pred.action,
                 dataSource: 'Prédiction IA'
             });
@@ -2985,37 +2985,205 @@ const useSupabaseHabits = (userId) => {
 const useWhoopData = (userId) => {
     const [data, setData] = useLocalStorage(`titan_whoop_${userId}`, null);
     const [syncing, setSyncing] = useState(false);
+    const [connected, setConnected] = useState(false);
+    const [error, setError] = useState(null);
     
-    useEffect(() => {
-        const loadFromCloud = async () => {
-            try {
-                const today = new Date().toISOString().split('T')[0];
-                const { data: rows, error } = await supabase
-                    .from('whoop_metrics')
-                    .select('*')
-                    .eq('user_id', userId)
-                    .eq('date', today)
-                    .single();
-                
-                if (!error && rows) {
-                    setData({
-                        recovery: { score: rows.recovery_score, hrv: rows.hrv, rhr: rows.rhr },
-                        strain: { score: rows.strain_score },
-                        sleep: { hours: rows.sleep_hours, score: rows.sleep_score }
-                    });
-                }
-            } catch (e) {
-                console.log('Pas de données Whoop aujourd\'hui');
+    // Fonction pour refresh le token Whoop
+    const refreshWhoopToken = async (refreshToken) => {
+        try {
+            const res = await fetch('https://api.prod.whoop.com/oauth/token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    grant_type: 'refresh_token',
+                    refresh_token: refreshToken,
+                    client_id: import.meta.env.VITE_WHOOP_CLIENT_ID || 'your_client_id',
+                    client_secret: import.meta.env.VITE_WHOOP_CLIENT_SECRET || 'your_client_secret'
+                })
+            });
+            
+            if (!res.ok) throw new Error('Token refresh failed');
+            
+            const tokens = await res.json();
+            
+            // Update tokens in Supabase
+            await supabase.from('whoop_tokens').update({
+                access_token: tokens.access_token,
+                refresh_token: tokens.refresh_token || refreshToken,
+                expires_at: new Date(Date.now() + (tokens.expires_in || 3600) * 1000).toISOString()
+            }).eq('user_id', userId);
+            
+            return tokens.access_token;
+        } catch (e) {
+            console.error('Token refresh error:', e);
+            return null;
+        }
+    };
+    
+    // Fonction pour charger depuis l'API Whoop
+    const loadFromWhoopAPI = async () => {
+        try {
+            setSyncing(true);
+            setError(null);
+            
+            // 1. Get tokens from Supabase
+            const { data: tokenData, error: tokenError } = await supabase
+                .from('whoop_tokens')
+                .select('*')
+                .eq('user_id', userId)
+                .single();
+            
+            if (tokenError || !tokenData?.access_token) {
+                console.log('No Whoop tokens found, falling back to manual entry');
+                setConnected(false);
+                // Load from whoop_metrics as fallback
+                await loadFromSupabase();
+                return;
             }
-        };
+            
+            setConnected(true);
+            let accessToken = tokenData.access_token;
+            
+            // Check if token is expired
+            const expiresAt = new Date(tokenData.expires_at);
+            if (expiresAt < new Date()) {
+                console.log('Token expired, refreshing...');
+                accessToken = await refreshWhoopToken(tokenData.refresh_token);
+                if (!accessToken) {
+                    setError('Token refresh failed');
+                    await loadFromSupabase();
+                    return;
+                }
+            }
+            
+            // 2. Call Whoop API to get today's cycle
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            const startDate = yesterday.toISOString().split('T')[0];
+            const endDate = today.toISOString().split('T')[0];
+            
+            const cycleRes = await fetch(`https://api.prod.whoop.com/developer/v1/cycle?start=${startDate}&end=${endDate}`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            
+            if (!cycleRes.ok) {
+                if (cycleRes.status === 401) {
+                    // Try refreshing token
+                    accessToken = await refreshWhoopToken(tokenData.refresh_token);
+                    if (accessToken) {
+                        return loadFromWhoopAPI(); // Retry
+                    }
+                }
+                throw new Error(`Whoop API error: ${cycleRes.status}`);
+            }
+            
+            const cycleData = await cycleRes.json();
+            const latestCycle = cycleData.records?.[0]; // Most recent cycle
+            
+            if (!latestCycle) {
+                console.log('No cycle data available');
+                await loadFromSupabase();
+                return;
+            }
+            
+            // 3. Get recovery data
+            const recoveryRes = await fetch(`https://api.prod.whoop.com/developer/v1/recovery/${latestCycle.id}`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            
+            let recoveryData = null;
+            if (recoveryRes.ok) {
+                recoveryData = await recoveryRes.json();
+            }
+            
+            // 4. Format data
+            const whoopData = {
+                recovery: {
+                    score: recoveryData?.score?.recovery_score || latestCycle.score?.recovery_score || 0,
+                    hrv: recoveryData?.score?.hrv_rmssd_milli || latestCycle.score?.hrv_rmssd_milli || 0,
+                    rhr: recoveryData?.score?.resting_heart_rate || latestCycle.score?.resting_heart_rate || 0
+                },
+                strain: {
+                    score: latestCycle.score?.strain || 0
+                },
+                sleep: {
+                    hours: latestCycle.score?.sleep?.duration_hours || (latestCycle.score?.sleep_performance_percentage ? (latestCycle.score.sleep_performance_percentage / 100) * 8 : 0),
+                    score: latestCycle.score?.sleep_performance_percentage || 0
+                },
+                connected: true
+            };
+            
+            setData(whoopData);
+            
+            // 5. Backup to Supabase whoop_metrics
+            const todayStr = new Date().toISOString().split('T')[0];
+            await supabase.from('whoop_metrics').upsert({
+                user_id: userId,
+                date: todayStr,
+                recovery_score: whoopData.recovery.score,
+                hrv: whoopData.recovery.hrv,
+                rhr: whoopData.recovery.rhr,
+                strain_score: whoopData.strain.score,
+                sleep_hours: whoopData.sleep.hours,
+                sleep_score: whoopData.sleep.score
+            }, { onConflict: 'user_id,date' });
+            
+            console.log('✅ Whoop data loaded from API');
+            
+        } catch (e) {
+            console.error('❌ Whoop API error:', e);
+            setError(e.message);
+            // Fallback to Supabase
+            await loadFromSupabase();
+        } finally {
+            setSyncing(false);
+        }
+    };
+    
+    // Fonction fallback pour charger depuis Supabase
+    const loadFromSupabase = async () => {
+        try {
+            const today = new Date().toISOString().split('T')[0];
+            const { data: rows, error } = await supabase
+                .from('whoop_metrics')
+                .select('*')
+                .eq('user_id', userId)
+                .eq('date', today)
+                .single();
+            
+            if (!error && rows) {
+                setData({
+                    recovery: { score: rows.recovery_score, hrv: rows.hrv, rhr: rows.rhr },
+                    strain: { score: rows.strain_score },
+                    sleep: { hours: rows.sleep_hours, score: rows.sleep_score },
+                    connected: false
+                });
+            }
+        } catch (e) {
+            console.log('No Whoop data in database');
+        }
+    };
+    
+    // Load on mount
+    useEffect(() => {
+        loadFromWhoopAPI();
         
-        loadFromCloud();
+        // Refresh every 30 minutes
+        const interval = setInterval(loadFromWhoopAPI, 30 * 60 * 1000);
+        return () => clearInterval(interval);
     }, [userId]);
     
+    // Manual update function (for when not connected to API)
     const updateWhoopData = async (newData) => {
         try {
             setSyncing(true);
-            setData(newData);
+            setData({ ...newData, connected: false });
             
             const today = new Date().toISOString().split('T')[0];
             await supabase.from('whoop_metrics').upsert({
@@ -3029,7 +3197,7 @@ const useWhoopData = (userId) => {
                 sleep_score: newData.sleep?.score || null
             }, { onConflict: 'user_id,date' });
             
-            console.log('✅ Whoop data saved to Supabase');
+            console.log('✅ Whoop data saved manually to Supabase');
         } catch (e) {
             console.error('❌ Erreur save Whoop:', e);
         } finally {
@@ -3037,7 +3205,7 @@ const useWhoopData = (userId) => {
         }
     };
     
-    return [data, updateWhoopData, syncing];
+    return [data, updateWhoopData, syncing, connected, error];
 };
 
 
@@ -3229,7 +3397,7 @@ const WhoopManualEntry = ({ userId, onDataUpdate, onConnect }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const WhoopWidget = ({ userId }) => {
-    const [data, updateData, syncing] = useWhoopData(userId);
+    const [data, updateData, syncing, connected, error] = useWhoopData(userId);
     const [isEditing, setIsEditing] = useState(false);
     const [formData, setFormData] = useState({
         recovery: data?.recovery?.score || 0,
@@ -3341,12 +3509,29 @@ const WhoopWidget = ({ userId }) => {
 
     return (
         <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-800">
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-bold text-white">💚 Whoop Metrics</h3>
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-white">💚 Whoop Metrics</h3>
+                    {connected ? (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 font-medium">
+                            ✓ API Connectée
+                        </span>
+                    ) : (
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400 font-medium">
+                            ✏️ Manuel
+                        </span>
+                    )}
+                </div>
                 <button onClick={() => setIsEditing(true)} className="text-gray-400 hover:text-white transition-colors">
                     ✏️
                 </button>
             </div>
+            
+            {error && (
+                <div className="mb-4 p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+                    {error}
+                </div>
+            )}
 
             <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
@@ -3851,6 +4036,8 @@ const SecondBrainDashboard = ({
     supplementLogs, setSupplementLogs, aiNotes, addAiNote, userId 
 }) => {
     const [showQuickMuscu, setShowQuickMuscu] = useState(false);
+    const [showQuickCardio, setShowQuickCardio] = useState(false);
+    const [cardioForm, setCardioForm] = useState({ type: 'course', duration: '', calories: '' });
     const [showAiQuestion, setShowAiQuestion] = useState(null);
     const [questionAnswer, setQuestionAnswer] = useState('');
     const [form, setForm] = useState({ duration: '', calories: '' });
@@ -7341,87 +7528,6 @@ const Dashboard = ({ setView, userId }) => {
                 </div>
             )}
             
-            {/* AI QUESTION */}
-            {aiAnalysis.questions.length > 0 && !showAiQuestion && (
-                <button
-                    onClick={() => setShowAiQuestion(true)}
-                    className={`w-full p-3 rounded-xl border flex items-center gap-3 ${
-                        aiAnalysis.questions[0].isSocratic 
-                            ? 'border-red-500/30 bg-red-500/10' 
-                            : 'border-purple-500/30 bg-purple-500/10'
-                    }`}
-                >
-                    <MessageCircle size={18} className={aiAnalysis.questions[0].isSocratic ? 'text-red-400' : 'text-purple-400'} />
-                    <div className="flex-1 text-left">
-                        <div className="text-sm font-medium text-white">
-                            {aiAnalysis.questions[0].isSocratic ? '⚠️ Deep Dive' : 'Question du jour'}
-                        </div>
-                        <div className="text-xs text-gray-400 truncate">{aiAnalysis.questions[0].question}</div>
-                    </div>
-                    <ChevronRight size={16} className={aiAnalysis.questions[0].isSocratic ? 'text-red-400' : 'text-purple-400'} />
-                </button>
-            )}
-            
-            {showAiQuestion && aiAnalysis.questions.length > 0 && (
-                <div className={`p-4 rounded-xl border ${
-                    aiAnalysis.questions[0].isSocratic 
-                        ? 'border-red-500/30 bg-red-500/5' 
-                        : 'border-purple-500/30 bg-purple-500/5'
-                }`}>
-                    <div className="flex items-center gap-2 mb-3">
-                        <Brain size={16} className={aiAnalysis.questions[0].isSocratic ? 'text-red-400' : 'text-purple-400'} />
-                        <span className={`text-xs font-bold ${aiAnalysis.questions[0].isSocratic ? 'text-red-400' : 'text-purple-400'}`}>
-                            {aiAnalysis.questions[0].isSocratic ? '⚠️ INTERROGATOIRE SOCRATIQUE' : 'TITAN veut comprendre'}
-                        </span>
-                    </div>
-                    <p className="text-sm text-white mb-3">{aiAnalysis.questions[0].question}</p>
-                    {aiAnalysis.questions[0].followUp && (
-                        <p className="text-xs text-gray-400 mb-3 italic">{aiAnalysis.questions[0].followUp}</p>
-                    )}
-                    {aiAnalysis.questions[0].options ? (
-                        <div className="flex flex-wrap gap-2 mb-3">
-                            {aiAnalysis.questions[0].options.map(opt => (
-                                <button
-                                    key={opt}
-                                    onClick={() => setQuestionAnswer(opt)}
-                                    className={`px-3 py-1.5 rounded-lg text-xs transition-all ${
-                                        questionAnswer === opt 
-                                            ? aiAnalysis.questions[0].isSocratic ? 'bg-red-500 text-white' : 'bg-purple-500 text-white'
-                                            : 'bg-white/5 text-gray-400 hover:bg-white/10'
-                                    }`}
-                                >
-                                    {opt}
-                                </button>
-                            ))}
-                        </div>
-                    ) : (
-                        <textarea
-                            value={questionAnswer}
-                            onChange={e => setQuestionAnswer(e.target.value)}
-                            placeholder={aiAnalysis.questions[0].isSocratic ? "Réponds honnêtement..." : "Ta réponse..."}
-                            className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm mb-3 resize-none"
-                            rows={3}
-                        />
-                    )}
-                    <div className="flex gap-2">
-                        <button 
-                            onClick={() => { setShowAiQuestion(false); setQuestionAnswer(''); }}
-                            className="flex-1 py-2 bg-white/10 text-gray-400 rounded-lg text-xs"
-                        >
-                            Plus tard
-                        </button>
-                        <button 
-                            onClick={submitQuestionAnswer}
-                            disabled={!questionAnswer}
-                            className={`flex-1 py-2 text-white rounded-lg text-xs font-bold disabled:opacity-50 ${
-                                aiAnalysis.questions[0].isSocratic ? 'bg-red-600' : 'bg-purple-600'
-                            }`}
-                        >
-                            Enregistrer
-                        </button>
-                    </div>
-                </div>
-            )}
             
             {/* QUICK STATE */}
             <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
