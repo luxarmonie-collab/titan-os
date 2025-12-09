@@ -405,12 +405,166 @@ const GlobalStyles = () => (
 const PHASE_1_START = new Date("2024-11-25");
 
 const CARDIO_DETAILS = {
-    "LISS_Opt": { title: "LISS (Marche Inclinée)", desc: "Tapis 8-10% / 6-7km/h", duration: "25-30 min", intensity: "60-70% FCmax" },
-    "HIIT": { title: "HIIT (Intervalles)", desc: "30s effort / 30s repos", duration: "15-20 min", intensity: "Max Effort" },
-    "Course_10km": { title: "Course Endurance", desc: "Allure fondamentale", duration: "10 km", intensity: "70-75% FCmax" },
-    "Ski": { title: "Ski Alpin", desc: "Journée complète", duration: "Journée", intensity: "Variable" },
-    "Non": { title: "Pas de Cardio", desc: "", duration: "", intensity: "" }
+    // LISS (Low Intensity Steady State) - Zone 2
+    "LISS": { 
+        title: "LISS - Marche/Vélo", 
+        desc: "Tapis incliné 8-10% à 6km/h OU Vélo elliptique OU Marche rapide extérieur", 
+        duration: "25-30 min", 
+        intensity: "60-70% FCmax (Zone 2)",
+        options: ["🚶 Marche inclinée tapis", "🚴 Vélo elliptique", "🏃 Marche rapide extérieur", "🚣 Rameur faible intensité"]
+    },
+    "LISS_Opt": { 
+        title: "LISS Optionnel", 
+        desc: "Tapis incliné OU Vélo OU Marche rapide", 
+        duration: "25-30 min", 
+        intensity: "60-70% FCmax (Zone 2)",
+        optional: true,
+        options: ["🚶 Marche inclinée tapis", "🚴 Vélo elliptique", "🏃 Marche rapide"]
+    },
+    "LISS_20": { 
+        title: "LISS Court", 
+        desc: "Récupération active légère", 
+        duration: "20 min", 
+        intensity: "60-65% FCmax",
+        options: ["🚶 Marche modérée", "🚴 Vélo léger"]
+    },
+    "LISS_25": { 
+        title: "LISS", 
+        desc: "Tapis incliné ou vélo faible intensité", 
+        duration: "25 min", 
+        intensity: "60-70% FCmax",
+        options: ["🚶 Marche inclinée", "🚴 Vélo", "🚣 Rameur"]
+    },
+    "LISS_30": { 
+        title: "LISS Modéré", 
+        desc: "Tapis incliné ou vélo", 
+        duration: "30 min", 
+        intensity: "65-70% FCmax",
+        options: ["🚶 Marche inclinée 10%", "🚴 Vélo elliptique", "🏃 Marche rapide"]
+    },
+    "LISS_35": { 
+        title: "LISS Long", 
+        desc: "Endurance fondamentale", 
+        duration: "35 min", 
+        intensity: "65-70% FCmax",
+        options: ["🚶 Marche inclinée", "🚴 Vélo", "🏃 Jogging léger"]
+    },
+    "LISS_40": { 
+        title: "LISS Étendu", 
+        desc: "Travail aérobie prolongé", 
+        duration: "40 min", 
+        intensity: "65-70% FCmax",
+        options: ["🚶 Marche inclinée", "🚴 Vélo", "🏃 Footing lent"]
+    },
+    "LISS_40_Opt": { 
+        title: "LISS Étendu (Optionnel)", 
+        desc: "Travail aérobie prolongé", 
+        duration: "40 min", 
+        intensity: "65-70% FCmax",
+        optional: true,
+        options: ["🚶 Marche inclinée", "🚴 Vélo", "🏃 Footing lent"]
+    },
+    "LISS_45": { 
+        title: "LISS Long", 
+        desc: "Endurance de base", 
+        duration: "45 min", 
+        intensity: "65-70% FCmax",
+        options: ["🚶 Marche longue", "🚴 Vélo", "🏃 Footing"]
+    },
+    "LISS_45_Opt": { 
+        title: "LISS Long (Optionnel)", 
+        desc: "Endurance de base", 
+        duration: "45 min", 
+        intensity: "65-70% FCmax",
+        optional: true,
+        options: ["🚶 Marche longue", "🚴 Vélo", "🏃 Footing"]
+    },
+    
+    // HIIT (High Intensity Interval Training)
+    "HIIT": { 
+        title: "HIIT Intervalles", 
+        desc: "30s effort max / 30s repos", 
+        duration: "15-20 min", 
+        intensity: "85-95% FCmax",
+        options: ["🏃 Sprint tapis", "🚴 Vélo intensif", "🪜 Escaliers", "🏋️ Burpees/Mountain climbers"]
+    },
+    "HIIT_15": { 
+        title: "HIIT Court", 
+        desc: "30s sprint / 30s repos × 15 cycles", 
+        duration: "15 min", 
+        intensity: "85-95% FCmax",
+        options: ["🏃 Sprint tapis", "🚴 Assault bike", "🪜 Escaliers rapides"]
+    },
+    "HIIT_20": { 
+        title: "HIIT Standard", 
+        desc: "30s sprint / 30s repos × 20 cycles", 
+        duration: "20 min", 
+        intensity: "85-95% FCmax",
+        options: ["🏃 Sprint tapis/extérieur", "🚴 Vélo intervalles", "🪜 Escaliers"]
+    },
+    "HIIT_25": { 
+        title: "HIIT Avancé", 
+        desc: "30s sprint / 30s repos × 25 cycles", 
+        duration: "25 min", 
+        intensity: "85-95% FCmax",
+        options: ["🏃 Sprints", "🚴 Assault bike", "🪜 Montée escaliers", "🏋️ Circuit training"]
+    },
+    
+    // Course
+    "Course_10km": { 
+        title: "Course 10km", 
+        desc: "Allure fondamentale régulière", 
+        duration: "~50-60 min", 
+        intensity: "70-75% FCmax",
+        options: ["🏃 Course extérieur", "🏃 Tapis de course"]
+    },
+    "Course_10km_Opt": { 
+        title: "Course 10km (Optionnel)", 
+        desc: "Allure fondamentale", 
+        duration: "~50-60 min", 
+        intensity: "70-75% FCmax",
+        optional: true,
+        options: ["🏃 Course extérieur", "🏃 Tapis"]
+    },
+    "Course_30": { 
+        title: "Footing 30min", 
+        desc: "Course à allure confortable", 
+        duration: "30 min", 
+        intensity: "65-75% FCmax",
+        options: ["🏃 Course extérieur", "🏃 Tapis"]
+    },
+    "Course_35": { 
+        title: "Footing 35min", 
+        desc: "Course endurance", 
+        duration: "35 min", 
+        intensity: "65-75% FCmax",
+        options: ["🏃 Course extérieur", "🏃 Tapis"]
+    },
+    "Course_40": { 
+        title: "Footing 40min", 
+        desc: "Course endurance prolongée", 
+        duration: "40 min", 
+        intensity: "65-75% FCmax",
+        options: ["🏃 Course extérieur", "🏃 Tapis"]
+    },
+    
+    // Spéciaux
+    "Ski": { 
+        title: "Ski Alpin", 
+        desc: "Journée ski = cardio naturel", 
+        duration: "Journée", 
+        intensity: "Variable selon pistes",
+        options: ["⛷️ Ski alpin"]
+    },
+    "Non": { 
+        title: "Pas de Cardio", 
+        desc: "", 
+        duration: "", 
+        intensity: "",
+        options: []
+    }
 };
+
 
 const EXERCISES_DB = {
     // ═══════════════════════════════════════════════════════════════════════════════
@@ -2680,31 +2834,95 @@ const getWeekNumber = (d) => {
         return Math.max(1, Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) + 1);
     } catch (e) { return 1; }
 };
-
 const getCalendarForDate = (dateStr) => {
     try {
         const date = new Date(dateStr);
-        const day = date.getDay();
-        // Programme Phase 1 - Masse (cardio optionnel = null pour ne pas l'afficher comme obligatoire)
-        const schedule = {
-            1: { type: "Training", seance: "PUSH_A", duree: 70, cardio: null, cardioOpt: "LISS" },
-            2: { type: "Training", seance: "PULL_A", duree: 75, cardio: null, cardioOpt: "LISS" },
-            3: { type: "Training", seance: "MOLLETS", duree: 35, cardio: null, cardioOpt: "LISS" },
-            4: { type: "Training", seance: "LEGS_A", duree: 75, cardio: null },
-            5: { type: "Training", seance: "PUSH_B", duree: 60, cardio: null, cardioOpt: "LISS" },
-            6: { type: "Training", seance: "PULL_B", duree: 60, cardio: null },
-            0: { type: "Repos", seance: null, duree: 0, cardio: null }
-        };
-        const isSki = (date >= new Date("2024-12-13") && date <= new Date("2024-12-20"));
-        if (isSki) {
-            return { type: "Ski", seance: "UPPER_SKI", duree: 45, cardio: "Ski", dateStr, dateObj: date, dayName: date.toLocaleDateString('fr-FR', {weekday:'long'}) };
+        const dayOfWeek = date.getDay(); // 0=Dim, 1=Lun, 2=Mar, etc.
+        
+        // Mapper jour de la semaine vers index dans le tableau jours (0=Lun, 1=Mar, ..., 6=Dim)
+        const jourIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        const joursNames = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
+        
+        // Calculer le numéro de semaine du programme (1-27)
+        const start = new Date(PHASE_1_START);
+        start.setHours(0, 0, 0, 0);
+        const diff = date - start;
+        const weekNumber = Math.max(1, Math.min(27, Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) + 1));
+        
+        // Récupérer la semaine correspondante dans CALENDAR_27_WEEKS
+        const weekData = CALENDAR_27_WEEKS.find(w => w.sem === weekNumber);
+        
+        if (!weekData) {
+            // Fallback si semaine non trouvée (avant le début ou après la fin du programme)
+            return { 
+                type: "Repos", 
+                seance: null, 
+                duree: 0, 
+                cardio: null, 
+                cardioOpt: null,
+                notes: weekNumber < 1 ? "Programme non commencé" : "Programme terminé",
+                dateStr, 
+                dateObj: date, 
+                dayName: date.toLocaleDateString('fr-FR', {weekday:'long'}),
+                weekNumber,
+                phase: null
+            };
         }
-        const data = schedule[day] || { type: "Repos", seance: null, duree: 0, cardio: null };
-        return { ...data, dateStr, dateObj: date, dayName: date.toLocaleDateString('fr-FR', {weekday:'long'}) };
+        
+        // Récupérer le jour correspondant
+        const jourData = weekData.jours.find(j => j.jour === joursNames[jourIndex]);
+        
+        if (!jourData) {
+            return { 
+                type: "Repos", 
+                seance: null, 
+                duree: 0, 
+                cardio: null, 
+                cardioOpt: null,
+                dateStr, 
+                dateObj: date, 
+                dayName: date.toLocaleDateString('fr-FR', {weekday:'long'}),
+                weekNumber,
+                phase: weekData.phase
+            };
+        }
+        
+        // Déterminer si le cardio est optionnel ou obligatoire
+        const cardioValue = jourData.cardio;
+        const isCardioOptional = cardioValue && cardioValue.includes('_Opt');
+        
+        return {
+            type: jourData.seance ? "Training" : "Repos",
+            seance: jourData.seance || null,
+            duree: jourData.duree || 0,
+            // Si cardio contient "_Opt", c'est optionnel
+            cardio: isCardioOptional ? null : cardioValue,
+            cardioOpt: isCardioOptional ? cardioValue.replace('_Opt', '') : null,
+            notes: jourData.notes || null,
+            dateStr,
+            dateObj: date,
+            dayName: date.toLocaleDateString('fr-FR', {weekday:'long'}),
+            weekNumber,
+            phase: weekData.phase
+        };
+        
     } catch (e) {
-        return { type: "Repos", seance: null, duree: 0, cardio: null, dateStr, dateObj: new Date(), dayName: "Erreur" };
+        console.error('Erreur getCalendarForDate:', e);
+        return { 
+            type: "Repos", 
+            seance: null, 
+            duree: 0, 
+            cardio: null, 
+            cardioOpt: null,
+            dateStr, 
+            dateObj: new Date(), 
+            dayName: "Erreur",
+            weekNumber: 1,
+            phase: null
+        };
     }
 };
+
 
 // --- HOOKS ---
 const useLocalStorage = (key, initialValue) => {
