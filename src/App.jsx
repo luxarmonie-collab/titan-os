@@ -1398,8 +1398,10 @@ const TitanAICouncil = {
         // PRÉDICTION OBJECTIFS HEBDO FITNESS - Calcul intelligent
         const weekWorkouts = workoutLogs?.filter(w => last7Days.includes(w.date)).length || 0;
         const targetWorkouts = 6; // Objectif hebdo
-        const daysLeftInWeek = 7 - new Date().getDay();
-        const workoutsNeeded = targetWorkouts - weekWorkouts;
+        const today = new Date();
+        const dayOfWeek = today.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
+        const daysLeftInWeek = dayOfWeek === 0 ? 0 : 7 - dayOfWeek; // Jours restants jusqu'à dimanche
+        const workoutsNeeded = Math.max(0, targetWorkouts - weekWorkouts);
         
         // Facteurs de calcul
         let workoutSuccessProb = 0;
@@ -1407,10 +1409,17 @@ const TitanAICouncil = {
         if (weekWorkouts >= targetWorkouts) {
             // Objectif déjà atteint
             workoutSuccessProb = 100;
-        } else if (workoutsNeeded > daysLeftInWeek) {
-            // Impossible mathématiquement
+        } else if (daysLeftInWeek === 0) {
+            // Dimanche, semaine terminée
             workoutSuccessProb = Math.round((weekWorkouts / targetWorkouts) * 100);
+        } else if (workoutsNeeded > daysLeftInWeek) {
+            // Mathématiquement difficile mais pas impossible
+            // On donne quand même une chance si début de semaine
+            const progressRate = weekWorkouts / Math.max(1, 7 - daysLeftInWeek); // Séances par jour jusqu'ici
+            const projectedTotal = progressRate * 7;
+            workoutSuccessProb = Math.min(80, Math.round((projectedTotal / targetWorkouts) * 100));
         } else {
+            // Objectif encore atteignable
             // Base: progression actuelle
             const baseProb = (weekWorkouts / targetWorkouts) * 50;
             
@@ -1433,7 +1442,7 @@ const TitanAICouncil = {
             // Bonus jours restants (plus facile si beaucoup de temps)
             const timeBonus = Math.round((daysLeftInWeek / 7) * 15);
             
-            workoutSuccessProb = Math.min(100, Math.max(0, Math.round(baseProb + whoopBonus + energyBonus + timeBonus)));
+            workoutSuccessProb = Math.min(100, Math.max(10, Math.round(baseProb + whoopBonus + energyBonus + timeBonus)));
         }
         
         predictions.push({
@@ -1444,7 +1453,7 @@ const TitanAICouncil = {
             details: {
                 done: weekWorkouts,
                 target: targetWorkouts,
-                remaining: Math.max(0, workoutsNeeded),
+                remaining: workoutsNeeded,
                 daysLeft: daysLeftInWeek
             },
             action: workoutSuccessProb >= 80 ? 'Tu es sur la bonne voie ! 💪' :
@@ -3182,7 +3191,7 @@ const useSupabaseMeals = (userId) => {
         }
     };
     
-    return [data, setData, addMeal, updateMealById, deleteMealById];
+    return [data, setData, addMeal, updateMeal, deleteMeal];
 };
 
 // Hook pour sync Whoop metrics
@@ -3268,7 +3277,8 @@ const useWhoopData = (userId) => {
                 console.log('Token expired, refreshing...');
                 accessToken = await refreshWhoopToken(tokenData.refresh_token);
                 if (!accessToken) {
-                    setError('Token refresh failed');
+                    setError('Ajoutez VITE_WHOOP_CLIENT_ID et VITE_WHOOP_CLIENT_SECRET dans Railway');
+                    setConnected(false);
                     await loadFromSupabase();
                     return;
                 }
@@ -5964,7 +5974,7 @@ const TransactionForm = ({ initialData, onSubmit, onDelete }) => {
 // MODULE REPAS - Planning hebdomadaire des repas
 // ═══════════════════════════════════════════════════════════════════════════════
 const MealsView = ({ userId }) => {
-    const [meals, setMeals, saveNewMeal, updateMealById, deleteMealById] = useSupabaseMeals(userId);
+    const [meals, setMeals] = useLocalStorage(`titan_meals_${userId}`, {});
     const [weekOffset, setWeekOffset] = useState(0);
     
     // Générer les dates de la semaine
