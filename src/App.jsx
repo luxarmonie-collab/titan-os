@@ -2981,6 +2981,210 @@ const useSupabaseHabits = (userId) => {
     return [data, setData, toggleHabit];
 };
 
+
+// Hook pour sync les tasks
+const useSupabaseTasks = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_tasks_${userId}`, []);
+    
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('tasks')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('created_at', { ascending: false });
+                
+                if (!error && rows && rows.length > 0) {
+                    setData(rows);
+                }
+            } catch (e) {
+                console.log('Supabase load tasks error:', e);
+            }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    const addTask = async (task) => {
+        const newTask = { ...task, id: task.id || Date.now().toString() };
+        const newData = [...data, newTask];
+        setData(newData);
+        
+        try {
+            await supabase.from('tasks').insert({
+                id: newTask.id,
+                user_id: userId,
+                title: newTask.title,
+                description: newTask.description || null,
+                priority: newTask.priority || 'medium',
+                due_date: newTask.due_date || null,
+                completed: newTask.completed || false,
+                completed_at: newTask.completed_at || null,
+                category: newTask.category || null
+            });
+        } catch (e) {
+            console.log('Supabase save task error:', e);
+        }
+    };
+    
+    const updateTask = async (taskId, updates) => {
+        const newData = data.map(t => t.id === taskId ? {...t, ...updates} : t);
+        setData(newData);
+        
+        try {
+            await supabase.from('tasks').update(updates).eq('id', taskId).eq('user_id', userId);
+        } catch (e) {
+            console.log('Supabase update task error:', e);
+        }
+    };
+    
+    const deleteTask = async (taskId) => {
+        const newData = data.filter(t => t.id !== taskId);
+        setData(newData);
+        
+        try {
+            await supabase.from('tasks').delete().eq('id', taskId).eq('user_id', userId);
+        } catch (e) {
+            console.log('Supabase delete task error:', e);
+        }
+    };
+    
+    return [data, setData, addTask, updateTask, deleteTask];
+};
+
+// Hook pour sync les transactions
+const useSupabaseTransactions = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_transactions_${userId}`, []);
+    
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('transactions')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('date', { ascending: false });
+                
+                if (!error && rows && rows.length > 0) {
+                    setData(rows);
+                }
+            } catch (e) {
+                console.log('Supabase load transactions error:', e);
+            }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    const addTransaction = async (transaction) => {
+        const newTx = {...transaction, id: transaction.id || Date.now().toString()};
+        const newData = [...data, newTx];
+        setData(newData);
+        
+        try {
+            await supabase.from('transactions').insert({
+                id: newTx.id,
+                user_id: userId,
+                date: newTx.date,
+                amount: newTx.amount,
+                category: newTx.category,
+                subcategory: newTx.subcategory || null,
+                description: newTx.description || null,
+                payment_method: newTx.payment_method || null,
+                is_recurring: newTx.is_recurring || false
+            });
+        } catch (e) {
+            console.log('Supabase save transaction error:', e);
+        }
+    };
+    
+    const deleteTransaction = async (txId) => {
+        const newData = data.filter(t => t.id !== txId);
+        setData(newData);
+        
+        try {
+            await supabase.from('transactions').delete().eq('id', txId).eq('user_id', userId);
+        } catch (e) {
+            console.log('Supabase delete transaction error:', e);
+        }
+    };
+    
+    return [data, setData, addTransaction, deleteTransaction];
+};
+
+// Hook pour sync les meals
+const useSupabaseMeals = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_meals_${userId}`, []);
+    
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('meals')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('date', { ascending: false });
+                
+                if (!error && rows && rows.length > 0) {
+                    setData(rows);
+                }
+            } catch (e) {
+                console.log('Supabase load meals error:', e);
+            }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    const addMeal = async (meal) => {
+        const newMeal = {...meal, id: meal.id || Date.now().toString()};
+        const newData = [...data, newMeal];
+        setData(newData);
+        
+        try {
+            await supabase.from('meals').insert({
+                id: newMeal.id,
+                user_id: userId,
+                date: newMeal.date,
+                meal_type: newMeal.meal_type,
+                name: newMeal.name,
+                description: newMeal.description || null,
+                calories: newMeal.calories || null,
+                protein: newMeal.protein || null,
+                carbs: newMeal.carbs || null,
+                fat: newMeal.fat || null,
+                is_planned: newMeal.is_planned || false,
+                is_consumed: newMeal.is_consumed || false,
+                consumed_at: newMeal.consumed_at || null
+            });
+        } catch (e) {
+            console.log('Supabase save meal error:', e);
+        }
+    };
+    
+    const updateMeal = async (mealId, updates) => {
+        const newData = data.map(m => m.id === mealId ? {...m, ...updates} : m);
+        setData(newData);
+        
+        try {
+            await supabase.from('meals').update(updates).eq('id', mealId).eq('user_id', userId);
+        } catch (e) {
+            console.log('Supabase update meal error:', e);
+        }
+    };
+    
+    const deleteMeal = async (mealId) => {
+        const newData = data.filter(m => m.id !== mealId);
+        setData(newData);
+        
+        try {
+            await supabase.from('meals').delete().eq('id', mealId).eq('user_id', userId);
+        } catch (e) {
+            console.log('Supabase delete meal error:', e);
+        }
+    };
+    
+    return [data, setData, addMeal, updateMealById, deleteMealById];
+};
+
 // Hook pour sync Whoop metrics
 const useWhoopData = (userId) => {
     const [data, setData] = useLocalStorage(`titan_whoop_${userId}`, null);
@@ -2991,18 +3195,31 @@ const useWhoopData = (userId) => {
     // Fonction pour refresh le token Whoop
     const refreshWhoopToken = async (refreshToken) => {
         try {
+            const clientId = import.meta.env.VITE_WHOOP_CLIENT_ID;
+            const clientSecret = import.meta.env.VITE_WHOOP_CLIENT_SECRET;
+            
+            // Si pas de credentials, on ne peut pas refresh
+            if (!clientId || !clientSecret) {
+                console.log('❌ Whoop credentials manquants - impossible de refresh le token');
+                return null;
+            }
+            
             const res = await fetch('https://api.prod.whoop.com/oauth/token', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     grant_type: 'refresh_token',
                     refresh_token: refreshToken,
-                    client_id: import.meta.env.VITE_WHOOP_CLIENT_ID || 'your_client_id',
-                    client_secret: import.meta.env.VITE_WHOOP_CLIENT_SECRET || 'your_client_secret'
+                    client_id: clientId,
+                    client_secret: clientSecret
                 })
             });
             
-            if (!res.ok) throw new Error('Token refresh failed');
+            if (!res.ok) {
+                const errorText = await res.text();
+                console.error('Whoop token refresh failed:', errorText);
+                throw new Error('Token refresh failed');
+            }
             
             const tokens = await res.json();
             
@@ -3013,9 +3230,10 @@ const useWhoopData = (userId) => {
                 expires_at: new Date(Date.now() + (tokens.expires_in || 3600) * 1000).toISOString()
             }).eq('user_id', userId);
             
+            console.log('✅ Whoop token refreshed successfully');
             return tokens.access_token;
         } catch (e) {
-            console.error('Token refresh error:', e);
+            console.error('❌ Token refresh error:', e);
             return null;
         }
     };
@@ -5574,7 +5792,7 @@ const PieChart = ({ data, title, size = 180 }) => {
 
 const FinanceView = ({ userId }) => {
     const [view, setView] = useState('overview');
-    const [transactions, setTransactions] = useLocalStorage(`titan_finance_${userId}`, []);
+    const [transactions, setTransactions, addTransactionToDb, deleteTransactionFromDb] = useSupabaseTransactions(userId);
     const [selectedMonth, setSelectedMonth] = useState(() => { const now = new Date(); return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`; });
     const [showAddManual, setShowAddManual] = useState(false);
     const [editingTx, setEditingTx] = useState(null);
@@ -5594,9 +5812,9 @@ const FinanceView = ({ userId }) => {
     const paymentChartData = useMemo(() => PAYMENT_METHODS.map(pm => ({ name: pm.name, value: monthStats.byPayment[pm.id] || 0, color: pm.color })).filter(d => d.value > 0), [monthStats.byPayment]);
 
     const autoCategorize = (description) => { const desc = description.toLowerCase(); for (const [category, keywords] of Object.entries(CATEGORY_KEYWORDS)) { if (keywords.some(kw => desc.includes(kw))) return category; } return 'autres'; };
-    const addTransaction = (tx) => setTransactions(prev => [...prev, { ...tx, id: Date.now().toString(), category: tx.category || autoCategorize(tx.description || ''), createdAt: new Date().toISOString() }]);
+    const addTransaction = (tx) => { const newTx = { ...tx, id: Date.now().toString(), category: tx.category || autoCategorize(tx.description || ''), createdAt: new Date().toISOString() }; addTransactionToDb(newTx); };
     const updateTransaction = (id, updates) => { setTransactions(prev => prev.map(tx => tx.id === id ? { ...tx, ...updates } : tx)); setEditingTx(null); };
-    const deleteTransaction = (id) => setTransactions(prev => prev.filter(tx => tx.id !== id));
+    const deleteTransaction = (id) => { deleteTransactionFromDb(id); };
     const changeMonth = (delta) => { const [year, month] = selectedMonth.split('-').map(Number); const newDate = new Date(year, month - 1 + delta); setSelectedMonth(`${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}`); };
 
     const monthName = new Date(selectedMonth + '-01').toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
@@ -5746,7 +5964,7 @@ const TransactionForm = ({ initialData, onSubmit, onDelete }) => {
 // MODULE REPAS - Planning hebdomadaire des repas
 // ═══════════════════════════════════════════════════════════════════════════════
 const MealsView = ({ userId }) => {
-    const [meals, setMeals] = useLocalStorage(`titan_meals_${userId}`, {});
+    const [meals, setMeals, saveNewMeal, updateMealById, deleteMealById] = useSupabaseMeals(userId);
     const [weekOffset, setWeekOffset] = useState(0);
     
     // Générer les dates de la semaine
@@ -6843,13 +7061,13 @@ const Layout = ({ children, view, setView }) => {
 };
 
 const Dashboard = ({ setView, userId }) => {
-    const [biometrics] = useLocalStorage(`titan_biometrics_${userId}`, {});
-    const [dailyCheckins, setDailyCheckins] = useLocalStorage(`titan_checkins_${userId}`, {});
-    const [supplementLogs, setSupplementLogs] = useLocalStorage(`titan_supplements_${userId}`, {});
-    const [workoutLogs] = useLocalStorage(`titan_workouts_${userId}`, []);
-    const [tasks, setTasks] = useLocalStorage(`titan_tasks_${userId}`, []);
-    const [transactions] = useLocalStorage(`titan_transactions_${userId}`, []);
-    const [whoopData] = useLocalStorage(`titan_whoop_${userId}`, null);
+    const [biometrics, setBiometrics, saveBiometric] = useSupabaseBiometrics(userId);
+    const [dailyCheckins, saveCheckin] = useSupabaseCheckins(userId);
+    const [supplementLogs, setSupplementLogs, saveSupplement] = useSupabaseSupplements(userId);
+    const [workoutLogs, setWorkoutLogs, addWorkout] = useSupabaseWorkouts(userId);
+    const [tasks, setTasks, addTask, updateTask, deleteTask] = useSupabaseTasks(userId);
+    const [transactions, setTransactions, addTransaction, deleteTransaction] = useSupabaseTransactions(userId);
+    const [whoopData, updateWhoopData, syncingWhoop, connectedWhoop] = useWhoopData(userId);
     const [showAiQuestion, setShowAiQuestion] = useState(false);
     const [questionAnswer, setQuestionAnswer] = useState('');
     const [aiNotes, setAiNotes] = useLocalStorage(`titan_ai_notes_${userId}`, []);
@@ -6865,22 +7083,16 @@ const Dashboard = ({ setView, userId }) => {
     const todayCheckin = dailyCheckins[todayStr] || {};
     const todaySupplements = supplementLogs[todayStr] || {};
     
-    const updateCheckin = (field, value) => {
-        setDailyCheckins(prev => ({
-            ...prev,
-            [todayStr]: { ...prev[todayStr], [field]: value }
-        }));
+    const updateCheckin = async (field, value) => {
+        await saveCheckin(todayStr, { [field]: value });
     };
     
-    const toggleSupplement = (period, id) => {
+    const toggleSupplement = async (period, id) => {
         const current = todaySupplements[period] || [];
         const updated = current.includes(id) 
             ? current.filter(x => x !== id)
             : [...current, id];
-        setSupplementLogs(prev => ({
-            ...prev,
-            [todayStr]: { ...prev[todayStr], [period]: updated }
-        }));
+        await saveSupplement(todayStr, period, updated);
     };
     
     
