@@ -402,7 +402,7 @@ const GlobalStyles = () => (
 );
 
 // --- DATA CONSTANTS ---
-const PHASE_1_START = new Date("2024-11-25");
+const PHASE_1_START = new Date("2025-11-24");
 
 const CARDIO_DETAILS = {
     // LISS (Low Intensity Steady State) - Zone 2
