@@ -3499,6 +3499,55 @@ const useSupabaseMeals = (userId) => {
     return [data, setData, addMeal, updateMeal, deleteMeal];
 };
 
+// Hook simplifié pour MealsView (format objet avec dates comme clés)
+const useSupabaseMealsSimple = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_meals_simple_${userId}`, {});
+    
+    // Charger depuis Supabase au démarrage
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('meals_simple')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .single();
+                
+                if (!error && rows && rows.data) {
+                    setData(rows.data);
+                }
+            } catch (e) {
+                console.log('Supabase load meals_simple:', e);
+            }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    // Sauvegarder dans Supabase à chaque modification
+    const setDataAndSync = (newDataOrFn) => {
+        setData(prev => {
+            const newData = typeof newDataOrFn === 'function' ? newDataOrFn(prev) : newDataOrFn;
+            
+            // Sync async
+            (async () => {
+                try {
+                    await supabase.from('meals_simple').upsert({
+                        user_id: userId,
+                        data: newData,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
+                } catch (e) {
+                    console.log('Supabase save meals_simple error:', e);
+                }
+            })();
+            
+            return newData;
+        });
+    };
+    
+    return [data, setDataAndSync, null, null, null];
+};
+
 // Hook pour sync Whoop metrics
 const useWhoopData = (userId) => {
     const [data, setData] = useLocalStorage(`titan_whoop_${userId}`, null);
@@ -6279,7 +6328,7 @@ const TransactionForm = ({ initialData, onSubmit, onDelete }) => {
 // MODULE REPAS - Planning hebdomadaire des repas
 // ═══════════════════════════════════════════════════════════════════════════════
 const MealsView = ({ userId }) => {
-    const [meals, setMeals] = useLocalStorage(`titan_meals_${userId}`, {});
+    const [meals, setMeals, , , syncMeals] = useSupabaseMealsSimple(userId);
     const [weekOffset, setWeekOffset] = useState(0);
     
     // Générer les dates de la semaine
