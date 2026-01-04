@@ -14,6 +14,17 @@ import {
 } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// INTELLIGENT COACH v2 - Import
+// ═══════════════════════════════════════════════════════════════════════════════
+import { 
+    useIntelligentCoach, 
+    PrescriptionCard, 
+    EveningReviewCard, 
+    WeeklySummaryCard,
+    NightReminderCard 
+} from './hooks/useIntelligentCoach.jsx';
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // SUPABASE CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
 const SUPABASE_URL = 'https://nzejiljpfdslouvehvin.supabase.co';
@@ -402,7 +413,8 @@ const GlobalStyles = () => (
 );
 
 // --- DATA CONSTANTS ---
-const PHASE_1_START = new Date("2025-11-24");
+// Programme: 6 janvier 2025 → 27 juillet 2025 (31 semaines)
+const PHASE_1_START = new Date("2026-01-01"); // Mercredi 1er janvier 2026
 
 const CARDIO_DETAILS = {
     // LISS (Low Intensity Steady State) - Zone 2
@@ -690,267 +702,320 @@ const EXERCISES_DB = {
 // ═══════════════════════════════════════════════════════════════════════════════
 // CALENDRIER 27 SEMAINES COMPLET
 // ═══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+// CALENDRIER 31 SEMAINES - 6 janvier → 27 juillet 2025
+// ═══════════════════════════════════════════════════════════════════════════════
 const CALENDAR_27_WEEKS = [
-    // PHASE 1 - MASSE (Semaines 1-10)
-    { sem: 1, date: "25/11", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_Opt", notes: "Focus rattrapage" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "Pesée + Photos" }
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PHASE 1 - MASSE (Semaines 1-14) - 6 janvier → 13 avril
+    // ═══════════════════════════════════════════════════════════════════════════
+    { sem: 1, date: "01/01", phase: "Phase1_Masse", jours: [
+        { jour: "Mer", seance: null, duree: 0, cardio: null, notes: "🎆 Jour de l'An - Repos" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt", notes: "🚀 DÉBUT PROGRAMME" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Sam", seance: "MOLLETS", duree: 35, cardio: "LISS_Opt", notes: "Focus rattrapage" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos S1" }
     ]},
-    { sem: 2, date: "02/12", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_Opt" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "Course_10km_Opt" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "Pesée + Photos" }
+    { sem: 2, date: "06/01", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Mar", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Sam", seance: "MOLLETS", duree: 35, cardio: "LISS_25" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos S2" }
     ]},
-    { sem: 3, date: "09/12", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_Opt" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: null, duree: 0, cardio: null, notes: "🎿 SKI début" },
-        { jour: "Sam", seance: "UPPER_SKI", duree: 45, cardio: null, notes: "SKI + Upper soir" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "🎿 SKI - Pesée" }
-    ]},
-    { sem: 4, date: "16/12", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "🎿 SKI" },
-        { jour: "Mar", seance: "UPPER_SKI", duree: 45, cardio: null, notes: "SKI + Upper soir" },
-        { jour: "Mer", seance: null, duree: 0, cardio: null, notes: "🎿 SKI" },
-        { jour: "Jeu", seance: "UPPER_SKI", duree: 50, cardio: null, notes: "SKI + Upper + Mollets" },
-        { jour: "Ven", seance: null, duree: 0, cardio: null, notes: "🎿 SKI fin" },
-        { jour: "Sam", seance: "PUSH_A_Deload", duree: 60, cardio: null, notes: "DELOAD" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "Photos" }
-    ]},
-    { sem: 5, date: "23/12", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PULL_A_Deload", duree: 60, cardio: "LISS_Opt", notes: "DELOAD" },
-        { jour: "Mar", seance: "POIDS_CORPS", duree: 30, cardio: "Course_30", notes: "🎄 Noël" },
-        { jour: "Mer", seance: null, duree: 0, cardio: null, notes: "🎄 Noël - Repos" },
-        { jour: "Jeu", seance: "HIIT_MAISON", duree: 20, cardio: "Course_35", notes: "Course + HIIT" },
-        { jour: "Ven", seance: "POIDS_CORPS", duree: 30, cardio: "Course_30" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "Course_40", notes: "LISS" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "Photos + Préparer reprise" }
-    ]},
-    { sem: 6, date: "30/12", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt", notes: "Reprise post-Noël" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt", notes: "Réveillon" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_Opt", notes: "🎆 Nouvel An" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "Pesée + Photos + Bilan mi-Phase1" }
-    ]},
-    { sem: 7, date: "06/01", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_Opt" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "Course_10km_Opt" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "Pesée + Photos" }
-    ]},
-    { sem: 8, date: "13/01", phase: "Phase1_Masse", jours: [
+    { sem: 3, date: "13/01", phase: "Phase1_Masse", jours: [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
         { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_Opt" },
         { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
         { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "Pesée + Photos" }
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 9, date: "20/01", phase: "Phase1_Masse", jours: [
+    { sem: 4, date: "27/01", phase: "Phase1_Masse", jours: [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_25", notes: "Ajout cardio progressif" },
         { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Bilan S4" }
+    ]},
+    { sem: 5, date: "03/02", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_25" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
+        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_25" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+    ]},
+    { sem: 6, date: "10/02", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_25" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
+        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
         { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "Course_10km_Opt" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "Pesée + Photos" }
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 10, date: "27/01", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A_Deload", duree: 60, cardio: "LISS_Opt", notes: "⚡ DELOAD" },
-        { jour: "Mar", seance: "PULL_A_Deload", duree: 60, cardio: "LISS_Opt", notes: "DELOAD" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "LISS_25", notes: "Cardio léger" },
-        { jour: "Jeu", seance: "LEGS_A_Deload", duree: 65, cardio: null, notes: "DELOAD" },
-        { jour: "Ven", seance: "PUSH_B_Deload", duree: 55, cardio: null, notes: "DELOAD" },
-        { jour: "Sam", seance: null, duree: 0, cardio: null, notes: "Repos complet" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 FIN PHASE 1 - Mesures complètes" }
+    { sem: 7, date: "17/02", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A_Deload", duree: 50, cardio: "LISS_20", notes: "⚡ DELOAD" },
+        { jour: "Mar", seance: "PULL_A_Deload", duree: 55, cardio: "LISS_20" },
+        { jour: "Mer", seance: "MOLLETS", duree: 30, cardio: "LISS_20" },
+        { jour: "Jeu", seance: "LEGS_A_Deload", duree: 50, cardio: null },
+        { jour: "Ven", seance: "PUSH_B_Deload", duree: 45, cardio: "LISS_20" },
+        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Mi-Phase1" }
     ]},
-    // PHASE 2 - TRANSITION (Semaines 11-18)
-    { sem: 11, date: "03/02", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_v2", duree: 70, cardio: "HIIT_15", notes: "🔄 DÉBUT PHASE 2" },
-        { jour: "Mar", seance: "PULL_A_v2", duree: 70, cardio: "LISS_30" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "HIIT_20", notes: "Cardio HIIT" },
-        { jour: "Jeu", seance: "LEGS_A_v2_MOLLETS", duree: 80, cardio: "LISS_35", notes: "Mollets intégrés" },
-        { jour: "Ven", seance: "PUSH_B_v2", duree: 60, cardio: null },
-        { jour: "Sam", seance: "PULL_B_v2_MOLLETS", duree: 65, cardio: "HIIT_15" },
-        { jour: "Dim", seance: null, duree: 0, cardio: "LISS_40_Opt", notes: "Pesée + Photos" }
+    { sem: 8, date: "24/02", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_25", notes: "Reprise post-deload" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
+        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 12, date: "10/02", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_v2", duree: 70, cardio: "HIIT_15" },
-        { jour: "Mar", seance: "PULL_A_v2", duree: 70, cardio: "LISS_30" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "HIIT_20" },
-        { jour: "Jeu", seance: "LEGS_A_v2_MOLLETS", duree: 80, cardio: "LISS_35" },
-        { jour: "Ven", seance: "PUSH_B_v2", duree: 60, cardio: null },
-        { jour: "Sam", seance: "PULL_B_v2_MOLLETS", duree: 65, cardio: "HIIT_15" },
-        { jour: "Dim", seance: null, duree: 0, cardio: "Course_10km_Opt", notes: "Pesée + Photos" }
+    { sem: 9, date: "03/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
+        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 13, date: "17/02", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_v2", duree: 70, cardio: "HIIT_15" },
-        { jour: "Mar", seance: "PULL_A_v2", duree: 70, cardio: "LISS_30" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "HIIT_20" },
-        { jour: "Jeu", seance: "LEGS_A_v2_MOLLETS", duree: 80, cardio: "LISS_35" },
-        { jour: "Ven", seance: "PUSH_B_v2", duree: 60, cardio: null },
-        { jour: "Sam", seance: "PULL_B_v2_MOLLETS", duree: 65, cardio: "HIIT_15" },
-        { jour: "Dim", seance: null, duree: 0, cardio: "LISS_40_Opt", notes: "Pesée + Photos" }
+    { sem: 10, date: "10/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
+        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "Course_10km_Opt" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 14, date: "24/02", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_v2", duree: 70, cardio: "HIIT_15" },
-        { jour: "Mar", seance: "PULL_A_v2", duree: 70, cardio: "LISS_30" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "HIIT_20" },
-        { jour: "Jeu", seance: "LEGS_A_v2_MOLLETS", duree: 80, cardio: "LISS_35" },
-        { jour: "Ven", seance: "PUSH_B_v2", duree: 60, cardio: null },
-        { jour: "Sam", seance: "PULL_B_v2_MOLLETS", duree: 65, cardio: "HIIT_15" },
-        { jour: "Dim", seance: null, duree: 0, cardio: "Course_10km_Opt", notes: "Pesée + Photos" }
+    { sem: 11, date: "17/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
+        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 15, date: "03/03", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_Deload", duree: 60, cardio: "LISS_20", notes: "⚡ DELOAD" },
-        { jour: "Mar", seance: "PULL_A_Deload", duree: 60, cardio: "LISS_20", notes: "DELOAD" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "LISS_25", notes: "Cardio LISS" },
-        { jour: "Jeu", seance: "LEGS_A_Deload", duree: 65, cardio: null, notes: "DELOAD" },
-        { jour: "Ven", seance: null, duree: 0, cardio: null, notes: "Repos" },
-        { jour: "Sam", seance: null, duree: 0, cardio: null, notes: "Repos" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "Pesée + Photos" }
+    { sem: 12, date: "24/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
+        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Bilan S12" }
     ]},
-    { sem: 16, date: "10/03", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_Intensif", duree: 70, cardio: "HIIT_20", notes: "🔥 Drop sets" },
-        { jour: "Mar", seance: "PULL_A_Intensif", duree: 75, cardio: "LISS_30" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "HIIT_25" },
-        { jour: "Jeu", seance: "LEGS_A_Intensif", duree: 80, cardio: "LISS_35" },
-        { jour: "Ven", seance: "PUSH_B_Intensif", duree: 70, cardio: null },
-        { jour: "Sam", seance: "PULL_B_LEGS_B_Intensif", duree: 90, cardio: "HIIT_20" },
-        { jour: "Dim", seance: null, duree: 0, cardio: "LISS_45", notes: "Pesée + Photos" }
+    { sem: 13, date: "31/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
+        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 17, date: "17/03", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_Intensif", duree: 70, cardio: "HIIT_20" },
-        { jour: "Mar", seance: "PULL_A_Intensif", duree: 75, cardio: "LISS_30" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "HIIT_25" },
-        { jour: "Jeu", seance: "LEGS_A_Intensif", duree: 80, cardio: "LISS_35" },
-        { jour: "Ven", seance: "PUSH_B_Intensif", duree: 70, cardio: null },
-        { jour: "Sam", seance: "PULL_B_LEGS_B_Intensif", duree: 90, cardio: "HIIT_20" },
-        { jour: "Dim", seance: null, duree: 0, cardio: "Course_10km_Opt", notes: "Pesée + Photos" }
+    { sem: 14, date: "07/04", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A_Deload", duree: 50, cardio: "LISS_25", notes: "⚡ DELOAD fin Phase 1" },
+        { jour: "Mar", seance: "PULL_A_Deload", duree: 55, cardio: "LISS_25" },
+        { jour: "Mer", seance: "MOLLETS", duree: 30, cardio: "LISS_25" },
+        { jour: "Jeu", seance: "LEGS_A_Deload", duree: 50, cardio: null },
+        { jour: "Ven", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 FIN PHASE 1 - Photos + Mesures" }
     ]},
-    { sem: 18, date: "24/03", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_Intensif", duree: 70, cardio: "HIIT_20" },
-        { jour: "Mar", seance: "PULL_A_Intensif", duree: 75, cardio: "LISS_30" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "HIIT_25" },
-        { jour: "Jeu", seance: "LEGS_A_Intensif", duree: 80, cardio: "LISS_35" },
-        { jour: "Ven", seance: "PUSH_B_Intensif", duree: 70, cardio: null },
-        { jour: "Sam", seance: "PULL_B_LEGS_B_Intensif", duree: 90, cardio: "HIIT_20" },
-        { jour: "Dim", seance: null, duree: 0, cardio: "LISS_45", notes: "📸 FIN PHASE 2 - Mesures" }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PHASE 2 - TRANSITION (Semaines 15-20) - 14 avril → 25 mai
+    // ═══════════════════════════════════════════════════════════════════════════
+    { sem: 15, date: "14/04", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "PUSH_A_v2", duree: 65, cardio: "LISS_30", notes: "🔄 DÉBUT PHASE 2" },
+        { jour: "Mar", seance: "PULL_A_v2", duree: 65, cardio: "LISS_30" },
+        { jour: "Mer", seance: "LEGS_A_v2_MOLLETS", duree: 75, cardio: null },
+        { jour: "Jeu", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Ven", seance: "PULL_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Sam", seance: null, duree: 0, cardio: "Course_10km_Opt" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    // PHASE 3 - SÈCHE (Semaines 19-27)
-    { sem: 19, date: "31/03", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "Repos avant Phase 3" },
-        { jour: "Mar", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_35", notes: "🔥 DÉBUT PHASE 3 SÈCHE" },
-        { jour: "Mer", seance: "LEGS_MOLLETS", duree: 70, cardio: null },
-        { jour: "Jeu", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Ven", seance: null, duree: 0, cardio: "LISS_40", notes: "Cardio ou Course 10km" },
-        { jour: "Sam", seance: "FULL_BODY", duree: 65, cardio: "LISS_30" },
-        { jour: "Dim", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" }
+    { sem: 16, date: "21/04", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "PUSH_A_v2", duree: 65, cardio: "LISS_30" },
+        { jour: "Mar", seance: "PULL_A_v2", duree: 65, cardio: "LISS_30" },
+        { jour: "Mer", seance: "LEGS_A_v2_MOLLETS", duree: 75, cardio: null },
+        { jour: "Jeu", seance: "PUSH_B", duree: 60, cardio: "LISS_35" },
+        { jour: "Ven", seance: "PULL_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Sam", seance: null, duree: 0, cardio: "HIIT_15", notes: "Introduction HIIT" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 20, date: "07/04", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: null, duree: 0, cardio: "LISS_45_Opt", notes: "Pesée + Photos" },
-        { jour: "Mar", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_35" },
-        { jour: "Mer", seance: "LEGS_MOLLETS", duree: 70, cardio: null },
-        { jour: "Jeu", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Ven", seance: null, duree: 0, cardio: "LISS_40" },
-        { jour: "Sam", seance: "FULL_BODY", duree: 65, cardio: "LISS_30" },
-        { jour: "Dim", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" }
+    { sem: 17, date: "28/04", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "PUSH_A_v2", duree: 65, cardio: "LISS_35" },
+        { jour: "Mar", seance: "PULL_A_v2", duree: 65, cardio: "LISS_30" },
+        { jour: "Mer", seance: "LEGS_A_v2_MOLLETS", duree: 75, cardio: null },
+        { jour: "Jeu", seance: "PUSH_B", duree: 60, cardio: "HIIT_15" },
+        { jour: "Ven", seance: "PULL_B", duree: 60, cardio: "LISS_35" },
+        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_40" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 21, date: "14/04", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: null, duree: 0, cardio: "Course_10km_Opt", notes: "Pesée + Photos" },
-        { jour: "Mar", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_35" },
-        { jour: "Mer", seance: "LEGS_MOLLETS", duree: 70, cardio: null },
-        { jour: "Jeu", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Ven", seance: null, duree: 0, cardio: "Course_10km" },
-        { jour: "Sam", seance: "FULL_BODY", duree: 65, cardio: "LISS_30" },
-        { jour: "Dim", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" }
+    { sem: 18, date: "05/05", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "FULL_BODY", duree: 70, cardio: "LISS_35", notes: "Switch Full Body" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "HIIT_15" },
+        { jour: "Mer", seance: "FULL_BODY", duree: 70, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_40" },
+        { jour: "Ven", seance: "FULL_BODY", duree: 70, cardio: "HIIT_15" },
+        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_40" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 22, date: "21/04", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: null, duree: 0, cardio: "LISS_45", notes: "Pesée + Photos" },
-        { jour: "Mar", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_35" },
-        { jour: "Mer", seance: "LEGS_MOLLETS", duree: 70, cardio: null },
-        { jour: "Jeu", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Ven", seance: null, duree: 0, cardio: "LISS_40" },
-        { jour: "Sam", seance: "FULL_BODY", duree: 65, cardio: "LISS_30" },
-        { jour: "Dim", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" }
+    { sem: 19, date: "12/05", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "FULL_BODY", duree: 70, cardio: "LISS_35" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "HIIT_20" },
+        { jour: "Mer", seance: "FULL_BODY", duree: 70, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_40" },
+        { jour: "Ven", seance: "FULL_BODY", duree: 70, cardio: "HIIT_15" },
+        { jour: "Sam", seance: null, duree: 0, cardio: "Course_10km" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 23, date: "28/04", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: null, duree: 0, cardio: "Course_10km_Opt", notes: "Pesée + Photos" },
-        { jour: "Mar", seance: "FULL_BODY_Deload", duree: 50, cardio: "LISS_30", notes: "⚡ DELOAD" },
-        { jour: "Mer", seance: "UPPER_Deload", duree: 45, cardio: "LISS_25", notes: "DELOAD" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_30", notes: "Cardio léger" },
-        { jour: "Ven", seance: "LOWER_Deload", duree: 50, cardio: null, notes: "DELOAD" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_25", notes: "Repos" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "Pesée + Photos" }
+    { sem: 20, date: "19/05", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "FULL_BODY_Deload", duree: 50, cardio: "LISS_30", notes: "⚡ DELOAD fin Phase 2" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Mer", seance: "UPPER_Deload", duree: 45, cardio: "LISS_25" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Ven", seance: "LOWER_Deload", duree: 45, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 FIN PHASE 2 - Photos + Mesures" }
     ]},
-    { sem: 24, date: "05/05", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "Récup avant sprint" },
-        { jour: "Mar", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_35", notes: "🚀 SPRINT FINAL" },
-        { jour: "Mer", seance: "LEGS_MOLLETS_MAX", duree: 70, cardio: null, notes: "Volume mollets MAX" },
-        { jour: "Jeu", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Ven", seance: null, duree: 0, cardio: "LISS_40" },
-        { jour: "Sam", seance: "FULL_BODY", duree: 65, cardio: "LISS_30" },
-        { jour: "Dim", seance: "CIRCUIT_METABOLIQUE_INTENSIF", duree: 55, cardio: "HIIT_25" }
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PHASE 3 - SÈCHE (Semaines 21-31) - 26 mai → 27 juillet
+    // ═══════════════════════════════════════════════════════════════════════════
+    { sem: 21, date: "26/05", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_40", notes: "🔥 DÉBUT SÈCHE" },
+        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: null },
+        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_45" },
+        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_35" },
+        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 25, date: "12/05", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: null, duree: 0, cardio: "LISS_45", notes: "Pesée + Photos + Mesures" },
-        { jour: "Mar", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_35" },
-        { jour: "Mer", seance: "LEGS_MOLLETS_MAX", duree: 70, cardio: null },
-        { jour: "Jeu", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Ven", seance: null, duree: 0, cardio: "Course_10km" },
-        { jour: "Sam", seance: "FULL_BODY", duree: 65, cardio: "LISS_30" },
-        { jour: "Dim", seance: "CIRCUIT_METABOLIQUE_INTENSIF", duree: 55, cardio: "HIIT_25" }
+    { sem: 22, date: "02/06", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_40", notes: "🎯 Objectif: SEC d'ici S24" },
+        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: null },
+        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_45" },
+        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_35" },
+        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 26, date: "19/05", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: null, duree: 0, cardio: "LISS_45", notes: "Pesée + Photos + Mesures" },
-        { jour: "Mar", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_35" },
-        { jour: "Mer", seance: "LEGS_MOLLETS_MAX", duree: 70, cardio: null },
-        { jour: "Jeu", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Ven", seance: null, duree: 0, cardio: "LISS_40" },
-        { jour: "Sam", seance: "FULL_BODY", duree: 65, cardio: "LISS_30" },
-        { jour: "Dim", seance: "CIRCUIT_METABOLIQUE_INTENSIF", duree: 55, cardio: "HIIT_25" }
+    { sem: 23, date: "09/06", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_40" },
+        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: null },
+        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_45" },
+        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_35" },
+        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 27, date: "26/05", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: null, duree: 0, cardio: "Course_10km_Opt", notes: "Pesée + Photos + Mesures" },
-        { jour: "Mar", seance: "FULL_BODY_A_MAX", duree: 60, cardio: "LISS_35", notes: "🏁 DERNIÈRE SEMAINE" },
-        { jour: "Mer", seance: "UPPER_MOLLETS_MAX", duree: 70, cardio: null },
-        { jour: "Jeu", seance: "LOWER_CIRCUIT_MAX", duree: 65, cardio: "LISS_35" },
-        { jour: "Ven", seance: "PUSH_PULL_SUPERSETS", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: "FULL_BODY_B_MOLLETS", duree: 65, cardio: "LISS_30" },
-        { jour: "Dim", seance: "CIRCUIT_FULL_BODY", duree: 55, cardio: "HIIT_25", notes: "Photos + Mesures" }
+    { sem: 24, date: "16/06", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_45", notes: "Cardio augmenté" },
+        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: "HIIT_15" },
+        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Course_10km" },
+        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_40" },
+        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Bilan mi-sèche" }
+    ]},
+    { sem: 25, date: "23/06", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "FULL_BODY_Deload", duree: 50, cardio: "LISS_35", notes: "⚡ DELOAD mi-sèche" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "LISS_35" },
+        { jour: "Mer", seance: "UPPER_Deload", duree: 45, cardio: "LISS_30" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_35" },
+        { jour: "Ven", seance: "LOWER_Deload", duree: 45, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+    ]},
+    { sem: 26, date: "30/06", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_45", notes: "🚀 SPRINT FINAL" },
+        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: "HIIT_15" },
+        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_45" },
+        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_40" },
+        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 55, cardio: "HIIT_25" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+    ]},
+    { sem: 27, date: "07/07", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_45" },
+        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: "HIIT_20" },
+        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Course_10km" },
+        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_40" },
+        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 55, cardio: "HIIT_25" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+    ]},
+    { sem: 28, date: "14/07", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_45", notes: "🇫🇷 14 juillet" },
+        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: "HIIT_20" },
+        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_45" },
+        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_40" },
+        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 55, cardio: "HIIT_25" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+    ]},
+    { sem: 29, date: "21/07", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "FULL_BODY_A_MAX", duree: 60, cardio: "LISS_40", notes: "🏁 DERNIÈRE SEMAINE INTENSE" },
+        { jour: "Mar", seance: "UPPER_MOLLETS_MAX", duree: 70, cardio: "HIIT_20" },
+        { jour: "Mer", seance: "LOWER_CIRCUIT_MAX", duree: 65, cardio: null },
+        { jour: "Jeu", seance: "PUSH_PULL_SUPERSETS", duree: 60, cardio: "LISS_40" },
+        { jour: "Ven", seance: "FULL_BODY_B_MOLLETS", duree: 65, cardio: "LISS_35" },
+        { jour: "Sam", seance: "CIRCUIT_FULL_BODY", duree: 55, cardio: "HIIT_20" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 BILAN FINAL - Photos + Mesures" }
+    ]},
+    { sem: 30, date: "28/07", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "FULL_BODY_Deload", duree: 45, cardio: "LISS_30", notes: "🎉 MAINTIEN - Deload" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Mer", seance: "UPPER_Light", duree: 40, cardio: "LISS_25" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Ven", seance: "LOWER_Light", duree: 40, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+    ]},
+    { sem: 31, date: "04/08", phase: "Maintien", jours: [
+        { jour: "Lun", seance: "FULL_BODY", duree: 60, cardio: "LISS_30", notes: "💎 MAINTIEN DES ACQUIS" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "LISS_35" },
+        { jour: "Mer", seance: "FULL_BODY", duree: 60, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_35" },
+        { jour: "Ven", seance: "FULL_BODY", duree: 60, cardio: "LISS_30" },
+        { jour: "Sam", seance: null, duree: 0, cardio: "Course_10km_Opt" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "🏆 FIN PROGRAMME - Photos finales" }
     ]}
 ];
 
-// Dates clés du programme
+// Dates clés du programme (1er janvier → 31 juillet 2026)
 const KEY_DATES = {
-    "2024-11-25": { label: "DÉBUT PROGRAMME", type: "start" },
-    "2024-12-13": { label: "Départ ski", type: "special" },
-    "2024-12-24": { label: "🎄 Noël", type: "special" },
-    "2025-02-02": { label: "📸 FIN PHASE 1", type: "milestone" },
-    "2025-02-03": { label: "🔄 DÉBUT PHASE 2", type: "start" },
-    "2025-03-30": { label: "📸 FIN PHASE 2", type: "milestone" },
-    "2025-04-01": { label: "🔥 DÉBUT PHASE 3 SÈCHE", type: "start" },
-    "2025-05-06": { label: "🚀 SPRINT FINAL", type: "special" },
-    "2025-06-02": { label: "⭐ PEAK WEEK", type: "special" },
-    "2025-06-15": { label: "🏆 OBJECTIF ATTEINT", type: "goal" }
+    "2026-01-01": { label: "🚀 DÉBUT PROGRAMME", type: "start" },
+    "2026-02-16": { label: "⚡ DELOAD S7", type: "deload" },
+    "2026-04-06": { label: "⚡ DELOAD fin Phase 1", type: "deload" },
+    "2026-04-12": { label: "📸 FIN PHASE 1", type: "milestone" },
+    "2026-04-13": { label: "🔄 DÉBUT PHASE 2", type: "start" },
+    "2026-05-18": { label: "⚡ DELOAD fin Phase 2", type: "deload" },
+    "2026-05-24": { label: "📸 FIN PHASE 2", type: "milestone" },
+    "2026-05-25": { label: "🔥 DÉBUT SÈCHE", type: "start" },
+    "2026-06-15": { label: "📸 Bilan mi-sèche", type: "milestone" },
+    "2026-06-22": { label: "⚡ DELOAD mi-sèche", type: "deload" },
+    "2026-06-29": { label: "🚀 SPRINT FINAL", type: "special" },
+    "2026-07-20": { label: "🏁 DERNIÈRE SEMAINE", type: "special" },
+    "2026-07-26": { label: "🏆 BILAN FINAL", type: "goal" }
+};
+    "2026-06-23": { label: "⚡ DELOAD mi-sèche", type: "deload" },
+    "2026-06-30": { label: "🚀 SPRINT FINAL", type: "special" },
+    "2026-07-21": { label: "🏁 DERNIÈRE SEMAINE", type: "special" },
+    "2026-07-27": { label: "🏆 BILAN FINAL", type: "goal" }
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -7300,12 +7365,27 @@ const Dashboard = ({ setView, userId }) => {
     const [questionAnswer, setQuestionAnswer] = useState('');
     const [aiNotes, setAiNotes] = useLocalStorage(`titan_ai_notes_${userId}`, []);
     const [showFlowDetails, setShowFlowDetails] = useState(false);
+    const [meals] = useLocalStorage(`titan_meals_${userId}`, []);
     
-    // Morning Coach States
+    // Morning Coach States (ancien système - conservé pour compatibilité)
     const [coachStep, setCoachStep] = useState('greeting'); // greeting, followup, recommendations, done
     const [coachDismissed, setCoachDismissed] = useLocalStorage(`titan_coach_dismissed_${userId}`, null);
     const [selectedOption, setSelectedOption] = useState(null);
     const [selectedAnswer, setSelectedAnswer] = useState(null);
+    
+    // ═══════════════════════════════════════════════════════════════════════════
+    // INTELLIGENT COACH v2 - Nouveau système avec cycle Matin/Soir
+    // ═══════════════════════════════════════════════════════════════════════════
+    const coach = useIntelligentCoach(userId, {
+        whoopData: whoopData,
+        checkins: dailyCheckins,
+        workoutLogs: workoutLogs,
+        tasks: tasks,
+        transactions: transactions,
+        meals: meals,
+        biometrics: biometrics,
+        todaySchedule: null
+    });
     
     const todayStr = new Date().toISOString().split('T')[0];
     const todayCheckin = dailyCheckins[todayStr] || {};
@@ -7425,329 +7505,176 @@ const Dashboard = ({ setView, userId }) => {
                 <div className="text-sm text-white italic">"{dailyQuote}"</div>
             </div>
             
+            
             {/* ═══════════════════════════════════════════════════════════════════════ */}
-            {/* MORNING COACH - Coaching Conversationnel Style Whoop */}
+            {/* INTELLIGENT COACH v2 - Cycle Matin/Soir/Nuit */}
             {/* ═══════════════════════════════════════════════════════════════════════ */}
-            {aiAnalysis.morningBriefing && coachDismissed !== todayStr && coachStep !== 'done' && (
+            {coach.step !== 'done' && coach.step !== 'loading' && coach.step !== 'error' && (
                 <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
-                    {/* Header avec logo */}
+                    {/* Header */}
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 flex items-center justify-center text-white font-black text-xs">
-                                T
+                                🧠
                             </div>
-                            <span className="text-xs text-gray-400 font-medium">TITAN Coach • Bêta v10</span>
+                            <div>
+                                <span className="text-xs text-gray-400 font-medium">TITAN Coach v2</span>
+                                <span className="text-xs text-cyan-500 ml-2">
+                                    {coach.coachingMode === 'morning' && '☀️ Matin'}
+                                    {coach.coachingMode === 'evening' && '🌆 Soir'}
+                                    {coach.coachingMode === 'night' && '🌙 Nuit'}
+                                </span>
+                            </div>
                         </div>
                         <button 
-                            onClick={() => { setCoachDismissed(todayStr); setCoachStep('done'); }}
+                            onClick={coach.dismissCoach}
                             className="text-gray-500 hover:text-gray-300"
                         >
                             <X size={16}/>
                         </button>
                     </div>
-                    
-                    {/* ÉTAPE 1: Greeting */}
-                    {coachStep === 'greeting' && (
+
+                    {/* ══════ ÉTAPE: GREETING (Matin) ══════ */}
+                    {coach.step === 'greeting' && coach.enquiry && (
                         <>
                             <div className="mb-4">
                                 <p className="text-white text-lg font-medium mb-1">
-                                    {aiAnalysis.morningBriefing.greeting.greeting} 👋
+                                    {coach.enquiry.greeting?.greeting || 'Bonjour'} 👋
                                 </p>
                                 <p className="text-gray-300">
-                                    {aiAnalysis.morningBriefing.greeting.mainMessage}
+                                    {coach.enquiry.greeting?.mainMessage || 'Comment vas-tu ?'}
                                 </p>
-                                {aiAnalysis.morningBriefing.greeting.subMessage && (
+                                {coach.enquiry.greeting?.subMessage && (
                                     <p className="text-gray-400 text-sm mt-1">
-                                        {aiAnalysis.morningBriefing.greeting.subMessage}
+                                        {coach.enquiry.greeting.subMessage}
                                     </p>
                                 )}
                             </div>
-                            
-                            {/* Question principale */}
-                            <p className="text-white text-sm mb-3">Tu préfères qu'on commence par quoi ?</p>
-                            
-                            {/* Options */}
-                            <div className="space-y-2">
-                                {aiAnalysis.morningBriefing.options.filter(o => o.id !== 'skip').map((option) => (
-                                    <button
-                                        key={option.id}
-                                        onClick={() => {
-                                            if (option.type === 'skip') {
-                                                setCoachDismissed(todayStr);
-                                                setCoachStep('done');
-                                            } else {
-                                                setSelectedOption(option);
-                                                setCoachStep('followup');
-                                            }
-                                        }}
-                                        className="w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/30 transition-all text-left"
-                                    >
-                                        <div className="flex items-start gap-3">
-                                            <span className="text-xl">{option.icon}</span>
-                                            <div className="flex-1">
-                                                <div className="text-white font-medium text-sm">{option.label}</div>
-                                                <div className="text-gray-400 text-xs mt-0.5">→ {option.description}</div>
-                                            </div>
-                                            <ChevronRight size={16} className="text-gray-500 mt-1"/>
-                                        </div>
-                                    </button>
-                                ))}
+
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={coach.startEnquiry}
+                                    className="flex-1 py-3 rounded-xl bg-cyan-500 hover:bg-cyan-600 text-white font-bold transition-colors"
+                                >
+                                    On analyse ensemble
+                                </button>
+                                <button
+                                    onClick={coach.skipEnquiry}
+                                    className="px-4 py-3 rounded-xl bg-white/10 text-gray-400 hover:text-white transition-colors"
+                                >
+                                    Passer
+                                </button>
                             </div>
-                            
-                            {/* Skip button */}
-                            <button 
-                                onClick={() => { setCoachDismissed(todayStr); setCoachStep('done'); }}
-                                className="w-full mt-3 py-2 text-gray-500 hover:text-gray-400 text-xs transition-colors"
-                            >
-                                Pas maintenant
-                            </button>
                         </>
                     )}
-                    
-                    {/* ÉTAPE 2: Follow-up (Explorer) */}
-                    {coachStep === 'followup' && selectedOption && (
+
+                    {/* ══════ ÉTAPE: ENQUIRY (Questions matin) ══════ */}
+                    {coach.step === 'enquiry' && coach.enquiry?.questions && (
                         <>
-                            {(() => {
-                                const followUp = aiAnalysis.MorningCoach.generateFollowUp(selectedOption.id, aiAnalysis.morningBriefing.analysis);
-                                if (!followUp) {
-                                    // Pas de follow-up défini, revenir au greeting
-                                    return (
-                                        <div className="text-center py-4">
-                                            <p className="text-gray-400 mb-4">Cette fonctionnalité arrive bientôt !</p>
-                                            <button 
-                                                onClick={() => { setCoachStep('greeting'); setSelectedOption(null); }}
-                                                className="text-cyan-400 text-sm"
-                                            >
-                                                ← Retour
-                                            </button>
-                                        </div>
-                                    );
-                                }
-                                
-                                // Type: Navigation vers une autre vue
-                                if (followUp.type === 'navigate') {
-                                    return (
-                                        <>
-                                            <div className="mb-4">
-                                                <button 
-                                                    onClick={() => { setCoachStep('greeting'); setSelectedOption(null); }}
-                                                    className="text-xs text-gray-500 hover:text-gray-400 mb-2"
+                            <div className="mb-4">
+                                <p className="text-white font-medium mb-3">
+                                    Quelques questions rapides pour personnaliser ton plan :
+                                </p>
+                            </div>
+
+                            <div className="space-y-4 mb-4">
+                                {coach.enquiry.questions.map((q) => (
+                                    <div key={q.id} className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                        <p className="text-white text-sm font-medium mb-2">{q.text}</p>
+                                        
+                                        {q.type === 'yesno' ? (
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => coach.answerQuestion(q.id, true)}
+                                                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                                                        coach.answers[q.id] === true 
+                                                            ? 'bg-cyan-500 text-white' 
+                                                            : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                                                    }`}
                                                 >
-                                                    ← Retour
+                                                    Oui
                                                 </button>
-                                                <h3 className="text-white font-bold text-lg">{followUp.title}</h3>
-                                                <p className="text-gray-400 text-sm mt-1">{followUp.message}</p>
-                                            </div>
-                                            
-                                            {followUp.recommendations && (
-                                                <div className="space-y-2 mb-4">
-                                                    {followUp.recommendations.map((rec, i) => (
-                                                        <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                                                            <span className="text-lg">{rec.icon}</span>
-                                                            <p className="text-white text-sm">{rec.action}</p>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                            
-                                            <button 
-                                                onClick={() => { 
-                                                    setCoachDismissed(todayStr); 
-                                                    setCoachStep('done');
-                                                    if (followUp.navigateTo === 'tasks') setView('tasks');
-                                                }}
-                                                className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-sm transition-all"
-                                            >
-                                                📋 Aller à mes tâches
-                                            </button>
-                                        </>
-                                    );
-                                }
-                                
-                                // Type: Quick check-in
-                                if (followUp.type === 'checkin') {
-                                    return (
-                                        <>
-                                            <div className="mb-4">
-                                                <button 
-                                                    onClick={() => { setCoachStep('greeting'); setSelectedOption(null); }}
-                                                    className="text-xs text-gray-500 hover:text-gray-400 mb-2"
+                                                <button
+                                                    onClick={() => coach.answerQuestion(q.id, false)}
+                                                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
+                                                        coach.answers[q.id] === false 
+                                                            ? 'bg-cyan-500 text-white' 
+                                                            : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                                                    }`}
                                                 >
-                                                    ← Retour
+                                                    Non
                                                 </button>
-                                                <h3 className="text-white font-bold text-lg">{followUp.title}</h3>
-                                                <p className="text-gray-400 text-sm mt-1">{followUp.message}</p>
                                             </div>
-                                            
-                                            <div className="space-y-2 mb-4">
-                                                {followUp.quickOptions.map((opt) => (
+                                        ) : (
+                                            <div className="flex flex-wrap gap-2">
+                                                {q.options?.map((opt) => (
                                                     <button
-                                                        key={opt.id}
-                                                        onClick={() => {
-                                                            // Sauvegarder le check-in rapide
-                                                            const today = new Date().toISOString().split('T')[0];
-                                                            setCheckins(prev => ({
-                                                                ...prev,
-                                                                [today]: { 
-                                                                    ...prev[today],
-                                                                    energy: opt.energy, 
-                                                                    mood: opt.mood,
-                                                                    quickCheckin: true,
-                                                                    timestamp: new Date().toISOString()
-                                                                }
-                                                            }));
-                                                            setCoachDismissed(todayStr);
-                                                            setCoachStep('done');
-                                                        }}
-                                                        className="w-full p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-cyan-500/30 transition-all text-left flex items-center gap-3"
+                                                        key={opt}
+                                                        onClick={() => coach.answerQuestion(q.id, opt)}
+                                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                                            coach.answers[q.id] === opt 
+                                                                ? 'bg-cyan-500 text-white' 
+                                                                : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                                                        }`}
                                                     >
-                                                        <span className="text-2xl">{opt.label.split(' ')[0]}</span>
-                                                        <span className="text-white font-medium">{opt.label.split(' ').slice(1).join(' ')}</span>
+                                                        {opt}
                                                     </button>
                                                 ))}
                                             </div>
-                                        </>
-                                    );
-                                }
-                                
-                                // Si c'est une action avec des recommandations directes
-                                if (followUp.recommendations) {
-                                    return (
-                                        <>
-                                            <div className="mb-4">
-                                                <button 
-                                                    onClick={() => { setCoachStep('greeting'); setSelectedOption(null); }}
-                                                    className="text-xs text-gray-500 hover:text-gray-400 mb-2"
-                                                >
-                                                    ← Retour
-                                                </button>
-                                                <h3 className="text-white font-bold text-lg">{followUp.title}</h3>
-                                            </div>
-                                            
-                                            <div className="space-y-2 mb-4">
-                                                {followUp.recommendations.map((rec, i) => (
-                                                    <div key={i} className={`flex items-start gap-3 p-3 rounded-xl ${
-                                                        rec.priority === 'high' ? 'bg-red-500/10 border border-red-500/20' :
-                                                        rec.priority === 'medium' ? 'bg-yellow-500/10 border border-yellow-500/20' :
-                                                        rec.time ? 'bg-cyan-500/10 border border-cyan-500/20' :
-                                                        'bg-white/5 border border-white/10'
-                                                    }`}>
-                                                        <span className="text-lg">{rec.icon}</span>
-                                                        <div className="flex-1">
-                                                            {rec.time && <span className="text-xs text-cyan-400 font-medium">{rec.time}</span>}
-                                                            <p className="text-white text-sm">{rec.action}</p>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            
-                                            {followUp.targetBedtime && (
-                                                <div className="p-3 rounded-xl bg-gradient-to-r from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 mb-4">
-                                                    <p className="text-white text-sm text-center">
-                                                        🎯 Objectif coucher ce soir : <span className="font-bold">{followUp.targetBedtime}</span>
-                                                    </p>
-                                                </div>
-                                            )}
-                                            
-                                            <button 
-                                                onClick={() => { setCoachDismissed(todayStr); setCoachStep('done'); }}
-                                                className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-sm transition-all"
-                                            >
-                                                C'est noté ! 👍
-                                            </button>
-                                        </>
-                                    );
-                                }
-                                
-                                // Si c'est une exploration avec des questions
-                                return (
-                                    <>
-                                        <button 
-                                            onClick={() => { setCoachStep('greeting'); setSelectedOption(null); }}
-                                            className="text-xs text-gray-500 hover:text-gray-400 mb-3"
-                                        >
-                                            ← Retour
-                                        </button>
-                                        
-                                        <p className="text-white font-medium mb-4">{followUp.question}</p>
-                                        
-                                        <div className="grid grid-cols-2 gap-2 mb-4">
-                                            {followUp.options.map((opt) => (
-                                                <button
-                                                    key={opt.id}
-                                                    onClick={() => {
-                                                        setSelectedAnswer(opt);
-                                                        setCoachStep('recommendations');
-                                                    }}
-                                                    className={`p-3 rounded-xl text-sm transition-all ${
-                                                        selectedAnswer?.id === opt.id 
-                                                            ? 'bg-cyan-500 text-white' 
-                                                            : 'bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10'
-                                                    }`}
-                                                >
-                                                    {opt.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                    </>
-                                );
-                            })()}
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button
+                                onClick={coach.submitAnswers}
+                                disabled={coach.loading}
+                                className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+                            >
+                                {coach.loading ? 'Analyse en cours...' : 'Générer mon plan'}
+                            </button>
                         </>
                     )}
-                    
-                    {/* ÉTAPE 3: Recommandations personnalisées */}
-                    {coachStep === 'recommendations' && selectedOption && selectedAnswer && (
+
+                    {/* ══════ ÉTAPE: PRESCRIPTION (Résultat matin) ══════ */}
+                    {coach.step === 'prescription' && coach.prescription && (
                         <>
-                            <button 
-                                onClick={() => { setCoachStep('followup'); setSelectedAnswer(null); }}
-                                className="text-xs text-gray-500 hover:text-gray-400 mb-3"
-                            >
-                                ← Retour
-                            </button>
+                            <PrescriptionCard prescription={coach.prescription} />
                             
-                            <div className="mb-4">
-                                <p className="text-white font-medium mb-2">
-                                    💡 Ce qu'il faut savoir sur "{selectedAnswer.label.replace(/^[^\s]+\s/, '')}"
-                                </p>
-                                
-                                {selectedAnswer.impact && (
-                                    <div className="p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 mb-3">
-                                        <p className="text-yellow-300 text-sm">{selectedAnswer.impact}</p>
-                                    </div>
-                                )}
-                                
-                                <div className="space-y-2">
-                                    {aiAnalysis.MorningCoach.generateRecommendations(
-                                        selectedOption.id, 
-                                        selectedAnswer.id, 
-                                        aiAnalysis.morningBriefing.analysis
-                                    ).map((rec, i) => (
-                                        <div key={i} className={`p-3 rounded-xl ${
-                                            rec.startsWith('💡') ? 'bg-cyan-500/10 border border-cyan-500/20' : 'bg-white/5 border border-white/10'
-                                        }`}>
-                                            <p className="text-gray-300 text-sm">{rec}</p>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                            
-                            <button 
-                                onClick={() => { 
-                                    // Sauvegarder la réponse
-                                    setAiNotes(prev => [...prev, {
-                                        type: 'coach_insight',
-                                        option: selectedOption.id,
-                                        answer: selectedAnswer.id,
-                                        timestamp: new Date().toISOString()
-                                    }]);
-                                    setCoachDismissed(todayStr); 
-                                    setCoachStep('done'); 
-                                }}
-                                className="w-full py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-xl font-bold text-sm transition-all"
+                            <button
+                                onClick={coach.dismissCoach}
+                                className="w-full mt-4 py-2 text-gray-500 hover:text-gray-400 text-sm"
                             >
-                                Merci, j'ai compris ! 🙌
+                                Fermer
                             </button>
                         </>
+                    )}
+
+                    {/* ══════ ÉTAPE: EVENING REVIEW (Bilan soir) ══════ */}
+                    {coach.step === 'evening_review' && coach.eveningReview && (
+                        <EveningReviewCard 
+                            review={coach.eveningReview}
+                            answers={coach.answers}
+                            onAnswer={coach.answerQuestion}
+                            onSubmit={coach.submitEveningReview}
+                            loading={coach.loading}
+                        />
+                    )}
+
+                    {/* ══════ ÉTAPE: WEEKLY SUMMARY (Dimanche soir) ══════ */}
+                    {coach.step === 'weekly_summary' && coach.weeklySummary && (
+                        <WeeklySummaryCard 
+                            summary={coach.weeklySummary}
+                            onDismiss={coach.dismissCoach}
+                        />
+                    )}
+
+                    {/* ══════ ÉTAPE: NIGHT REMINDER (Rappel coucher) ══════ */}
+                    {coach.step === 'night_reminder' && coach.nightReminder && (
+                        <NightReminderCard 
+                            reminder={coach.nightReminder}
+                            onDismiss={coach.dismissCoach}
+                        />
                     )}
                 </div>
             )}
