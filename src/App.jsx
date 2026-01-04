@@ -705,310 +705,337 @@ const EXERCISES_DB = {
 // ═══════════════════════════════════════════════════════════════════════════════
 // CALENDRIER 31 SEMAINES - 6 janvier → 27 juillet 2025
 // ═══════════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════════════════
+// CALENDRIER 31 SEMAINES - 1er janvier → 27 juillet 2026
+// Semaines du LUNDI au DIMANCHE
+// ═══════════════════════════════════════════════════════════════════════════════
 const CALENDAR_27_WEEKS = [
     // ═══════════════════════════════════════════════════════════════════════════
-    // PHASE 1 - MASSE (Semaines 1-14) - 6 janvier → 13 avril
+    // PHASE 1 - MASSE (Semaines 1-14) - 1er janvier → 12 avril 2026
+    // PPL 6x/sem + 1 séance mollets isolée + cardio LISS facultatif
     // ═══════════════════════════════════════════════════════════════════════════
+    
+    // S1: Semaine courte (1er janvier = mercredi)
     { sem: 1, date: "01/01", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "Avant programme" },
+        { jour: "Mar", seance: null, duree: 0, cardio: null, notes: "Avant programme" },
         { jour: "Mer", seance: null, duree: 0, cardio: null, notes: "🎆 Jour de l'An - Repos" },
         { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt", notes: "🚀 DÉBUT PROGRAMME" },
         { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "MOLLETS", duree: 35, cardio: "LISS_Opt", notes: "Focus rattrapage" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos S1" }
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 2, date: "06/01", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Mar", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
+    
+    // S2-S6: Semaines complètes PPL
+    { sem: 2, date: "05/01", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25", notes: "Séance mollets isolée" },
         { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
         { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "MOLLETS", duree: 35, cardio: "LISS_25" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos S2" }
-    ]},
-    { sem: 3, date: "13/01", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_Opt" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 4, date: "27/01", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_25", notes: "Ajout cardio progressif" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+    { sem: 3, date: "12/01", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+    ]},
+    { sem: 4, date: "19/01", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
+        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_30", notes: "Cardio obligatoire" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Bilan S4" }
     ]},
-    { sem: 5, date: "03/02", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_25" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_25" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+    { sem: 5, date: "26/01", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_25" },
+        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 6, date: "10/02", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_25" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "Course_10km_Opt" },
+    { sem: 6, date: "02/02", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_30" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 7, date: "17/02", phase: "Phase1_Masse", jours: [
+    
+    // S7: DELOAD
+    { sem: 7, date: "09/02", phase: "Phase1_Masse", jours: [
         { jour: "Lun", seance: "PUSH_A_Deload", duree: 50, cardio: "LISS_20", notes: "⚡ DELOAD" },
-        { jour: "Mar", seance: "PULL_A_Deload", duree: 55, cardio: "LISS_20" },
-        { jour: "Mer", seance: "MOLLETS", duree: 30, cardio: "LISS_20" },
+        { jour: "Mar", seance: "PULL_A_Deload", duree: 50, cardio: "LISS_20" },
+        { jour: "Mer", seance: null, duree: 0, cardio: "LISS_30" },
         { jour: "Jeu", seance: "LEGS_A_Deload", duree: 50, cardio: null },
         { jour: "Ven", seance: "PUSH_B_Deload", duree: 45, cardio: "LISS_20" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_25" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Mi-Phase1" }
     ]},
-    { sem: 8, date: "24/02", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_25", notes: "Reprise post-deload" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+    
+    // S8-S13: Reprise intense
+    { sem: 8, date: "16/02", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_25", notes: "Reprise post-deload" },
+        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_30" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 9, date: "03/03", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+    { sem: 9, date: "23/02", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_25" },
+        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_30", notes: "Cardio obligatoire" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 10, date: "10/03", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "Course_10km_Opt" },
+    { sem: 10, date: "02/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
+        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 11, date: "17/03", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+    { sem: 11, date: "09/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 12, date: "24/03", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+    { sem: 12, date: "16/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
+        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_30", notes: "Cardio obligatoire" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Bilan S12" }
     ]},
-    { sem: 13, date: "31/03", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
-        { jour: "Mer", seance: "MOLLETS", duree: 35, cardio: "LISS_30" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: null },
+    { sem: 13, date: "23/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_25" },
+        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25" },
+        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 14, date: "07/04", phase: "Phase1_Masse", jours: [
+    
+    // S14: DELOAD fin Phase 1
+    { sem: 14, date: "30/03", phase: "Phase1_Masse", jours: [
         { jour: "Lun", seance: "PUSH_A_Deload", duree: 50, cardio: "LISS_25", notes: "⚡ DELOAD fin Phase 1" },
-        { jour: "Mar", seance: "PULL_A_Deload", duree: 55, cardio: "LISS_25" },
-        { jour: "Mer", seance: "MOLLETS", duree: 30, cardio: "LISS_25" },
+        { jour: "Mar", seance: "PULL_A_Deload", duree: 50, cardio: "LISS_25" },
+        { jour: "Mer", seance: null, duree: 0, cardio: "LISS_30" },
         { jour: "Jeu", seance: "LEGS_A_Deload", duree: 50, cardio: null },
         { jour: "Ven", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_30" },
+        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_25" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 FIN PHASE 1 - Photos + Mesures" }
     ]},
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // PHASE 2 - TRANSITION (Semaines 15-20) - 14 avril → 25 mai
+    // PHASE 2 - TRANSITION (Semaines 15-20) - 6 avril → 17 mai 2026
+    // PPL 5-6x/sem + cardio mix obligatoire/facultatif + plus de mollets isolés
     // ═══════════════════════════════════════════════════════════════════════════
-    { sem: 15, date: "14/04", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_v2", duree: 65, cardio: "LISS_30", notes: "🔄 DÉBUT PHASE 2" },
-        { jour: "Mar", seance: "PULL_A_v2", duree: 65, cardio: "LISS_30" },
-        { jour: "Mer", seance: "LEGS_A_v2_MOLLETS", duree: 75, cardio: null },
-        { jour: "Jeu", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Ven", seance: "PULL_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "Course_10km_Opt" },
+    { sem: 15, date: "06/04", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30", notes: "🔄 DÉBUT PHASE 2" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 16, date: "21/04", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_v2", duree: 65, cardio: "LISS_30" },
-        { jour: "Mar", seance: "PULL_A_v2", duree: 65, cardio: "LISS_30" },
-        { jour: "Mer", seance: "LEGS_A_v2_MOLLETS", duree: 75, cardio: null },
-        { jour: "Jeu", seance: "PUSH_B", duree: 60, cardio: "LISS_35" },
-        { jour: "Ven", seance: "PULL_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "HIIT_15", notes: "Introduction HIIT" },
+    { sem: 16, date: "13/04", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "LISS_35" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 17, date: "28/04", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_v2", duree: 65, cardio: "LISS_35" },
-        { jour: "Mar", seance: "PULL_A_v2", duree: 65, cardio: "LISS_30" },
-        { jour: "Mer", seance: "LEGS_A_v2_MOLLETS", duree: 75, cardio: null },
-        { jour: "Jeu", seance: "PUSH_B", duree: 60, cardio: "HIIT_15" },
-        { jour: "Ven", seance: "PULL_B", duree: 60, cardio: "LISS_35" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_40" },
+    { sem: 17, date: "20/04", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: null, duree: 0, cardio: "HIIT_20", notes: "Introduction HIIT" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "Course_10km_Opt" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 18, date: "05/05", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "FULL_BODY", duree: 70, cardio: "LISS_35", notes: "Switch Full Body" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "HIIT_15" },
-        { jour: "Mer", seance: "FULL_BODY", duree: 70, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_40" },
-        { jour: "Ven", seance: "FULL_BODY", duree: 70, cardio: "HIIT_15" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_40" },
+    { sem: 18, date: "27/04", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_35" },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "HIIT_15" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 19, date: "12/05", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "FULL_BODY", duree: 70, cardio: "LISS_35" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "HIIT_20" },
-        { jour: "Mer", seance: "FULL_BODY", duree: 70, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_40" },
-        { jour: "Ven", seance: "FULL_BODY", duree: 70, cardio: "HIIT_15" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "Course_10km" },
+    { sem: 19, date: "04/05", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_35" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: null, duree: 0, cardio: "HIIT_20", notes: "Cardio obligatoire" },
+        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "Course_10km_Opt" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 20, date: "19/05", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "FULL_BODY_Deload", duree: 50, cardio: "LISS_30", notes: "⚡ DELOAD fin Phase 2" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Mer", seance: "UPPER_Deload", duree: 45, cardio: "LISS_25" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Ven", seance: "LOWER_Deload", duree: 45, cardio: null },
+    
+    // S20: DELOAD fin Phase 2
+    { sem: 20, date: "11/05", phase: "Phase2_Transition", jours: [
+        { jour: "Lun", seance: "PUSH_A_Deload", duree: 50, cardio: "LISS_30", notes: "⚡ DELOAD fin Phase 2" },
+        { jour: "Mar", seance: "PULL_A_Deload", duree: 50, cardio: "LISS_Opt" },
+        { jour: "Mer", seance: null, duree: 0, cardio: "LISS_35" },
+        { jour: "Jeu", seance: "LEGS_A_Deload", duree: 50, cardio: null },
+        { jour: "Ven", seance: null, duree: 0, cardio: "LISS_30" },
         { jour: "Sam", seance: null, duree: 0, cardio: "LISS_30" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 FIN PHASE 2 - Photos + Mesures" }
     ]},
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // PHASE 3 - SÈCHE (Semaines 21-31) - 26 mai → 27 juillet
+    // PHASE 3 - SÈCHE (Semaines 21-31) - 18 mai → 26 juillet 2026
+    // Muscu lourde 4-5x/sem + Cardio 3-4x/sem obligatoire
     // ═══════════════════════════════════════════════════════════════════════════
-    { sem: 21, date: "26/05", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_40", notes: "🔥 DÉBUT SÈCHE" },
-        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: null },
-        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_45" },
-        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_35" },
-        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" },
+    { sem: 21, date: "18/05", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_40", notes: "🔥 DÉBUT SÈCHE" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
+        { jour: "Mer", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
+        { jour: "Ven", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Sam", seance: "PUSH_B", duree: 60, cardio: "Endurance_45", notes: "Endurance fondamentale" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 22, date: "02/06", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_40", notes: "🎯 Objectif: SEC d'ici S24" },
-        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: null },
-        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_45" },
-        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_35" },
-        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" },
+    { sem: 22, date: "25/05", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PULL_B", duree: 60, cardio: "LISS_35" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
+        { jour: "Mer", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_20", notes: "Cardio obligatoire" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_45" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 23, date: "09/06", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_40" },
-        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: null },
-        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_45" },
-        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_35" },
-        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" },
+    { sem: 23, date: "01/06", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_40" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "Course_12km", notes: "Cardio obligatoire - Distance +" },
+        { jour: "Mer", seance: "PULL_B", duree: 60, cardio: "LISS_30" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
+        { jour: "Ven", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_50" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Objectif SEC" }
+    ]},
+    { sem: 24, date: "08/06", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PULL_A", duree: 75, cardio: "LISS_40" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
+        { jour: "Mer", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
+        { jour: "Ven", seance: "PULL_B", duree: 60, cardio: null },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_45" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 24, date: "16/06", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_45", notes: "Cardio augmenté" },
-        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: "HIIT_15" },
-        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Course_10km" },
-        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_40" },
-        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 50, cardio: "HIIT_20" },
+    
+    // S25: DELOAD mi-sèche
+    { sem: 25, date: "15/06", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_A_Deload", duree: 50, cardio: "LISS_35", notes: "⚡ DELOAD mi-sèche" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "LISS_40" },
+        { jour: "Mer", seance: "PULL_A_Deload", duree: 50, cardio: "LISS_30" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_40" },
+        { jour: "Ven", seance: "LEGS_A_Deload", duree: 50, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: "Endurance_40" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Bilan mi-sèche" }
     ]},
-    { sem: 25, date: "23/06", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "FULL_BODY_Deload", duree: 50, cardio: "LISS_35", notes: "⚡ DELOAD mi-sèche" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "LISS_35" },
-        { jour: "Mer", seance: "UPPER_Deload", duree: 45, cardio: "LISS_30" },
+    
+    // S26-S30: Sprint final
+    { sem: 26, date: "22/06", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_40", notes: "🚀 SPRINT FINAL" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "Course_12km", notes: "Cardio obligatoire" },
+        { jour: "Mer", seance: "PULL_A", duree: 75, cardio: "LISS_35" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
+        { jour: "Ven", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Sam", seance: "PUSH_B", duree: 60, cardio: "Endurance_50" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+    ]},
+    { sem: 27, date: "29/06", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PULL_B", duree: 60, cardio: "LISS_40" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
+        { jour: "Mer", seance: "PUSH_A", duree: 70, cardio: "LISS_35" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_30", notes: "Cardio obligatoire" },
+        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_45" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+    ]},
+    { sem: 28, date: "06/07", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_45" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "Course_12km", notes: "Cardio obligatoire" },
+        { jour: "Mer", seance: "PULL_B", duree: 60, cardio: "LISS_35" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
+        { jour: "Ven", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_50" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+    ]},
+    { sem: 29, date: "13/07", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PULL_A", duree: 75, cardio: "LISS_40" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
+        { jour: "Mer", seance: "PUSH_A", duree: 70, cardio: "LISS_35" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
+        { jour: "Ven", seance: "PULL_B", duree: 60, cardio: null },
+        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_45" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+    ]},
+    { sem: 30, date: "20/07", phase: "Phase3_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_40", notes: "🏁 DERNIÈRE SEMAINE INTENSE" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "Course_15km", notes: "Cardio final long" },
+        { jour: "Mer", seance: "PULL_A", duree: 75, cardio: "LISS_35" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_30", notes: "Cardio obligatoire" },
+        { jour: "Ven", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Sam", seance: "FULL_BODY", duree: 60, cardio: "Endurance_45" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - BILAN FINAL" }
+    ]},
+    
+    // S31: Semaine de maintien
+    { sem: 31, date: "27/07", phase: "Maintien", jours: [
+        { jour: "Lun", seance: "FULL_BODY", duree: 60, cardio: "LISS_35", notes: "💎 MAINTIEN" },
+        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km_Opt" },
+        { jour: "Mer", seance: "FULL_BODY", duree: 60, cardio: "LISS_30" },
         { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_35" },
-        { jour: "Ven", seance: "LOWER_Deload", duree: 45, cardio: null },
-        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
-    ]},
-    { sem: 26, date: "30/06", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_45", notes: "🚀 SPRINT FINAL" },
-        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: "HIIT_15" },
-        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_45" },
-        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_40" },
-        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 55, cardio: "HIIT_25" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
-    ]},
-    { sem: 27, date: "07/07", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_45" },
-        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: "HIIT_20" },
-        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Course_10km" },
-        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_40" },
-        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 55, cardio: "HIIT_25" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
-    ]},
-    { sem: 28, date: "14/07", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_PULL_A", duree: 65, cardio: "LISS_45", notes: "🇫🇷 14 juillet" },
-        { jour: "Mar", seance: "LEGS_MOLLETS", duree: 70, cardio: "HIIT_20" },
-        { jour: "Mer", seance: "PUSH_PULL_B", duree: 60, cardio: "HIIT_20" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_45" },
-        { jour: "Ven", seance: "FULL_BODY", duree: 65, cardio: "LISS_40" },
-        { jour: "Sam", seance: "CIRCUIT_METABOLIQUE", duree: 55, cardio: "HIIT_25" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
-    ]},
-    { sem: 29, date: "21/07", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "FULL_BODY_A_MAX", duree: 60, cardio: "LISS_40", notes: "🏁 DERNIÈRE SEMAINE INTENSE" },
-        { jour: "Mar", seance: "UPPER_MOLLETS_MAX", duree: 70, cardio: "HIIT_20" },
-        { jour: "Mer", seance: "LOWER_CIRCUIT_MAX", duree: 65, cardio: null },
-        { jour: "Jeu", seance: "PUSH_PULL_SUPERSETS", duree: 60, cardio: "LISS_40" },
-        { jour: "Ven", seance: "FULL_BODY_B_MOLLETS", duree: 65, cardio: "LISS_35" },
-        { jour: "Sam", seance: "CIRCUIT_FULL_BODY", duree: 55, cardio: "HIIT_20" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 BILAN FINAL - Photos + Mesures" }
-    ]},
-    { sem: 30, date: "28/07", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "FULL_BODY_Deload", duree: 45, cardio: "LISS_30", notes: "🎉 MAINTIEN - Deload" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Mer", seance: "UPPER_Light", duree: 40, cardio: "LISS_25" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Ven", seance: "LOWER_Light", duree: 40, cardio: null },
-        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
-    ]},
-    { sem: 31, date: "04/08", phase: "Maintien", jours: [
-        { jour: "Lun", seance: "FULL_BODY", duree: 60, cardio: "LISS_30", notes: "💎 MAINTIEN DES ACQUIS" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "LISS_35" },
-        { jour: "Mer", seance: "FULL_BODY", duree: 60, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_35" },
-        { jour: "Ven", seance: "FULL_BODY", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "Course_10km_Opt" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "🏆 FIN PROGRAMME - Photos finales" }
+        { jour: "Ven", seance: "FULL_BODY", duree: 60, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: "Endurance_40_Opt" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "🏆 FIN PROGRAMME" }
     ]}
 ];
 
 // Dates clés du programme (1er janvier → 31 juillet 2026)
 const KEY_DATES = {
     "2026-01-01": { label: "🚀 DÉBUT PROGRAMME", type: "start" },
-    "2026-02-16": { label: "⚡ DELOAD S7", type: "deload" },
-    "2026-04-06": { label: "⚡ DELOAD fin Phase 1", type: "deload" },
-    "2026-04-12": { label: "📸 FIN PHASE 1", type: "milestone" },
-    "2026-04-13": { label: "🔄 DÉBUT PHASE 2", type: "start" },
-    "2026-05-18": { label: "⚡ DELOAD fin Phase 2", type: "deload" },
-    "2026-05-24": { label: "📸 FIN PHASE 2", type: "milestone" },
-    "2026-05-25": { label: "🔥 DÉBUT SÈCHE", type: "start" },
-    "2026-06-15": { label: "📸 Bilan mi-sèche", type: "milestone" },
-    "2026-06-22": { label: "⚡ DELOAD mi-sèche", type: "deload" },
-    "2026-06-29": { label: "🚀 SPRINT FINAL", type: "special" },
+    "2026-02-09": { label: "⚡ DELOAD S7", type: "deload" },
+    "2026-03-30": { label: "⚡ DELOAD fin Phase 1", type: "deload" },
+    "2026-04-05": { label: "📸 FIN PHASE 1", type: "milestone" },
+    "2026-04-06": { label: "🔄 DÉBUT PHASE 2", type: "start" },
+    "2026-05-11": { label: "⚡ DELOAD fin Phase 2", type: "deload" },
+    "2026-05-17": { label: "📸 FIN PHASE 2", type: "milestone" },
+    "2026-05-18": { label: "🔥 DÉBUT SÈCHE", type: "start" },
+    "2026-06-15": { label: "⚡ DELOAD mi-sèche", type: "deload" },
+    "2026-06-21": { label: "📸 Bilan mi-sèche", type: "milestone" },
+    "2026-06-22": { label: "🚀 SPRINT FINAL", type: "special" },
     "2026-07-20": { label: "🏁 DERNIÈRE SEMAINE", type: "special" },
     "2026-07-26": { label: "🏆 BILAN FINAL", type: "goal" }
 };
@@ -7263,10 +7290,10 @@ const Layout = ({ children, view, setView }) => {
     const MobileNavItem = ({ id, icon: Icon, label }) => (
         <button 
             onClick={() => setView(id)} 
-            className={`flex flex-col items-center justify-center flex-1 py-2 transition-all ${view === id ? 'text-cyan-400' : 'text-gray-500'}`}
+            className={`flex flex-col items-center justify-center min-w-[70px] py-2 px-3 transition-all ${view === id ? 'text-cyan-400' : 'text-gray-500'}`}
         >
             <Icon size={20}/>
-            <span className="text-[10px] mt-0.5 font-medium">{label}</span>
+            <span className="text-[10px] mt-0.5 font-medium whitespace-nowrap">{label}</span>
         </button>
     );
     
@@ -7333,14 +7360,16 @@ const Layout = ({ children, view, setView }) => {
                     <div className="max-w-4xl mx-auto">{children}</div>
                 </div>
                 
-                {/* Mobile Bottom Navigation */}
+                {/* Mobile Bottom Navigation - Scrollable pour inclure tous les onglets */}
                 <div className="md:hidden fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-xl border-t border-white/10 z-40 safe-area-bottom">
-                    <div className="flex">
+                    <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
                         <MobileNavItem id="dashboard" icon={LayoutDashboard} label="Accueil" />
                         <MobileNavItem id="fitness" icon={Dumbbell} label="Fitness" />
                         <MobileNavItem id="tasks" icon={ClipboardList} label="Tâches" />
                         <MobileNavItem id="meals" icon={Utensils} label="Repas" />
                         <MobileNavItem id="finance" icon={Wallet} label="Finance" />
+                        <MobileNavItem id="routine" icon={ListTodo} label="Routine" />
+                        <MobileNavItem id="lifestyle" icon={Clapperboard} label="Lifestyle" />
                     </div>
                 </div>
             </div>
