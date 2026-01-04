@@ -12,11 +12,11 @@ import {
   Search, Loader2, AlertCircle, MessageCircle, Cloud, CloudOff, RefreshCw,
   ClipboardList, CalendarDays, Square, CheckSquare, StickyNote, Layers, Utensils
 } from 'lucide-react';
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // INTELLIGENT COACH v2 - Import
 // ═══════════════════════════════════════════════════════════════════════════════
 import { 
-
     useIntelligentCoach, 
     PrescriptionCard, 
     EveningReviewCard, 
@@ -290,6 +290,12 @@ const GlobalStyles = () => (
     }
     
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    html, body, #root {
+      width: 100%;
+      max-width: 100vw;
+      overflow-x: hidden;
+    }
     
     body {
       font-family: var(--font-family);
@@ -7344,7 +7350,7 @@ const Layout = ({ children, view, setView }) => {
     );
     
     return (
-        <div className="flex h-screen bg-[#050508] text-white overflow-hidden" style={{ fontFamily: 'var(--font-family)' }}>
+        <div className="flex h-screen bg-[#050508] text-white overflow-x-hidden" style={{ fontFamily: 'var(--font-family)' }}>
             <GlobalStyles />
             
             {/* Ambient background */}
@@ -7372,7 +7378,7 @@ const Layout = ({ children, view, setView }) => {
             </div>
             
             {/* Main Content */}
-            <div className="flex-1 flex flex-col h-full relative z-10">
+            <div className="flex-1 flex flex-col h-full relative z-10 w-full min-w-0">
                 {/* Mobile Header - Fixed */}
                 <div className="md:hidden sticky top-0 flex justify-between items-center p-3 border-b border-white/5 bg-black/90 backdrop-blur-xl z-40">
                     <div className="flex items-center gap-2">
@@ -7402,8 +7408,8 @@ const Layout = ({ children, view, setView }) => {
                 )}
                 
                 {/* Content Area - Ajusté pour mobile avec bottom nav */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8">
-                    <div className="max-w-4xl mx-auto">{children}</div>
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-20 md:pb-8">
+                    <div className="max-w-4xl mx-auto w-full">{children}</div>
                 </div>
                 
                 {/* Mobile Bottom Navigation - Scrollable pour inclure tous les onglets */}
