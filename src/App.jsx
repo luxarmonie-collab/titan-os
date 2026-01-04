@@ -12,11 +12,11 @@ import {
   Search, Loader2, AlertCircle, MessageCircle, Cloud, CloudOff, RefreshCw,
   ClipboardList, CalendarDays, Square, CheckSquare, StickyNote, Layers, Utensils
 } from 'lucide-react';
-
 // ═══════════════════════════════════════════════════════════════════════════════
 // INTELLIGENT COACH v2 - Import
 // ═══════════════════════════════════════════════════════════════════════════════
 import { 
+
     useIntelligentCoach, 
     PrescriptionCard, 
     EveningReviewCard, 
@@ -3369,57 +3369,54 @@ const useSupabaseTasks = (userId) => {
 // Hook pour sync les transactions
 const useSupabaseTransactions = (userId) => {
     const [data, setData] = useLocalStorage(`titan_transactions_${userId}`, []);
+    const [loaded, setLoaded] = useState(false);
     
+    // Charger depuis Supabase au démarrage
     useEffect(() => {
         const loadFromCloud = async () => {
             try {
-                const { data: rows, error } = await supabase
-                    .from('transactions')
+                const { data: row, error } = await supabase
+                    .from('transactions_simple')
                     .select('*')
                     .eq('user_id', userId)
-                    .order('date', { ascending: false });
+                    .single();
                 
-                if (!error && rows && rows.length > 0) {
-                    setData(rows);
+                if (!error && row && row.data && row.data.length > 0) {
+                    setData(row.data);
                 }
+                setLoaded(true);
             } catch (e) {
-                console.log('Supabase load transactions error:', e);
+                console.log('Supabase load transactions:', e);
+                setLoaded(true);
             }
         };
         loadFromCloud();
     }, [userId]);
     
+    // Sync vers Supabase
+    const syncToCloud = async (newData) => {
+        try {
+            await supabase.from('transactions_simple').upsert({
+                user_id: userId,
+                data: newData,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+        } catch (e) {
+            console.log('Supabase save transactions error:', e);
+        }
+    };
+    
     const addTransaction = async (transaction) => {
         const newTx = {...transaction, id: transaction.id || Date.now().toString()};
         const newData = [...data, newTx];
         setData(newData);
-        
-        try {
-            await supabase.from('transactions').insert({
-                id: newTx.id,
-                user_id: userId,
-                date: newTx.date,
-                amount: newTx.amount,
-                category: newTx.category,
-                subcategory: newTx.subcategory || null,
-                description: newTx.description || null,
-                payment_method: newTx.payment_method || null,
-                is_recurring: newTx.is_recurring || false
-            });
-        } catch (e) {
-            console.log('Supabase save transaction error:', e);
-        }
+        await syncToCloud(newData);
     };
     
     const deleteTransaction = async (txId) => {
         const newData = data.filter(t => t.id !== txId);
         setData(newData);
-        
-        try {
-            await supabase.from('transactions').delete().eq('id', txId).eq('user_id', userId);
-        } catch (e) {
-            console.log('Supabase delete transaction error:', e);
-        }
+        await syncToCloud(newData);
     };
     
     return [data, setData, addTransaction, deleteTransaction];
