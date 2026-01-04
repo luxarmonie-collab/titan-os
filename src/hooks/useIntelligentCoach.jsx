@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import IntelligentCoach from './services/intelligentCoach.js';
+import IntelligentCoach from '../services/intelligentCoach.js';
 
 // Supabase client (utiliser celui déjà défini dans App.jsx)
 const SUPABASE_URL = 'https://nzejiljpfdslouvehvin.supabase.co';
