@@ -1012,11 +1012,6 @@ const KEY_DATES = {
     "2026-07-20": { label: "🏁 DERNIÈRE SEMAINE", type: "special" },
     "2026-07-26": { label: "🏆 BILAN FINAL", type: "goal" }
 };
-    "2026-06-23": { label: "⚡ DELOAD mi-sèche", type: "deload" },
-    "2026-06-30": { label: "🚀 SPRINT FINAL", type: "special" },
-    "2026-07-21": { label: "🏁 DERNIÈRE SEMAINE", type: "special" },
-    "2026-07-27": { label: "🏆 BILAN FINAL", type: "goal" }
-};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // WHOOP INTEGRATION
