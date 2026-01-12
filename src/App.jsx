@@ -3254,47 +3254,6 @@ const useSupabaseDevPerso = (userId) => {
     return [data, setData, toggleItem];
 };
 
-// Hook pour sync les habitudes
-const useSupabaseHabits = (userId) => {
-    const [data, setData] = useLocalStorage(`titan_habits_${userId}`, {});
-    
-    useEffect(() => {
-        const loadFromCloud = async () => {
-            try {
-                const { data: rows, error } = await supabase
-                    .from('habits')
-                    .select('*')
-                    .eq('user_id', userId);
-                if (!error && rows) {
-                    const mapped = {};
-                    rows.forEach(row => {
-                        const key = `${row.date}_${row.habit_id}`;
-                        mapped[key] = row.completed;
-                    });
-                    if (Object.keys(mapped).length > 0) setData(prev => ({ ...prev, ...mapped }));
-                }
-            } catch (e) { console.log('Supabase load error:', e); }
-        };
-        loadFromCloud();
-    }, [userId]);
-    
-    const toggleHabit = async (date, habitId, value) => {
-        const key = `${date}_${habitId}`;
-        setData(prev => ({ ...prev, [key]: value }));
-        
-        try {
-            await supabase.from('habits').upsert({
-                user_id: userId,
-                date,
-                habit_id: habitId,
-                completed: value
-            }, { onConflict: 'user_id,date,habit_id' });
-        } catch (e) { console.log('Supabase save error:', e); }
-    };
-    
-    return [data, setData, toggleHabit];
-};
-
 
 // Hook pour sync les tasks
 const useSupabaseTasks = (userId) => {
