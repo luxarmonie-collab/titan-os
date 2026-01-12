@@ -291,12 +291,6 @@ const GlobalStyles = () => (
     
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
-    html, body, #root {
-      width: 100%;
-      max-width: 100vw;
-      overflow-x: hidden;
-    }
-    
     body {
       font-family: var(--font-family);
       background: var(--color-bg-primary);
@@ -3551,6 +3545,106 @@ const useSupabaseMealsSimple = (userId) => {
     return [data, setDataAndSync, null, null, null];
 };
 
+// Hook pour sync les habitudes/routine
+const useSupabaseHabits = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_habits_${userId}`, {});
+    
+    // Charger depuis Supabase au démarrage
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: row, error } = await supabase
+                    .from('habits_simple')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .single();
+                
+                if (!error && row && row.data) {
+                    setData(row.data);
+                }
+            } catch (e) {
+                console.log('Supabase load habits:', e);
+            }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    // Sauvegarder dans Supabase à chaque modification
+    const setDataAndSync = (newDataOrFn) => {
+        setData(prev => {
+            const newData = typeof newDataOrFn === 'function' ? newDataOrFn(prev) : newDataOrFn;
+            
+            // Sync async
+            (async () => {
+                try {
+                    await supabase.from('habits_simple').upsert({
+                        user_id: userId,
+                        data: newData,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id' });
+                } catch (e) {
+                    console.log('Supabase save habits error:', e);
+                }
+            })();
+            
+            return newData;
+        });
+    };
+    
+    return [data, setDataAndSync];
+};
+
+// Hook pour sync les workout logs
+const useSupabaseWorkoutsSimple = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_workouts_simple_${userId}`, []);
+    
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: row, error } = await supabase
+                    .from('workouts_simple')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .single();
+                
+                if (!error && row && row.data) {
+                    setData(row.data);
+                }
+            } catch (e) {
+                console.log('Supabase load workouts:', e);
+            }
+        };
+        loadFromCloud();
+    }, [userId]);
+    
+    const syncToCloud = async (newData) => {
+        try {
+            await supabase.from('workouts_simple').upsert({
+                user_id: userId,
+                data: newData,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+        } catch (e) {
+            console.log('Supabase save workouts error:', e);
+        }
+    };
+    
+    const addWorkout = async (log) => {
+        const newLog = { ...log, id: log.id || Date.now().toString() };
+        const newData = [...data, newLog];
+        setData(newData);
+        await syncToCloud(newData);
+    };
+    
+    const removeWorkout = async (id) => {
+        const newData = data.filter(l => l.id !== id);
+        setData(newData);
+        await syncToCloud(newData);
+    };
+    
+    return [data, setData, addWorkout, removeWorkout];
+};
+
 // Hook pour sync Whoop metrics
 const useWhoopData = (userId) => {
     const [data, setData] = useLocalStorage(`titan_whoop_${userId}`, null);
@@ -4520,7 +4614,7 @@ const Badge = ({ children, color = "cyan", size = "md" }) => {
 const FitnessModule = ({ userId }) => {
     const [view, setView] = useState('dashboard');
     const [activeSession, setActiveSession] = useState(null);
-    const [workoutLogs, setWorkoutLogs] = useLocalStorage(`titan_logs_${userId}`, []);
+    const [workoutLogs, setWorkoutLogs, addWorkoutLog, removeWorkoutLog] = useSupabaseWorkoutsSimple(userId);
     const [dailyCheckins, setDailyCheckins] = useLocalStorage(`titan_checkins_${userId}`, []);
     const [whoopData, setWhoopData] = useLocalStorage(`titan_whoop_${userId}`, null);
     const [supplementLogs, setSupplementLogs] = useLocalStorage(`titan_supplements_${userId}`, {});
@@ -4534,8 +4628,8 @@ const FitnessModule = ({ userId }) => {
     const todayData = useMemo(() => getCalendarForDate(todayStr), [todayStr]);
     const todayCheckin = dailyCheckins.find(c => c.date === todayStr);
 
-    const addLog = (log) => setWorkoutLogs(prev => [...prev, { ...log, id: Date.now().toString() }]);
-    const removeLog = (identifier) => setWorkoutLogs(prev => prev.filter(log => log.id !== identifier && log.timestamp !== identifier));
+    const addLog = (log) => addWorkoutLog(log);
+    const removeLog = (identifier) => removeWorkoutLog(identifier);
     const startWorkout = (code) => { setActiveSession(code); setView('logger'); };
     const handleExitLogger = () => { setActiveSession(null); setView('dashboard'); };
     
@@ -5633,12 +5727,46 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
     const [idx, setIdx] = useState(0);
     const [finishMode, setFinishMode] = useState(false);
     const [final, setFinal] = useState({ duration: '', calories: '' });
+    const [restTimer, setRestTimer] = useState(null);
+    const [restSeconds, setRestSeconds] = useState(0);
+
+    // Temps de repos par défaut selon l'exercice (en secondes)
+    const getRestTime = (exercise) => {
+        if (exercise?.name?.toLowerCase().includes('compound') || exercise?.sets >= 4) return 180; // 3 min pour gros mouvements
+        if (exercise?.reps?.includes('6-8') || exercise?.reps?.includes('4-6')) return 150; // 2:30 pour force
+        return 90; // 1:30 par défaut
+    };
 
     useEffect(() => {
         const init = {};
         exercises.forEach(e => { init[e.id] = Array(e.sets).fill(null).map(() => ({weight: '', reps: ''})); });
         setLogs(init);
     }, [sessionCode]);
+
+    // Timer de repos
+    useEffect(() => {
+        let interval;
+        if (restTimer !== null && restSeconds > 0) {
+            interval = setInterval(() => {
+                setRestSeconds(prev => {
+                    if (prev <= 1) {
+                        setRestTimer(null);
+                        // Vibration si disponible
+                        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [restTimer, restSeconds]);
+
+    const startRest = () => {
+        const cur = exercises[idx];
+        setRestSeconds(getRestTime(cur));
+        setRestTimer(Date.now());
+    };
 
     const update = (eid, i, field, value) => {
         setLogs(prev => { const updated = {...prev}; updated[eid] = [...(updated[eid] || [])]; updated[eid][i] = {...(updated[eid][i] || {}), [field]: value}; return updated; });
@@ -5655,10 +5783,10 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
         return (
             <div className="space-y-6 animate-fade-in">
                 <Card className="p-6 space-y-4">
-                    <div className="text-center mb-4"><CheckCircle className="mx-auto text-emerald-500 mb-2" size={48}/><p className="text-gray-400">Bien joué !</p></div>
-                    <Input label="Durée (min)" type="number" value={final.duration} onChange={e => setFinal({...final, duration: e.target.value})} />
-                    <Input label="Calories (kcal)" type="number" value={final.calories} onChange={e => setFinal({...final, calories: e.target.value})} />
-                    <Button onClick={save} variant="success" className="w-full">TERMINER</Button>
+                    <div className="text-center mb-4"><CheckCircle className="mx-auto text-emerald-500 mb-2" size={48}/><h2 className="text-xl font-bold text-white">Séance terminée !</h2><p className="text-gray-400">Bien joué 💪</p></div>
+                    <Input label="Durée totale (min)" type="number" value={final.duration} onChange={e => setFinal({...final, duration: e.target.value})} placeholder="Ex: 65" />
+                    <Input label="Calories brûlées (kcal)" type="number" value={final.calories} onChange={e => setFinal({...final, calories: e.target.value})} placeholder="Ex: 450" />
+                    <Button onClick={save} variant="success" className="w-full text-lg py-4">✓ ENREGISTRER LA SÉANCE</Button>
                 </Card>
             </div>
         );
@@ -5666,35 +5794,91 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
 
     const cur = exercises[idx];
     const curLogs = logs[cur?.id] || [];
+    const restTimeDefault = getRestTime(cur);
 
     return (
         <div className="flex flex-col min-h-[60vh] animate-fade-in">
-            <div className="flex justify-between items-center mb-4">
+            {/* Header */}
+            <div className="flex justify-between items-center mb-3">
                 <button onClick={onExit} className="p-2 hover:bg-white/10 rounded-xl"><ArrowLeft className="text-gray-400" size={20}/></button>
                 <span className="font-bold text-white text-lg">{sessionCode}</span>
                 <Badge color="cyan">{idx + 1}/{exercises.length}</Badge>
             </div>
+            
+            {/* Progress bar */}
             <div className="w-full bg-white/10 rounded-full h-1.5 mb-4">
                 <div className="bg-gradient-to-r from-cyan-500 to-blue-500 h-1.5 rounded-full transition-all" style={{width: `${((idx + 1) / exercises.length) * 100}%`}} />
             </div>
-            <Card className="p-5 flex-1 mb-4">
-                <div className="flex justify-between items-start mb-4">
-                    <div><h2 className="text-xl font-bold text-white">{cur?.name}</h2><p className="text-gray-500 text-sm">{cur?.sets} séries × {cur?.reps}</p></div>
-                    <Dumbbell className="text-cyan-500/50" size={32}/>
+
+            {/* Timer de repos */}
+            {restTimer !== null && (
+                <Card className="p-4 mb-4 bg-gradient-to-r from-orange-500/20 to-red-500/20 border-orange-500/30">
+                    <div className="text-center">
+                        <div className="text-xs text-orange-400 uppercase font-bold mb-1">⏱️ Repos</div>
+                        <div className="text-4xl font-black text-white">{Math.floor(restSeconds / 60)}:{(restSeconds % 60).toString().padStart(2, '0')}</div>
+                        <button onClick={() => setRestTimer(null)} className="mt-2 text-xs text-gray-400 hover:text-white">Passer</button>
+                    </div>
+                </Card>
+            )}
+            
+            {/* Exercise card */}
+            <Card className="p-4 flex-1 mb-4">
+                <div className="flex justify-between items-start mb-3">
+                    <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-bold text-white truncate">{cur?.name}</h2>
+                        <p className="text-gray-500 text-sm">{cur?.sets} séries × {cur?.reps}</p>
+                    </div>
+                    <div className="flex items-center gap-2 ml-2">
+                        <button 
+                            onClick={startRest}
+                            className="p-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-xl transition-all"
+                            title={`Repos ${Math.floor(restTimeDefault/60)}:${(restTimeDefault%60).toString().padStart(2,'0')}`}
+                        >
+                            <Timer className="text-orange-400" size={20}/>
+                        </button>
+                        <Dumbbell className="text-cyan-500/50" size={28}/>
+                    </div>
                 </div>
-                <div className="space-y-3">
+                
+                {/* Sets */}
+                <div className="space-y-2">
                     {curLogs.map((s, i) => (
-                        <div key={i} className="flex items-center space-x-2">
-                            <span className="text-gray-500 text-xs w-8 text-center font-mono">#{i + 1}</span>
-                            <input type="number" placeholder="kg" className="flex-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white font-bold text-center focus:border-cyan-500 outline-none" value={s?.weight || ''} onChange={e => update(cur.id, i, 'weight', e.target.value)} />
-                            <input type="number" placeholder="reps" className="flex-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white font-bold text-center focus:border-cyan-500 outline-none" value={s?.reps || ''} onChange={e => update(cur.id, i, 'reps', e.target.value)} />
+                        <div key={i} className="flex items-center gap-2">
+                            <span className="text-gray-500 text-xs w-6 text-center font-mono">#{i + 1}</span>
+                            <input 
+                                type="number" 
+                                inputMode="decimal"
+                                placeholder="kg" 
+                                className="flex-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white font-bold text-center focus:border-cyan-500 outline-none min-w-0" 
+                                value={s?.weight || ''} 
+                                onChange={e => update(cur.id, i, 'weight', e.target.value)} 
+                            />
+                            <input 
+                                type="number" 
+                                inputMode="numeric"
+                                placeholder="reps" 
+                                className="flex-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white font-bold text-center focus:border-cyan-500 outline-none min-w-0" 
+                                value={s?.reps || ''} 
+                                onChange={e => update(cur.id, i, 'reps', e.target.value)} 
+                            />
                         </div>
                     ))}
                 </div>
+                
+                {/* Rest time info */}
+                <div className="mt-3 text-center">
+                    <span className="text-xs text-gray-500">💡 Repos recommandé : {Math.floor(restTimeDefault/60)}:{(restTimeDefault%60).toString().padStart(2,'0')}</span>
+                </div>
             </Card>
+            
+            {/* Navigation */}
             <div className="flex gap-2">
-                {idx > 0 && <Button onClick={() => setIdx(idx - 1)} variant="secondary" className="flex-1">Précédent</Button>}
-                {idx < exercises.length - 1 ? <Button onClick={() => setIdx(idx + 1)} variant="primary" className="flex-1">Suivant</Button> : <Button onClick={() => setFinishMode(true)} variant="success" className="flex-1">Finir</Button>}
+                {idx > 0 && <Button onClick={() => setIdx(idx - 1)} variant="secondary" className="flex-1">← Précédent</Button>}
+                {idx < exercises.length - 1 ? (
+                    <Button onClick={() => setIdx(idx + 1)} variant="primary" className="flex-1">Suivant →</Button>
+                ) : (
+                    <Button onClick={() => setFinishMode(true)} variant="success" className="flex-1">✓ Terminer</Button>
+                )}
             </div>
         </div>
     );
@@ -5931,7 +6115,7 @@ const FitnessBiometrics = ({ userId }) => {
 
 const RoutineView = ({ userId }) => {
     const [view, setView] = useState('today');
-    const [habitLogs, setHabitLogs] = useLocalStorage(`titan_habits_${userId}`, {});
+    const [habitLogs, setHabitLogs] = useSupabaseHabits(userId);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
 
     const todayStr = new Date().toISOString().split('T')[0];
@@ -7350,7 +7534,7 @@ const Layout = ({ children, view, setView }) => {
     );
     
     return (
-        <div className="flex h-screen bg-[#050508] text-white overflow-x-hidden" style={{ fontFamily: 'var(--font-family)' }}>
+        <div className="flex h-screen bg-[#050508] text-white overflow-hidden" style={{ fontFamily: 'var(--font-family)' }}>
             <GlobalStyles />
             
             {/* Ambient background */}
@@ -7378,7 +7562,7 @@ const Layout = ({ children, view, setView }) => {
             </div>
             
             {/* Main Content */}
-            <div className="flex-1 flex flex-col h-full relative z-10 w-full min-w-0">
+            <div className="flex-1 flex flex-col h-full relative z-10">
                 {/* Mobile Header - Fixed */}
                 <div className="md:hidden sticky top-0 flex justify-between items-center p-3 border-b border-white/5 bg-black/90 backdrop-blur-xl z-40">
                     <div className="flex items-center gap-2">
@@ -7408,8 +7592,8 @@ const Layout = ({ children, view, setView }) => {
                 )}
                 
                 {/* Content Area - Ajusté pour mobile avec bottom nav */}
-                <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-20 md:pb-8">
-                    <div className="max-w-4xl mx-auto w-full">{children}</div>
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8">
+                    <div className="max-w-4xl mx-auto">{children}</div>
                 </div>
                 
                 {/* Mobile Bottom Navigation - Scrollable pour inclure tous les onglets */}
