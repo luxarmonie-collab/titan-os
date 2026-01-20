@@ -4609,11 +4609,11 @@ const FitnessModule = ({ userId }) => {
     };
 
     const tabs = [
-        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-        { id: 'programme', label: 'Programme', icon: '📅' },
-        { id: 'planning', label: 'Planning', icon: '🗓️' },
-        { id: 'progress', label: 'Progrès', icon: '📈' },
-        { id: 'biometrics', label: 'Biométrie', icon: '⚖️' }
+        { id: 'dashboard', label: 'Dashboard', shortLabel: 'Home', icon: '📊' },
+        { id: 'programme', label: 'Programme', shortLabel: 'Prog', icon: '📅' },
+        { id: 'planning', label: 'Planning', shortLabel: 'Plan', icon: '🗓️' },
+        { id: 'progress', label: 'Progrès', shortLabel: 'Stats', icon: '📈' },
+        { id: 'biometrics', label: 'Biométrie', shortLabel: 'Bio', icon: '⚖️' }
     ];
 
     return (
@@ -4621,7 +4621,7 @@ const FitnessModule = ({ userId }) => {
             {view !== 'logger' && (
                 <div className="relative">
                     <div 
-                        className="flex space-x-2 overflow-x-auto pb-2 px-1 -mx-1" 
+                        className="flex space-x-2 overflow-x-auto pb-2 pr-4" 
                         style={{
                             scrollbarWidth: 'none',
                             WebkitOverflowScrolling: 'touch',
@@ -4632,15 +4632,16 @@ const FitnessModule = ({ userId }) => {
                             <button 
                                 key={tab.id} 
                                 onClick={() => setView(tab.id)} 
-                                className={`flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${view === tab.id ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                                className={`flex-shrink-0 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1 sm:gap-1.5 ${view === tab.id ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
                             >
                                 <span>{tab.icon}</span>
-                                <span className="uppercase">{tab.label}</span>
+                                <span className="uppercase hidden sm:inline">{tab.label}</span>
+                                <span className="uppercase sm:hidden">{tab.shortLabel}</span>
                             </button>
                         ))}
                     </div>
-                    {/* Indicateur scroll droit */}
-                    <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-[#030305] to-transparent pointer-events-none md:hidden" />
+                    {/* Indicateur scroll - plus discret */}
+                    <div className="absolute right-0 top-0 bottom-2 w-6 bg-gradient-to-l from-[#050508] to-transparent pointer-events-none sm:hidden opacity-80" />
                 </div>
             )}
             
@@ -5279,7 +5280,7 @@ const FitnessProgramme = ({ workoutLogs }) => {
                                         return (
                                             <div 
                                                 key={idx}
-                                                className={`flex items-center justify-between p-2 rounded-lg text-xs ${
+                                                className={`p-2 rounded-lg text-xs ${
                                                     isToday 
                                                         ? 'bg-blue-500/20 border border-blue-500/30' 
                                                         : jour.seance 
@@ -5287,31 +5288,48 @@ const FitnessProgramme = ({ workoutLogs }) => {
                                                         : 'bg-transparent'
                                                 }`}
                                             >
-                                                <div className="flex items-center gap-2">
-                                                    <span className={`w-8 ${isToday ? 'text-blue-400 font-bold' : 'text-gray-500'}`}>
-                                                        {jour.jour}
-                                                    </span>
-                                                    {completed && <Check size={14} className="text-green-400" />}
-                                                    {jour.seance ? (
-                                                        <span className={`font-medium ${completed ? 'text-green-400 line-through opacity-70' : isToday ? 'text-white' : 'text-gray-300'}`}>
-                                                            {jour.seance}
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                                                        <span className={`w-8 flex-shrink-0 ${isToday ? 'text-blue-400 font-bold' : 'text-gray-500'}`}>
+                                                            {jour.jour}
                                                         </span>
-                                                    ) : (
-                                                        <span className="text-gray-600">Repos</span>
-                                                    )}
-                                                    {isToday && <span className="text-[10px] bg-blue-500 text-white px-1 rounded">AUJOURD'HUI</span>}
+                                                        {completed && <Check size={14} className="text-green-400 flex-shrink-0" />}
+                                                        {jour.seance ? (
+                                                            <span className={`font-medium truncate ${completed ? 'text-green-400 line-through opacity-70' : isToday ? 'text-white' : 'text-gray-300'}`}>
+                                                                {jour.seance}
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-600">Repos</span>
+                                                        )}
+                                                        {isToday && <span className="text-[10px] bg-blue-500 text-white px-1 rounded flex-shrink-0">AUJOURD'HUI</span>}
+                                                    </div>
+                                                    {/* Desktop: infos à droite */}
+                                                    <div className="hidden sm:flex items-center gap-2 flex-shrink-0 ml-2">
+                                                        {jour.duree > 0 && (
+                                                            <span className="text-gray-500">{jour.duree}min</span>
+                                                        )}
+                                                        {jour.cardio && (
+                                                            <span className="text-green-500/70 text-[10px]">{jour.cardio}</span>
+                                                        )}
+                                                        {jour.notes && (
+                                                            <span className="text-yellow-500/70 text-[10px] max-w-24 truncate">{jour.notes}</span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                                <div className="flex items-center gap-2">
-                                                    {jour.duree > 0 && (
-                                                        <span className="text-gray-500">{jour.duree}min</span>
-                                                    )}
-                                                    {jour.cardio && (
-                                                        <span className="text-green-500/70 text-[10px]">{jour.cardio}</span>
-                                                    )}
-                                                    {jour.notes && (
-                                                        <span className="text-yellow-500/70 text-[10px] max-w-24 truncate">{jour.notes}</span>
-                                                    )}
-                                                </div>
+                                                {/* Mobile: infos en dessous */}
+                                                {(jour.duree > 0 || jour.cardio || jour.notes) && (
+                                                    <div className="sm:hidden flex items-center gap-2 mt-1 ml-10 text-[10px]">
+                                                        {jour.duree > 0 && (
+                                                            <span className="text-gray-500">{jour.duree}min</span>
+                                                        )}
+                                                        {jour.cardio && (
+                                                            <span className="text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded">{jour.cardio}</span>
+                                                        )}
+                                                        {jour.notes && (
+                                                            <span className="text-yellow-400">{jour.notes}</span>
+                                                        )}
+                                                    </div>
+                                                )}
                                             </div>
                                         );
                                     })}
