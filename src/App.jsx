@@ -291,6 +291,12 @@ const GlobalStyles = () => (
     
     * { box-sizing: border-box; margin: 0; padding: 0; }
     
+    html, body, #root {
+      overflow-x: hidden;
+      max-width: 100vw;
+      width: 100%;
+    }
+    
     body {
       font-family: var(--font-family);
       background: var(--color-bg-primary);
@@ -4810,13 +4816,13 @@ const SecondBrainDashboard = ({
             
             {/* TODAY'S WORKOUT - MUSCU */}
             {todayData.seance && (
-                <div className="p-4 rounded-xl border border-blue-500/30 bg-blue-500/5">
+                <div className="p-4 rounded-xl border border-blue-500/30 bg-blue-500/5 overflow-hidden">
                     <div className="flex items-center justify-between mb-3">
-                        <div>
+                        <div className="min-w-0 flex-1">
                             <div className="text-xs text-blue-400 font-bold">💪 MUSCULATION</div>
-                            <div className="text-xl font-bold text-white">{todayData.seance}</div>
+                            <div className="text-xl font-bold text-white truncate">{todayData.seance}</div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0 ml-2">
                             <div className="text-sm text-gray-400">{todayData.duree} min</div>
                         </div>
                     </div>
@@ -4854,31 +4860,31 @@ const SecondBrainDashboard = ({
             
             {/* TODAY'S CARDIO - Obligatoire OU optionnel */}
             {(todayData.cardio || todayData.cardioOpt) && (
-                <div className={`p-4 rounded-xl border ${todayData.cardioOpt && !todayData.cardio ? 'border-orange-500/20 border-dashed bg-orange-500/[0.03]' : 'border-orange-500/30 bg-orange-500/5'}`}>
+                <div className={`p-4 rounded-xl border overflow-hidden ${todayData.cardioOpt && !todayData.cardio ? 'border-orange-500/20 border-dashed bg-orange-500/[0.03]' : 'border-orange-500/30 bg-orange-500/5'}`}>
                     {(() => {
                         const cardioAlreadyDone = workoutLogs.some(log => log.date === todayStr && log.type === 'Cardio');
                         const cardioType = todayData.cardio || todayData.cardioOpt;
                         const isOptional = todayData.cardioOpt && !todayData.cardio;
                         return (
                             <>
-                                <div className="flex items-center justify-between mb-3">
-                                    <div>
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+                                    <div className="min-w-0">
                                         <div className="text-xs text-orange-400 font-bold flex items-center gap-2">
                                             🏃 CARDIO
                                             {isOptional && <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-300">OPTIONNEL</span>}
                                         </div>
-                                        <div className="text-lg font-bold text-white">{cardioType}</div>
+                                        <div className="text-lg font-bold text-white truncate">{cardioType}</div>
                                     </div>
                                     {cardioAlreadyDone ? (
-                                        <div className="px-4 py-2 bg-green-500/20 text-green-400 font-bold rounded-xl text-sm">
+                                        <div className="px-4 py-2 bg-green-500/20 text-green-400 font-bold rounded-xl text-sm text-center flex-shrink-0">
                                             ✓ Validé
                                         </div>
                                     ) : (
                                         <button
                                             onClick={() => setShowQuickCardio(true)}
-                                            className="px-4 py-2 bg-orange-500/20 text-orange-400 font-bold rounded-xl text-sm hover:bg-orange-500/30 transition-all"
+                                            className="w-full sm:w-auto px-4 py-2 bg-orange-500/20 text-orange-400 font-bold rounded-xl text-sm hover:bg-orange-500/30 transition-all flex-shrink-0"
                                         >
-                                            Marquer fait
+                                            ✓ Marquer fait
                                         </button>
                                     )}
                                 </div>
@@ -7506,8 +7512,8 @@ const Layout = ({ children, view, setView }) => {
                 )}
                 
                 {/* Content Area - Ajusté pour mobile avec bottom nav */}
-                <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8">
-                    <div className="max-w-4xl mx-auto">{children}</div>
+                <div className="flex-1 overflow-y-auto overflow-x-hidden p-4 md:p-8 pb-20 md:pb-8">
+                    <div className="max-w-4xl mx-auto w-full">{children}</div>
                 </div>
                 
                 {/* Mobile Bottom Navigation - Scrollable pour inclure tous les onglets */}
