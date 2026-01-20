@@ -4835,7 +4835,7 @@ const SecondBrainDashboard = ({
                         </div>
                     )}
                     
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                         <button
                             onClick={() => setShowQuickMuscu(true)}
                             className="flex-1 py-3 bg-green-500/20 text-green-400 font-bold rounded-xl text-sm"
@@ -5431,9 +5431,9 @@ const FitnessCalendar = ({ onSelectDay, workoutLogs, addLog, removeLog }) => {
                         <Card 
                             key={i} 
                             onClick={() => setSelected({...d, muscuLog, cardioLog})} 
-                            className={`p-4 flex justify-between items-center border-l-4 ${isToday ? 'border-l-cyan-500' : (muscuLog || cardioLog) ? 'border-l-emerald-500' : 'border-l-gray-700'}`}
+                            className={`p-4 flex justify-between items-center border-l-4 overflow-hidden ${isToday ? 'border-l-cyan-500' : (muscuLog || cardioLog) ? 'border-l-emerald-500' : 'border-l-gray-700'}`}
                         >
-                            <div>
+                            <div className="min-w-0 flex-1">
                                 <div className="text-white font-bold text-sm capitalize flex items-center gap-2">
                                     {d.dayName} {d.dateObj?.getDate()}
                                     {isToday && <Badge color="cyan" size="sm">Aujourd'hui</Badge>}
@@ -5444,81 +5444,36 @@ const FitnessCalendar = ({ onSelectDay, workoutLogs, addLog, removeLog }) => {
                                     {d.cardioOpt && !d.cardio && <span className="text-orange-400/70"> (+ {d.cardioOpt} optionnel)</span>}
                                 </div>
                             </div>
-                            <div className="flex gap-3 items-center">
+                            <div className="flex gap-2 items-center flex-shrink-0 ml-2">
                                 {/* Quick checkbox for Musculation */}
                                 {d.type === 'Training' && d.seance && (
-                                    <>
-                                        <button 
-                                            onClick={(e) => quickToggleMuscu(e, d, muscuLog)}
-                                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                                                muscuLog 
-                                                    ? 'bg-emerald-500 hover:bg-emerald-600' 
-                                                    : 'bg-white/5 border-2 border-gray-600 hover:border-cyan-500'
-                                            }`}
-                                            title="J'ai fait ma séance"
-                                        >
-                                            {muscuLog ? <Check size={16} className="text-white"/> : <Dumbbell size={14} className="text-gray-500"/>}
-                                        </button>
-                                        {/* Bouton Skip */}
-                                        {!muscuLog && (
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    addLog({ 
-                                                        date: d.dateStr, 
-                                                        session: d.seance, 
-                                                        type: 'Muscu', 
-                                                        status: 'skipped',
-                                                        reason: 'Pas fait',
-                                                        timestamp: new Date().toISOString() 
-                                                    });
-                                                }}
-                                                className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border-2 border-dashed border-red-600/30 hover:border-red-500 transition-all"
-                                                title="Pas fait aujourd'hui"
-                                            >
-                                                <Ban size={14} className="text-red-500/70"/>
-                                            </button>
-                                        )}
-                                    </>
+                                    <button 
+                                        onClick={(e) => quickToggleMuscu(e, d, muscuLog)}
+                                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${
+                                            muscuLog 
+                                                ? 'bg-emerald-500 hover:bg-emerald-600' 
+                                                : 'bg-white/5 border-2 border-gray-600 hover:border-cyan-500'
+                                        }`}
+                                        title="J'ai fait ma séance"
+                                    >
+                                        {muscuLog ? <Check size={18} className="text-white"/> : <Dumbbell size={16} className="text-gray-500"/>}
+                                    </button>
                                 )}
                                 {/* Quick checkbox for Cardio (obligatoire ou optionnel) */}
                                 {(d.cardio || d.cardioOpt) && (
-                                    <>
-                                        <button 
-                                            onClick={(e) => quickToggleCardio(e, d, cardioLog)}
-                                            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
-                                                cardioLog 
-                                                    ? 'bg-orange-500 hover:bg-orange-600' 
-                                                    : d.cardioOpt && !d.cardio
-                                                        ? 'bg-white/5 border-2 border-dashed border-gray-600 hover:border-orange-500'
-                                                        : 'bg-white/5 border-2 border-gray-600 hover:border-orange-500'
-                                            }`}
-                                            title={d.cardioOpt && !d.cardio ? `${d.cardioOpt} (optionnel)` : 'Cardio'}
-                                        >
-                                            {cardioLog ? <Check size={16} className="text-white"/> : <Heart size={14} className={d.cardioOpt && !d.cardio ? "text-gray-600" : "text-gray-500"}/>}
-                                        </button>
-                                        {/* Bouton Skip cardio */}
-                                        {!cardioLog && d.cardio && (
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    addLog({ 
-                                                        date: d.dateStr, 
-                                                        session: 'CARDIO', 
-                                                        type: 'Cardio',
-                                                        cardioType: d.cardio,
-                                                        status: 'skipped',
-                                                        reason: 'Pas fait',
-                                                        timestamp: new Date().toISOString() 
-                                                    });
-                                                }}
-                                                className="w-8 h-8 rounded-lg flex items-center justify-center bg-white/5 border-2 border-dashed border-red-600/30 hover:border-red-500 transition-all"
-                                                title="Cardio pas fait"
-                                            >
-                                                <Ban size={14} className="text-red-500/70"/>
-                                            </button>
-                                        )}
-                                    </>
+                                    <button 
+                                        onClick={(e) => quickToggleCardio(e, d, cardioLog)}
+                                        className={`w-9 h-9 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${
+                                            cardioLog 
+                                                ? 'bg-orange-500 hover:bg-orange-600' 
+                                                : d.cardioOpt && !d.cardio
+                                                    ? 'bg-white/5 border-2 border-dashed border-gray-600 hover:border-orange-500'
+                                                    : 'bg-white/5 border-2 border-gray-600 hover:border-orange-500'
+                                        }`}
+                                        title={d.cardioOpt && !d.cardio ? `${d.cardioOpt} (optionnel)` : 'Cardio'}
+                                    >
+                                        {cardioLog ? <Check size={18} className="text-white"/> : <Heart size={16} className={d.cardioOpt && !d.cardio ? "text-gray-600" : "text-gray-500"}/>}
+                                    </button>
                                 )}
                             </div>
                         </Card>
