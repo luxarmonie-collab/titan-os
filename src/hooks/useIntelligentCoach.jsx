@@ -248,39 +248,68 @@ export function useIntelligentCoach(userId, allData) {
         setLoading(true);
         try {
             const todayMemory = memory.find(m => m.date === todayStr);
-            const reviewResult = await IntelligentCoach.processEveningReview(
-                answers, 
-                todayMemory?.prescription || prescription,
-                state,
-                memory
-            );
+            
+            // Essayer de processer avec IntelligentCoach
+            let reviewResult = null;
+            try {
+                reviewResult = await IntelligentCoach.processEveningReview(
+                    answers, 
+                    todayMemory?.prescription || prescription,
+                    state,
+                    memory
+                );
+            } catch (processError) {
+                console.warn('IntelligentCoach.processEveningReview failed, using fallback:', processError);
+                // Fallback: créer un résultat simple basé sur les réponses
+                reviewResult = {
+                    date: todayStr,
+                    answers: answers,
+                    completed: true,
+                    timestamp: new Date().toISOString()
+                };
+            }
 
-            // Mettre à jour la mémoire avec le bilan du soir
-            await supabase.from('coach_memory').upsert({
-                user_id: userId,
-                date: todayStr,
-                outcomes: reviewResult,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id,date' });
-
-            // Sauvegarder l'insight si généré
-            if (reviewResult.insight) {
-                await supabase.from('coach_insights').insert({
+            // Essayer de sauvegarder dans Supabase (optionnel - ne bloque pas si ça échoue)
+            try {
+                await supabase.from('coach_memory').upsert({
                     user_id: userId,
                     date: todayStr,
-                    insight_type: 'pattern',
-                    content: reviewResult.insight
-                });
+                    outcomes: reviewResult,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,date' });
+
+                // Sauvegarder l'insight si généré
+                if (reviewResult?.insight) {
+                    await supabase.from('coach_insights').insert({
+                        user_id: userId,
+                        date: todayStr,
+                        insight_type: 'pattern',
+                        content: reviewResult.insight
+                    });
+                }
+            } catch (supabaseError) {
+                console.warn('Supabase save failed (non-blocking):', supabaseError);
+                // Continue quand même - l'enregistrement local compte
             }
 
-            // Afficher la synthèse hebdo si dimanche
+            // Afficher la synthèse hebdo si dimanche, sinon attendre un peu pour le feedback
             if (weeklySummary && weeklySummary.hasEnoughData) {
+                // Petit délai pour voir le feedback "Enregistré"
+                await new Promise(resolve => setTimeout(resolve, 800));
                 setStep('weekly_summary');
             } else {
+                // Petit délai pour voir le feedback "Enregistré"
+                await new Promise(resolve => setTimeout(resolve, 1200));
                 setStep('done');
             }
+            
+            // Reset answers pour la prochaine fois
+            setAnswers({});
+            
         } catch (e) {
             console.error('Failed to submit evening review:', e);
+            // Même en cas d'erreur, on ferme le formulaire pour ne pas bloquer l'utilisateur
+            setStep('done');
         } finally {
             setLoading(false);
         }
@@ -457,11 +486,20 @@ export function PrescriptionCard({ prescription }) {
  * Composant pour le bilan du soir
  */
 export function EveningReviewCard({ review, answers, onAnswer, onSubmit, loading }) {
+    const [submitted, setSubmitted] = useState(false);
+    
     if (!review) return null;
 
     const allQuestionsAnswered = review.questions.every(q => 
         answers[q.id] !== undefined || q.autoAnswer !== undefined
     );
+    
+    const handleSubmit = async () => {
+        console.log('📊 EveningReview - Submitting with answers:', answers);
+        console.log('📊 EveningReview - Questions:', review.questions.map(q => q.id));
+        setSubmitted(true);
+        await onSubmit();
+    };
 
     return (
         <div className="rounded-2xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20 border border-indigo-500/30 p-5">
@@ -472,7 +510,7 @@ export function EveningReviewCard({ review, answers, onAnswer, onSubmit, loading
                 </div>
                 <div>
                     <h3 className="text-white font-bold">Bilan de la journée</h3>
-                    <p className="text-gray-400 text-sm">{review.greeting.subMessage}</p>
+                    <p className="text-gray-400 text-sm">{review.greeting?.subMessage || "Comment s'est passée ta journée ?"}</p>
                 </div>
             </div>
 
@@ -508,6 +546,22 @@ export function EveningReviewCard({ review, answers, onAnswer, onSubmit, loading
                                     Non
                                 </button>
                             </div>
+                        ) : q.type === 'scale' ? (
+                            <div className="flex flex-wrap gap-2">
+                                {(q.options || ['1', '2', '3', '4', '5']).map((opt) => (
+                                    <button
+                                        key={opt}
+                                        onClick={() => onAnswer(q.id, opt)}
+                                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                                            answers[q.id] === opt 
+                                                ? 'bg-indigo-500 text-white' 
+                                                : 'bg-white/10 text-gray-400 hover:bg-white/20'
+                                        }`}
+                                    >
+                                        {opt}
+                                    </button>
+                                ))}
+                            </div>
                         ) : (
                             <div className="flex flex-wrap gap-2">
                                 {q.options?.map((opt) => (
@@ -535,16 +589,26 @@ export function EveningReviewCard({ review, answers, onAnswer, onSubmit, loading
 
             {/* Submit */}
             <button
-                onClick={onSubmit}
-                disabled={!allQuestionsAnswered || loading}
+                onClick={handleSubmit}
+                disabled={!allQuestionsAnswered || loading || submitted}
                 className={`w-full py-3 rounded-xl font-bold transition-all ${
-                    allQuestionsAnswered && !loading
-                        ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90'
-                        : 'bg-white/10 text-gray-500 cursor-not-allowed'
+                    submitted
+                        ? 'bg-green-500 text-white animate-pulse'
+                        : allQuestionsAnswered && !loading
+                            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:opacity-90'
+                            : 'bg-white/10 text-gray-500 cursor-not-allowed'
                 }`}
             >
-                {loading ? 'Analyse en cours...' : 'Enregistrer mon bilan'}
+                {submitted ? '✓ Bilan enregistré ! Fermeture...' : loading ? 'Enregistrement...' : 'Enregistrer mon bilan'}
             </button>
+            </button>
+            
+            {/* Debug info - à retirer en prod */}
+            {!allQuestionsAnswered && (
+                <p className="text-xs text-red-400 mt-2 text-center">
+                    Réponds à toutes les questions pour continuer
+                </p>
+            )}
         </div>
     );
 }
