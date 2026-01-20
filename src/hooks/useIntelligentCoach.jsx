@@ -601,7 +601,6 @@ export function EveningReviewCard({ review, answers, onAnswer, onSubmit, loading
             >
                 {submitted ? '✓ Bilan enregistré ! Fermeture...' : loading ? 'Enregistrement...' : 'Enregistrer mon bilan'}
             </button>
-            </button>
             
             {/* Debug info - à retirer en prod */}
             {!allQuestionsAnswered && (
