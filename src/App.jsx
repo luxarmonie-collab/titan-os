@@ -5174,13 +5174,16 @@ const FitnessProgramme = ({ workoutLogs }) => {
         setExpandedWeek(currentWeek);
     }, [currentWeek]);
     
-    // Check if a session is completed
+    // Check if a session is completed for a specific week
     const isSessionCompleted = (weekNum, dayName, seance) => {
         if (!seance) return false;
-        // Simplify: check if we have a log for this session type in the logs
-        return workoutLogs.some(log => 
-            log.session === seance && log.status === 'completed'
-        );
+        // Check if we have a log for this session in the specific week
+        return workoutLogs.some(log => {
+            if (log.session !== seance || log.status !== 'completed') return false;
+            // Calculate the week number of the log's date
+            const logWeek = getWeekNumber(new Date(log.date));
+            return logWeek === weekNum;
+        });
     };
     
     const filteredCalendar = selectedPhase === 'all' 
@@ -5711,7 +5714,33 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
     };
 
     const save = () => {
-        addLog({ date: new Date().toISOString().split('T')[0], session: sessionCode, logs, duration: final.duration, calories: final.calories, status: 'completed', type: 'Muscu', timestamp: new Date().toISOString() });
+        // Transform logs to exercises array for FitnessProgress compatibility
+        const exercisesArray = exercises.map(ex => {
+            const exLogs = logs[ex.id] || [];
+            // Calculate average weight and total reps across all sets
+            const validSets = exLogs.filter(s => s.weight && parseFloat(s.weight) > 0);
+            if (validSets.length === 0) return null;
+            const avgWeight = validSets.reduce((sum, s) => sum + parseFloat(s.weight), 0) / validSets.length;
+            const totalReps = validSets.reduce((sum, s) => sum + (parseInt(s.reps) || 0), 0);
+            return {
+                name: ex.name,
+                weight: Math.round(avgWeight * 10) / 10,
+                reps: Math.round(totalReps / validSets.length),
+                sets: validSets.length
+            };
+        }).filter(Boolean);
+
+        addLog({
+            date: new Date().toISOString().split('T')[0],
+            session: sessionCode,
+            exercises: exercisesArray,
+            logs,
+            duration: final.duration,
+            calories: final.calories,
+            status: 'completed',
+            type: 'Muscu',
+            timestamp: new Date().toISOString()
+        });
         onFinishSession?.();
     };
 
@@ -5719,7 +5748,7 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
     
     if (finishMode) {
         return (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-6 pb-4 animate-fade-in">
                 <Card className="p-6 space-y-4">
                     <div className="text-center mb-4"><CheckCircle className="mx-auto text-emerald-500 mb-2" size={48}/><h2 className="text-xl font-bold text-white">Séance terminée !</h2><p className="text-gray-400">Bien joué 💪</p></div>
                     <Input label="Durée totale (min)" type="number" value={final.duration} onChange={e => setFinal({...final, duration: e.target.value})} placeholder="Ex: 65" />
@@ -5735,7 +5764,7 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
     const restTimeDefault = getRestTime(cur);
 
     return (
-        <div className="flex flex-col min-h-[60vh] animate-fade-in">
+        <div className="flex flex-col min-h-[60vh] pb-4 animate-fade-in">
             {/* Header */}
             <div className="flex justify-between items-center mb-3">
                 <button onClick={onExit} className="p-2 hover:bg-white/10 rounded-xl"><ArrowLeft className="text-gray-400" size={20}/></button>
@@ -5809,13 +5838,13 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
                 </div>
             </Card>
             
-            {/* Navigation */}
-            <div className="flex gap-2">
-                {idx > 0 && <Button onClick={() => setIdx(idx - 1)} variant="secondary" className="flex-1">← Précédent</Button>}
+            {/* Navigation - avec padding pour mobile safe area */}
+            <div className="flex gap-2 mt-auto pt-4">
+                {idx > 0 && <Button onClick={() => setIdx(idx - 1)} variant="secondary" className="flex-1 py-3">← Précédent</Button>}
                 {idx < exercises.length - 1 ? (
-                    <Button onClick={() => setIdx(idx + 1)} variant="primary" className="flex-1">Suivant →</Button>
+                    <Button onClick={() => setIdx(idx + 1)} variant="primary" className="flex-1 py-3">Suivant →</Button>
                 ) : (
-                    <Button onClick={() => setFinishMode(true)} variant="success" className="flex-1">✓ Terminer</Button>
+                    <Button onClick={() => setFinishMode(true)} variant="success" className="flex-1 py-3">✓ Terminer</Button>
                 )}
             </div>
         </div>
