@@ -419,8 +419,41 @@ const GlobalStyles = () => (
 );
 
 // --- DATA CONSTANTS ---
-// Programme: 6 janvier 2025 → 27 juillet 2025 (31 semaines)
-const PHASE_1_START = new Date("2026-01-01"); // Mercredi 1er janvier 2026
+// Programme: 6 janvier 2026 → 31 octobre 2026 (5 phases)
+// Phase 1: Prise de masse (6 jan → 2 avril) - 13 semaines
+// Phase 2: Repos médical greffe (3 avril → 5 mai) - 5 semaines BLOQUÉES
+// Phase 3: Réadaptation (6 mai → 25 mai) - 3 semaines
+// Phase 4: Sèche intensive (26 mai → 30 juin) - 5 semaines
+// Phase 5: Maintien (1 juillet → 31 octobre) - 18 semaines
+const PHASE_1_START = new Date("2026-01-06"); // Lundi 6 janvier 2026
+
+// Dates clés des phases
+const PHASE_DATES = {
+    masse: { start: "2026-01-06", end: "2026-04-02" },
+    repos_medical: { start: "2026-04-03", end: "2026-05-05" },
+    readaptation: { start: "2026-05-06", end: "2026-05-25" },
+    seche: { start: "2026-05-26", end: "2026-06-30" },
+    maintien: { start: "2026-07-01", end: "2026-10-31" }
+};
+
+// Helper pour vérifier si une date est dans la période de repos médical
+const isInMedicalRest = (dateStr) => {
+    const date = new Date(dateStr);
+    const restStart = new Date(PHASE_DATES.repos_medical.start);
+    const restEnd = new Date(PHASE_DATES.repos_medical.end);
+    return date >= restStart && date <= restEnd;
+};
+
+// Helper pour obtenir la phase actuelle
+const getCurrentPhase = (dateStr) => {
+    const date = new Date(dateStr);
+    for (const [phase, dates] of Object.entries(PHASE_DATES)) {
+        if (date >= new Date(dates.start) && date <= new Date(dates.end)) {
+            return phase;
+        }
+    }
+    return date < new Date(PHASE_DATES.masse.start) ? 'pre_programme' : 'post_programme';
+};
 
 const CARDIO_DETAILS = {
     // LISS (Low Intensity Steady State) - Zone 2
@@ -702,348 +735,604 @@ const EXERCISES_DB = {
         { id: "BURPEES", name: "Burpees", sets: 3, reps: "12", repos: 0, muscles: "Full body", consignes: "Burpees complets" },
         { id: "MOUNTAIN_CLIMBERS", name: "Mountain Climbers", sets: 3, reps: "30", repos: 0, muscles: "Core, Cardio", consignes: "Position pompe, alterner genoux" },
         { id: "BOX_JUMPS", name: "Box Jumps", sets: 3, reps: "10", repos: 120, muscles: "Quadriceps, Explosivité", consignes: "Box 50-60cm, repos 2min après round" }
+    ],
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // RÉADAPTATION - Semaine 1 (50% charges, machines guidées)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    "FULLBODY_A_READAPT_S1": [
+        { id: "LEG_PRESS_R1", name: "Leg Press", sets: 2, reps: "12", repos: 120, muscles: "Quadriceps, Fessiers", consignes: "50% charge habituelle, contrôlé, pas de douleur" },
+        { id: "CHEST_PRESS_R1", name: "Chest Press Machine", sets: 2, reps: "12", repos: 120, muscles: "Pectoraux, Triceps", consignes: "50% charge, mouvement fluide" },
+        { id: "LAT_PULLDOWN_R1", name: "Lat Pulldown", sets: 2, reps: "12", repos: 120, muscles: "Grand dorsal, Biceps", consignes: "50% charge, tirer vers poitrine" },
+        { id: "SHOULDER_PRESS_R1", name: "Shoulder Press Machine", sets: 2, reps: "12", repos: 120, muscles: "Épaules", consignes: "50% charge, pas de douleur" },
+        { id: "LEG_CURL_R1", name: "Leg Curl", sets: 2, reps: "15", repos: 90, muscles: "Ischios", consignes: "50% charge, contrôlé" },
+        { id: "CABLE_ROWS_R1", name: "Cable Rows", sets: 2, reps: "12", repos: 90, muscles: "Dos milieu", consignes: "50% charge, omoplates serrées" }
+    ],
+    "FULLBODY_B_READAPT_S1": [
+        { id: "GOBLET_SQUAT_R1", name: "Goblet Squat léger", sets: 2, reps: "12", repos: 120, muscles: "Quadriceps, Fessiers", consignes: "Haltère léger, squat contrôlé" },
+        { id: "INCLINE_CHEST_R1", name: "Incline Chest Press Machine", sets: 2, reps: "12", repos: 120, muscles: "Pectoraux haut", consignes: "50% charge" },
+        { id: "CABLE_PULLDOWN_R1", name: "Cable Pulldown", sets: 2, reps: "12", repos: 120, muscles: "Grand dorsal", consignes: "50% charge" },
+        { id: "LAT_RAISE_R1", name: "Lateral Raises", sets: 2, reps: "15", repos: 90, muscles: "Épaules moyen", consignes: "Poids très léger, focus sensation" },
+        { id: "LEG_EXT_R1", name: "Leg Extension", sets: 2, reps: "15", repos: 90, muscles: "Quadriceps", consignes: "50% charge" },
+        { id: "FACE_PULLS_R1", name: "Face Pulls", sets: 2, reps: "15", repos: 90, muscles: "Épaules arrière", consignes: "Léger, focus technique" }
+    ],
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // RÉADAPTATION - Semaine 2 (65% charges, réintro compounds)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    "PUSH_READAPT_S2": [
+        { id: "BENCH_R2", name: "Bench Press", sets: 3, reps: "10", repos: 150, muscles: "Pectoraux, Triceps", consignes: "65% charge, contrôlé" },
+        { id: "INCLINE_DB_R2", name: "Incline Dumbbell Press", sets: 3, reps: "10", repos: 120, muscles: "Pectoraux haut", consignes: "65% charge" },
+        { id: "SHOULDER_DB_R2", name: "Shoulder Press Haltères", sets: 3, reps: "10", repos: 120, muscles: "Épaules", consignes: "65% charge" },
+        { id: "LAT_RAISE_R2", name: "Lateral Raises", sets: 3, reps: "12", repos: 90, muscles: "Épaules moyen", consignes: "Progresser légèrement" },
+        { id: "TRICEPS_PUSH_R2", name: "Triceps Pushdown", sets: 3, reps: "12", repos: 90, muscles: "Triceps", consignes: "Focus contraction" }
+    ],
+    "PULL_READAPT_S2": [
+        { id: "ROWING_BARRE_R2", name: "Rowing Barre", sets: 3, reps: "10", repos: 150, muscles: "Dos, Trapèzes", consignes: "65% charge, dos droit" },
+        { id: "LAT_PULLDOWN_R2", name: "Lat Pulldown", sets: 3, reps: "10", repos: 120, muscles: "Grand dorsal", consignes: "65% charge" },
+        { id: "CABLE_ROWS_R2", name: "Cable Rows", sets: 3, reps: "10", repos: 120, muscles: "Dos milieu", consignes: "65% charge" },
+        { id: "FACE_PULLS_R2", name: "Face Pulls", sets: 3, reps: "12", repos: 90, muscles: "Épaules arrière", consignes: "Focus technique" },
+        { id: "BICEPS_CURLS_R2", name: "Biceps Curls", sets: 3, reps: "12", repos: 90, muscles: "Biceps", consignes: "Coudes fixes" }
+    ],
+    "LEGS_READAPT_S2": [
+        { id: "SQUAT_R2", name: "Squat", sets: 3, reps: "10", repos: 150, muscles: "Quadriceps, Fessiers", consignes: "60% charge, réintro prudente" },
+        { id: "LEG_PRESS_R2", name: "Leg Press", sets: 3, reps: "10", repos: 120, muscles: "Quadriceps", consignes: "65% charge" },
+        { id: "RDL_R2", name: "Romanian Deadlift léger", sets: 3, reps: "10", repos: 150, muscles: "Ischios, Fessiers", consignes: "60% charge, dos droit" },
+        { id: "LEG_CURL_R2", name: "Leg Curl", sets: 3, reps: "12", repos: 90, muscles: "Ischios", consignes: "Focus contraction" },
+        { id: "LEG_EXT_R2", name: "Leg Extension", sets: 3, reps: "12", repos: 90, muscles: "Quadriceps", consignes: "Contrôlé" },
+        { id: "MOLLETS_R2", name: "Mollets", sets: 3, reps: "15", repos: 60, muscles: "Mollets", consignes: "Amplitude max" }
+    ],
+    "UPPER_READAPT_S2": [
+        { id: "INCLINE_BENCH_R2", name: "Incline Bench", sets: 3, reps: "10", repos: 150, muscles: "Pectoraux haut", consignes: "65% charge" },
+        { id: "ROWING_DB_R2", name: "Rowing Haltères", sets: 3, reps: "10", repos: 120, muscles: "Dos", consignes: "65% charge" },
+        { id: "OHP_R2", name: "Overhead Press", sets: 3, reps: "10", repos: 120, muscles: "Épaules", consignes: "65% charge" },
+        { id: "PULLUPS_ASSISTED_R2", name: "Pull-ups assistés ou Lat Pulldown", sets: 3, reps: "10", repos: 120, muscles: "Dos", consignes: "Assistance si nécessaire" },
+        { id: "DIPS_ASSISTED_R2", name: "Dips assistés ou Triceps", sets: 3, reps: "10", repos: 90, muscles: "Triceps", consignes: "Assistance si nécessaire" },
+        { id: "CURLS_R2", name: "Curls", sets: 3, reps: "12", repos: 90, muscles: "Biceps", consignes: "Contrôlé" }
+    ],
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // RÉADAPTATION - Semaine 3 (80-85% charges, retour quasi-normal)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    "PUSH_READAPT_S3": [
+        { id: "BENCH_R3", name: "Bench Press", sets: 4, reps: "8-10", repos: 150, muscles: "Pectoraux, Triceps", consignes: "80-85% charge" },
+        { id: "INCLINE_DB_R3", name: "Incline Dumbbell Press", sets: 4, reps: "10", repos: 120, muscles: "Pectoraux haut", consignes: "80% charge" },
+        { id: "OHP_R3", name: "Overhead Press", sets: 4, reps: "8-10", repos: 120, muscles: "Épaules", consignes: "80% charge" },
+        { id: "LAT_RAISE_R3", name: "Lateral Raises", sets: 4, reps: "12-15", repos: 90, muscles: "Épaules", consignes: "Retour volume normal" },
+        { id: "CABLE_FLYES_R3", name: "Cable Flyes", sets: 3, reps: "12", repos: 90, muscles: "Pectoraux", consignes: "Focus étirement" },
+        { id: "TRICEPS_R3", name: "Triceps Pushdown", sets: 3, reps: "12", repos: 90, muscles: "Triceps", consignes: "Contrôlé" }
+    ],
+    "PULL_READAPT_S3": [
+        { id: "DEADLIFT_R3", name: "Deadlift", sets: 4, reps: "6-8", repos: 180, muscles: "Dos, Ischios", consignes: "80% charge, technique parfaite" },
+        { id: "PULLUPS_R3", name: "Pull-ups", sets: 4, reps: "8-10", repos: 150, muscles: "Dos, Biceps", consignes: "Retour normal" },
+        { id: "ROWING_R3", name: "Barbell Row", sets: 4, reps: "8-10", repos: 120, muscles: "Dos", consignes: "80% charge" },
+        { id: "CABLE_ROWS_R3", name: "Cable Rows", sets: 3, reps: "10-12", repos: 90, muscles: "Dos milieu", consignes: "Contrôlé" },
+        { id: "FACE_PULLS_R3", name: "Face Pulls", sets: 3, reps: "15", repos: 90, muscles: "Épaules arrière", consignes: "Léger" },
+        { id: "CURLS_R3", name: "Barbell Curls", sets: 3, reps: "10-12", repos: 90, muscles: "Biceps", consignes: "Coudes fixes" }
+    ],
+    "LEGS_READAPT_S3": [
+        { id: "SQUAT_R3", name: "Squat", sets: 4, reps: "6-8", repos: 180, muscles: "Quadriceps, Fessiers", consignes: "80% charge" },
+        { id: "RDL_R3", name: "Romanian Deadlift", sets: 4, reps: "8-10", repos: 150, muscles: "Ischios, Fessiers", consignes: "80% charge" },
+        { id: "LEG_PRESS_R3", name: "Leg Press", sets: 4, reps: "10-12", repos: 120, muscles: "Quadriceps", consignes: "Retour volume" },
+        { id: "LUNGES_R3", name: "Walking Lunges", sets: 3, reps: "12/jambe", repos: 120, muscles: "Quadriceps, Fessiers", consignes: "Contrôlé" },
+        { id: "LEG_CURL_R3", name: "Leg Curl", sets: 3, reps: "12", repos: 90, muscles: "Ischios", consignes: "Contrôlé" },
+        { id: "MOLLETS_R3", name: "Standing Calf Raises", sets: 4, reps: "15", repos: 60, muscles: "Mollets", consignes: "Amplitude max" }
+    ],
+    "UPPER_READAPT_S3": [
+        { id: "INCLINE_BENCH_R3", name: "Incline Bench Press", sets: 4, reps: "8-10", repos: 150, muscles: "Pectoraux", consignes: "80% charge" },
+        { id: "WEIGHTED_PULLUPS_R3", name: "Weighted Pull-ups", sets: 4, reps: "6-8", repos: 150, muscles: "Dos", consignes: "Lest léger si possible" },
+        { id: "DB_SHOULDER_R3", name: "Dumbbell Shoulder Press", sets: 4, reps: "10", repos: 120, muscles: "Épaules", consignes: "80% charge" },
+        { id: "CABLE_ROWS_R3B", name: "Cable Rows", sets: 3, reps: "10-12", repos: 90, muscles: "Dos", consignes: "Contrôlé" },
+        { id: "DIPS_R3", name: "Dips", sets: 3, reps: "10-12", repos: 90, muscles: "Triceps, Pecs", consignes: "Retour normal" },
+        { id: "SUPERSET_ARMS_R3", name: "Curls + Triceps superset", sets: 3, reps: "12 chaque", repos: 90, muscles: "Biceps, Triceps", consignes: "Enchaîner" }
+    ],
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ABDOS - Circuit court (fin de séance, 5-10min)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    "ABDOS_COURT": [
+        { id: "PLANCHE_C", name: "Planche", sets: 2, reps: "45sec", repos: 30, muscles: "Core", consignes: "Corps aligné, gainage max" },
+        { id: "CRUNCHS_C", name: "Crunchs", sets: 2, reps: "20", repos: 30, muscles: "Abdos", consignes: "Contracter en haut" },
+        { id: "LEG_RAISES_C", name: "Leg Raises", sets: 2, reps: "15", repos: 30, muscles: "Abdos bas", consignes: "Jambes tendues, contrôlé" },
+        { id: "RUSSIAN_TWISTS_C", name: "Russian Twists", sets: 2, reps: "20 (10/côté)", repos: 45, muscles: "Obliques", consignes: "Pieds au sol ou levés" }
+    ],
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // ABDOS - Séance dédiée (samedi, 15-20min)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    "ABDOS_DEDIE": [
+        { id: "PLANCHE_D", name: "Planche", sets: 3, reps: "60sec", repos: 30, muscles: "Core", consignes: "Corps aligné, gainage max" },
+        { id: "CRUNCHS_D", name: "Crunchs", sets: 3, reps: "25", repos: 30, muscles: "Abdos", consignes: "Contracter en haut" },
+        { id: "HANGING_LEG_RAISES", name: "Hanging Leg Raises", sets: 3, reps: "12", repos: 45, muscles: "Abdos bas, Hip flexors", consignes: "Suspendu à barre, lever jambes" },
+        { id: "CABLE_CRUNCH", name: "Cable Crunch", sets: 3, reps: "15", repos: 45, muscles: "Abdos", consignes: "À genoux, enrouler colonne" },
+        { id: "DEAD_BUG", name: "Dead Bug", sets: 3, reps: "10/côté", repos: 30, muscles: "Core, Stabilité", consignes: "Dos plaqué au sol, alterner" },
+        { id: "AB_WHEEL", name: "Ab Wheel ou Planche bras tendus", sets: 3, reps: "10 ou 45sec", repos: 45, muscles: "Core entier", consignes: "Contrôlé, pas cambrer" },
+        { id: "SIDE_PLANK", name: "Side Plank", sets: 3, reps: "30sec/côté", repos: 30, muscles: "Obliques, Core latéral", consignes: "Hanches hautes, corps aligné" }
+    ],
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // SÈCHE INTENSIVE - Séances complètes avec abdos intégrés
+    // ═══════════════════════════════════════════════════════════════════════════════
+    "PUSH_SECHE": [
+        { id: "BENCH_S", name: "Bench Press", sets: 4, reps: "8-10", repos: 180, muscles: "Pectoraux, Triceps", consignes: "100% charge, compound lourd" },
+        { id: "INCLINE_DB_S", name: "Incline Dumbbell Press", sets: 4, reps: "10", repos: 150, muscles: "Pectoraux haut", consignes: "Étirement max" },
+        { id: "OHP_S", name: "Overhead Press", sets: 4, reps: "8-10", repos: 150, muscles: "Épaules", consignes: "Debout, gainage" },
+        { id: "LAT_RAISE_S", name: "Lateral Raises", sets: 4, reps: "12-15", repos: 90, muscles: "Épaules moyen", consignes: "Léger, volume" },
+        { id: "CABLE_FLYES_S", name: "Cable Flyes", sets: 3, reps: "12", repos: 90, muscles: "Pectoraux", consignes: "Étirement, contraction" },
+        { id: "TRICEPS_PUSH_S", name: "Triceps Pushdown", sets: 3, reps: "12", repos: 90, muscles: "Triceps", consignes: "Coudes collés" },
+        { id: "OVERHEAD_EXT_S", name: "Overhead Triceps Extension", sets: 3, reps: "12", repos: 90, muscles: "Triceps long", consignes: "Étirement max" }
+    ],
+    "PULL_SECHE": [
+        { id: "DEADLIFT_S", name: "Deadlift", sets: 4, reps: "6-8", repos: 180, muscles: "Dos, Ischios", consignes: "100% charge" },
+        { id: "PULLUPS_S", name: "Pull-ups", sets: 4, reps: "8-10", repos: 150, muscles: "Dos, Biceps", consignes: "Prise large" },
+        { id: "BARBELL_ROW_S", name: "Barbell Row", sets: 4, reps: "8-10", repos: 150, muscles: "Dos milieu", consignes: "Buste 45°" },
+        { id: "CABLE_ROWS_S", name: "Cable Rows", sets: 3, reps: "10-12", repos: 120, muscles: "Dos", consignes: "Omoplates serrées" },
+        { id: "FACE_PULLS_S", name: "Face Pulls", sets: 3, reps: "15", repos: 90, muscles: "Épaules arrière", consignes: "Léger, technique" },
+        { id: "BARBELL_CURLS_S", name: "Barbell Curls", sets: 3, reps: "10-12", repos: 90, muscles: "Biceps", consignes: "Pas de balancement" },
+        { id: "HAMMER_CURLS_S", name: "Hammer Curls", sets: 3, reps: "12", repos: 90, muscles: "Biceps, Brachial", consignes: "Contrôlé" }
+    ],
+    "LEGS_SECHE": [
+        { id: "SQUAT_S", name: "Squat", sets: 4, reps: "6-8", repos: 180, muscles: "Quadriceps, Fessiers", consignes: "100% charge" },
+        { id: "RDL_S", name: "Romanian Deadlift", sets: 4, reps: "8-10", repos: 180, muscles: "Ischios, Fessiers", consignes: "Étirement max" },
+        { id: "LEG_PRESS_S", name: "Leg Press", sets: 4, reps: "10-12", repos: 150, muscles: "Quadriceps", consignes: "Pieds milieu" },
+        { id: "WALKING_LUNGES_S", name: "Walking Lunges", sets: 3, reps: "12/jambe", repos: 120, muscles: "Quadriceps, Fessiers", consignes: "Grand pas" },
+        { id: "LEG_CURL_S", name: "Leg Curl", sets: 3, reps: "12", repos: 90, muscles: "Ischios", consignes: "Contrôlé" },
+        { id: "LEG_EXT_S", name: "Leg Extension", sets: 3, reps: "12", repos: 90, muscles: "Quadriceps", consignes: "Contraction max" },
+        { id: "CALF_RAISES_S", name: "Standing Calf Raises", sets: 4, reps: "15", repos: 60, muscles: "Mollets", consignes: "Amplitude max" }
+    ],
+    "UPPER_SECHE": [
+        { id: "INCLINE_BENCH_S", name: "Incline Bench Press", sets: 4, reps: "8-10", repos: 180, muscles: "Pectoraux", consignes: "100% charge" },
+        { id: "WEIGHTED_PULLUPS_S", name: "Weighted Pull-ups", sets: 4, reps: "6-8", repos: 150, muscles: "Dos", consignes: "Lest" },
+        { id: "DB_SHOULDER_S", name: "Dumbbell Shoulder Press", sets: 4, reps: "10", repos: 150, muscles: "Épaules", consignes: "Assis ou debout" },
+        { id: "CABLE_ROWS_S2", name: "Cable Rows", sets: 3, reps: "10-12", repos: 120, muscles: "Dos", consignes: "Focus milieu dos" },
+        { id: "DIPS_S", name: "Dips", sets: 3, reps: "10-12", repos: 120, muscles: "Triceps, Pecs", consignes: "Buste penché" },
+        { id: "LAT_RAISE_S2", name: "Lateral Raises", sets: 3, reps: "15", repos: 90, muscles: "Épaules", consignes: "Léger, volume" },
+        { id: "SUPERSET_ARMS_S", name: "Curls + Triceps superset", sets: 3, reps: "12 chaque", repos: 90, muscles: "Biceps, Triceps", consignes: "Enchaîner" }
+    ],
+    "LOWER_SECHE": [
+        { id: "FRONT_SQUAT_S", name: "Front Squat", sets: 4, reps: "8-10", repos: 180, muscles: "Quadriceps", consignes: "Coudes hauts" },
+        { id: "HIP_THRUST_S", name: "Hip Thrust", sets: 4, reps: "10-12", repos: 150, muscles: "Fessiers", consignes: "Squeeze en haut" },
+        { id: "BULGARIAN_S", name: "Bulgarian Split Squat", sets: 3, reps: "10/jambe", repos: 120, muscles: "Quadriceps, Fessiers", consignes: "Pied arrière sur banc" },
+        { id: "LEG_CURL_S2", name: "Leg Curl", sets: 3, reps: "12", repos: 90, muscles: "Ischios", consignes: "Contrôlé" },
+        { id: "LEG_EXT_S2", name: "Leg Extension", sets: 3, reps: "12", repos: 90, muscles: "Quadriceps", consignes: "Contrôlé" },
+        { id: "SEATED_CALF_S", name: "Seated Calf Raises", sets: 4, reps: "15", repos: 60, muscles: "Soléaires", consignes: "Amplitude max" }
+    ],
+
+    // ═══════════════════════════════════════════════════════════════════════════════
+    // MAINTIEN - Programme 4 mois (juillet → octobre)
+    // ═══════════════════════════════════════════════════════════════════════════════
+    "PUSH_MAINTIEN": [
+        { id: "BENCH_M", name: "Bench Press", sets: 4, reps: "8-10", repos: 180, muscles: "Pectoraux", consignes: "90-100% charge, maintien force" },
+        { id: "INCLINE_DB_M", name: "Incline Dumbbell Press", sets: 4, reps: "10", repos: 150, muscles: "Pectoraux haut", consignes: "Maintien volume" },
+        { id: "OHP_M", name: "Overhead Press", sets: 4, reps: "8-10", repos: 150, muscles: "Épaules", consignes: "Maintien" },
+        { id: "LAT_RAISE_M", name: "Lateral Raises", sets: 3, reps: "12-15", repos: 90, muscles: "Épaules", consignes: "Léger" },
+        { id: "TRICEPS_M", name: "Triceps (au choix)", sets: 3, reps: "12", repos: 90, muscles: "Triceps", consignes: "Varier exercices" }
+    ],
+    "PULL_MAINTIEN": [
+        { id: "DEADLIFT_M", name: "Deadlift", sets: 4, reps: "6-8", repos: 180, muscles: "Dos", consignes: "90-100% charge" },
+        { id: "PULLUPS_M", name: "Pull-ups", sets: 4, reps: "8-10", repos: 150, muscles: "Dos", consignes: "Lest si possible" },
+        { id: "ROWS_M", name: "Rows (barre ou haltères)", sets: 4, reps: "8-10", repos: 150, muscles: "Dos", consignes: "Varier" },
+        { id: "FACE_PULLS_M", name: "Face Pulls", sets: 3, reps: "15", repos: 90, muscles: "Épaules arrière", consignes: "Léger" },
+        { id: "CURLS_M", name: "Curls (au choix)", sets: 3, reps: "10-12", repos: 90, muscles: "Biceps", consignes: "Varier" }
+    ],
+    "LEGS_MAINTIEN": [
+        { id: "SQUAT_M", name: "Squat", sets: 4, reps: "6-8", repos: 180, muscles: "Quadriceps", consignes: "90-100% charge" },
+        { id: "RDL_M", name: "Romanian Deadlift", sets: 4, reps: "8-10", repos: 150, muscles: "Ischios", consignes: "Maintien" },
+        { id: "LEG_PRESS_M", name: "Leg Press", sets: 3, reps: "10-12", repos: 120, muscles: "Quadriceps", consignes: "Volume maintenu" },
+        { id: "LEG_CURL_M", name: "Leg Curl", sets: 3, reps: "12", repos: 90, muscles: "Ischios", consignes: "Contrôlé" },
+        { id: "MOLLETS_M", name: "Calf Raises", sets: 3, reps: "15", repos: 60, muscles: "Mollets", consignes: "Maintien acquis" }
+    ],
+    "UPPER_MAINTIEN": [
+        { id: "INCLINE_M", name: "Incline Press", sets: 4, reps: "8-10", repos: 150, muscles: "Pectoraux", consignes: "90-100% charge" },
+        { id: "PULLUPS_M2", name: "Pull-ups/Chin-ups", sets: 4, reps: "8-10", repos: 150, muscles: "Dos", consignes: "Alterner" },
+        { id: "SHOULDER_M", name: "Shoulder Press", sets: 3, reps: "10", repos: 120, muscles: "Épaules", consignes: "Maintien" },
+        { id: "ROWS_M2", name: "Rows", sets: 3, reps: "10-12", repos: 120, muscles: "Dos", consignes: "Focus technique" },
+        { id: "ARMS_M", name: "Superset Biceps/Triceps", sets: 3, reps: "12", repos: 90, muscles: "Bras", consignes: "Enchaîner" }
+    ],
+    "LOWER_MAINTIEN": [
+        { id: "SQUAT_M2", name: "Squat ou Front Squat", sets: 4, reps: "8-10", repos: 150, muscles: "Quadriceps", consignes: "Alterner" },
+        { id: "HIP_THRUST_M", name: "Hip Thrust", sets: 4, reps: "10-12", repos: 120, muscles: "Fessiers", consignes: "Maintien" },
+        { id: "LUNGES_M", name: "Lunges", sets: 3, reps: "10/jambe", repos: 120, muscles: "Quadriceps", consignes: "Varier" },
+        { id: "ISCHIOS_M", name: "Leg Curl", sets: 3, reps: "12", repos: 90, muscles: "Ischios", consignes: "Contrôlé" },
+        { id: "MOLLETS_M2", name: "Calf Raises", sets: 3, reps: "15", repos: 60, muscles: "Mollets", consignes: "Maintien" }
     ]
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// CALENDRIER 27 SEMAINES COMPLET
-// ═══════════════════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════════════════
-// CALENDRIER 31 SEMAINES - 6 janvier → 27 juillet 2025
-// ═══════════════════════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════════════════════
-// CALENDRIER 31 SEMAINES - 1er janvier → 27 juillet 2026
+// CALENDRIER 44 SEMAINES - 6 janvier → 31 octobre 2026
+// Phase 1: Prise de masse (6 jan → 2 avril) - 13 semaines
+// Phase 2: Repos médical (3 avril → 5 mai) - 5 semaines BLOQUÉES
+// Phase 3: Réadaptation (6 mai → 25 mai) - 3 semaines
+// Phase 4: Sèche intensive (26 mai → 30 juin) - 5 semaines
+// Phase 5: Maintien (1 juillet → 31 octobre) - 18 semaines
 // Semaines du LUNDI au DIMANCHE
 // ═══════════════════════════════════════════════════════════════════════════════
 const CALENDAR_27_WEEKS = [
     // ═══════════════════════════════════════════════════════════════════════════
-    // PHASE 1 - MASSE (Semaines 1-14) - 1er janvier → 12 avril 2026
-    // PPL 6x/sem + 1 séance mollets isolée + cardio LISS facultatif
+    // PHASE 1 - PRISE DE MASSE (Semaines 1-13) - 6 janvier → 2 avril 2026
+    // Push/Pull/Legs/Rest+Cardio/Upper/Lower/Rest
+    // Cardio obligatoire 1x/semaine (jour flexible)
     // ═══════════════════════════════════════════════════════════════════════════
-    
-    // S1: Semaine courte (1er janvier = mercredi)
-    { sem: 1, date: "01/01", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "Avant programme" },
-        { jour: "Mar", seance: null, duree: 0, cardio: null, notes: "Avant programme" },
-        { jour: "Mer", seance: null, duree: 0, cardio: null, notes: "🎆 Jour de l'An - Repos" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt", notes: "🚀 DÉBUT PROGRAMME" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
+
+    // S1: 6-12 janvier 2026
+    { sem: 1, date: "06/01", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null, notes: "🚀 DÉBUT PROGRAMME" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio obligatoire (jour flexible)" },
+        { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
+        { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    
-    // S2-S6: Semaines complètes PPL
-    { sem: 2, date: "05/01", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25", notes: "Séance mollets isolée" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
+
+    // S2: 13-19 janvier 2026
+    { sem: 2, date: "13/01", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio obligatoire" },
+        { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
+        { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 3, date: "12/01", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
+    // S3: 20-26 janvier 2026
+    { sem: 3, date: "20/01", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio obligatoire" },
+        { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
+        { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
         { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 4, date: "19/01", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
-        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_30", notes: "Cardio obligatoire" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Bilan S4" }
+
+    // S4: 27 jan - 2 fév 2026
+    { sem: 4, date: "27/01", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
+        { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée - Bilan S4" }
     ]},
-    { sem: 5, date: "26/01", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_25" },
-        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S5: 3-9 février 2026
+    { sem: 5, date: "03/02", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
+        { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
     ]},
-    { sem: 6, date: "02/02", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_30" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S6: 10-16 février 2026
+    { sem: 6, date: "10/02", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
+        { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
     ]},
-    
-    // S7: DELOAD
-    { sem: 7, date: "09/02", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A_Deload", duree: 50, cardio: "LISS_20", notes: "⚡ DELOAD" },
-        { jour: "Mar", seance: "PULL_A_Deload", duree: 50, cardio: "LISS_20" },
+
+    // S7: 17-23 février 2026 - DELOAD
+    { sem: 7, date: "17/02", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 50, cardio: null, notes: "⚡ DELOAD - charges réduites" },
+        { jour: "Mar", seance: "PULL_A", duree: 50, cardio: null },
         { jour: "Mer", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Jeu", seance: "LEGS_A_Deload", duree: 50, cardio: null },
-        { jour: "Ven", seance: "PUSH_B_Deload", duree: 45, cardio: "LISS_20" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_25" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Mi-Phase1" }
+        { jour: "Jeu", seance: "LEGS_A", duree: 50, cardio: null },
+        { jour: "Ven", seance: null, duree: 0, cardio: "LISS_25" },
+        { jour: "Sam", seance: null, duree: 0, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Mi-Phase1" }
     ]},
-    
-    // S8-S13: Reprise intense
-    { sem: 8, date: "16/02", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_25", notes: "Reprise post-deload" },
-        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_30" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S8: 24 fév - 2 mars 2026
+    { sem: 8, date: "24/02", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null, notes: "Reprise post-deload" },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
+        { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
     ]},
-    { sem: 9, date: "23/02", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_25" },
-        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_30", notes: "Cardio obligatoire" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S9: 3-9 mars 2026
+    { sem: 9, date: "03/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
+        { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
     ]},
-    { sem: 10, date: "02/03", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
-        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_25" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S10: 10-16 mars 2026
+    { sem: 10, date: "10/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
+        { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
     ]},
-    { sem: 11, date: "09/03", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S11: 17-23 mars 2026
+    { sem: 11, date: "17/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
+        { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
     ]},
-    { sem: 12, date: "16/03", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_25" },
-        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_30", notes: "Cardio obligatoire" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Bilan S12" }
+
+    // S12: 24-30 mars 2026
+    { sem: 12, date: "24/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
+        { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Bilan S12" }
     ]},
-    { sem: 13, date: "23/03", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_B", duree: 60, cardio: "LISS_25" },
-        { jour: "Mer", seance: "MOLLETS", duree: 40, cardio: "LISS_25" },
-        { jour: "Jeu", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
-    ]},
-    
-    // S14: DELOAD fin Phase 1
-    { sem: 14, date: "30/03", phase: "Phase1_Masse", jours: [
-        { jour: "Lun", seance: "PUSH_A_Deload", duree: 50, cardio: "LISS_25", notes: "⚡ DELOAD fin Phase 1" },
-        { jour: "Mar", seance: "PULL_A_Deload", duree: 50, cardio: "LISS_25" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Jeu", seance: "LEGS_A_Deload", duree: 50, cardio: null },
-        { jour: "Ven", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_25" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 FIN PHASE 1 - Photos + Mesures" }
-    ]},
-    
-    // ═══════════════════════════════════════════════════════════════════════════
-    // PHASE 2 - TRANSITION (Semaines 15-20) - 6 avril → 17 mai 2026
-    // PPL 5-6x/sem + cardio mix obligatoire/facultatif + plus de mollets isolés
-    // ═══════════════════════════════════════════════════════════════════════════
-    { sem: 15, date: "06/04", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30", notes: "🔄 DÉBUT PHASE 2" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
-    ]},
-    { sem: 16, date: "13/04", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "LISS_35" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
-    ]},
-    { sem: 17, date: "20/04", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "HIIT_20", notes: "Introduction HIIT" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "Course_10km_Opt" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
-    ]},
-    { sem: 18, date: "27/04", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_Opt" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_35" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "HIIT_15" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "LISS_Opt" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
-    ]},
-    { sem: 19, date: "04/05", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_35" },
-        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "HIIT_20", notes: "Cardio obligatoire" },
-        { jour: "Jeu", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Ven", seance: "PUSH_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Sam", seance: "PULL_B", duree: 60, cardio: "Course_10km_Opt" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
-    ]},
-    
-    // S20: DELOAD fin Phase 2
-    { sem: 20, date: "11/05", phase: "Phase2_Transition", jours: [
-        { jour: "Lun", seance: "PUSH_A_Deload", duree: 50, cardio: "LISS_30", notes: "⚡ DELOAD fin Phase 2" },
-        { jour: "Mar", seance: "PULL_A_Deload", duree: 50, cardio: "LISS_Opt" },
-        { jour: "Mer", seance: null, duree: 0, cardio: "LISS_35" },
-        { jour: "Jeu", seance: "LEGS_A_Deload", duree: 50, cardio: null },
-        { jour: "Ven", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_30" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 FIN PHASE 2 - Photos + Mesures" }
+
+    // S13: 31 mars - 2 avril 2026 (FIN PHASE 1)
+    { sem: 13, date: "31/03", phase: "Phase1_Masse", jours: [
+        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
+        { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
+        { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null, notes: "📸 FIN PHASE 1 - Photos + Mesures" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null, notes: "🦷 GREFFE DENTAIRE" },
+        { jour: "Ven", seance: null, duree: 0, cardio: null, notes: "🏥 Début repos médical" },
+        { jour: "Sam", seance: null, duree: 0, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
     ]},
     
     // ═══════════════════════════════════════════════════════════════════════════
-    // PHASE 3 - SÈCHE (Semaines 21-31) - 18 mai → 26 juillet 2026
-    // Muscu lourde 4-5x/sem + Cardio 3-4x/sem obligatoire
+    // PHASE 2 - REPOS MÉDICAL GREFFE DENTAIRE (Semaines 14-18) - 3 avril → 5 mai 2026
+    // AUCUNE séance de musculation - AUCUN cardio intense - Marche légère autorisée
     // ═══════════════════════════════════════════════════════════════════════════
-    { sem: 21, date: "18/05", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_40", notes: "🔥 DÉBUT SÈCHE" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
-        { jour: "Mer", seance: "PULL_A", duree: 75, cardio: "LISS_30" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
-        { jour: "Ven", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Sam", seance: "PUSH_B", duree: 60, cardio: "Endurance_45", notes: "Endurance fondamentale" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S14: 6-12 avril 2026
+    { sem: 14, date: "06/04", phase: "Phase2_ReposMedical", blocked: true, jours: [
+        { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "🏥 REPOS MÉDICAL - Marche légère autorisée (5k pas max)" },
+        { jour: "Mar", seance: null, duree: 0, cardio: null },
+        { jour: "Mer", seance: null, duree: 0, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null },
+        { jour: "Ven", seance: null, duree: 0, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
     ]},
-    { sem: 22, date: "25/05", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PULL_B", duree: 60, cardio: "LISS_35" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
-        { jour: "Mer", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_20", notes: "Cardio obligatoire" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: null },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_45" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S15: 13-19 avril 2026
+    { sem: 15, date: "13/04", phase: "Phase2_ReposMedical", blocked: true, jours: [
+        { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "🏥 REPOS MÉDICAL" },
+        { jour: "Mar", seance: null, duree: 0, cardio: null },
+        { jour: "Mer", seance: null, duree: 0, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null },
+        { jour: "Ven", seance: null, duree: 0, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
     ]},
-    { sem: 23, date: "01/06", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_40" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "Course_12km", notes: "Cardio obligatoire - Distance +" },
-        { jour: "Mer", seance: "PULL_B", duree: 60, cardio: "LISS_30" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
-        { jour: "Ven", seance: "PUSH_A", duree: 70, cardio: null },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_50" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Objectif SEC" }
+
+    // S16: 20-26 avril 2026
+    { sem: 16, date: "20/04", phase: "Phase2_ReposMedical", blocked: true, jours: [
+        { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "🏥 REPOS MÉDICAL" },
+        { jour: "Mar", seance: null, duree: 0, cardio: null },
+        { jour: "Mer", seance: null, duree: 0, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null },
+        { jour: "Ven", seance: null, duree: 0, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
     ]},
-    { sem: 24, date: "08/06", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PULL_A", duree: 75, cardio: "LISS_40" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
-        { jour: "Mer", seance: "PUSH_A", duree: 70, cardio: "LISS_30" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
-        { jour: "Ven", seance: "PULL_B", duree: 60, cardio: null },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_45" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S17: 27 avril - 3 mai 2026
+    { sem: 17, date: "27/04", phase: "Phase2_ReposMedical", blocked: true, jours: [
+        { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "🏥 REPOS MÉDICAL" },
+        { jour: "Mar", seance: null, duree: 0, cardio: null },
+        { jour: "Mer", seance: null, duree: 0, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null },
+        { jour: "Ven", seance: null, duree: 0, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
+    ]},
+
+    // S18: 4-5 mai 2026 (FIN REPOS)
+    { sem: 18, date: "04/05", phase: "Phase2_ReposMedical", blocked: true, jours: [
+        { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "🏥 REPOS MÉDICAL - Dernière semaine" },
+        { jour: "Mar", seance: null, duree: 0, cardio: null, notes: "📸 FIN REPOS MÉDICAL" },
+        { jour: "Mer", seance: null, duree: 0, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null },
+        { jour: "Ven", seance: null, duree: 0, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: null },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
+    ]},
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PHASE 3 - RÉADAPTATION (Semaines 19-21) - 6 mai → 25 mai 2026
+    // Reprise progressive: S1=50%, S2=65%, S3=80-85%
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // S19: 6-12 mai 2026 - Réadaptation Semaine 1 (50% charges, machines)
+    { sem: 19, date: "06/05", phase: "Phase3_Readaptation", readaptWeek: 1, jours: [
+        { jour: "Lun", seance: "FULLBODY_A_READAPT_S1", duree: 40, cardio: null, notes: "🔄 REPRISE - 50% charges, machines guidées" },
+        { jour: "Mar", seance: null, duree: 0, cardio: null, stepsGoal: 6000, notes: "Marche 6k pas" },
+        { jour: "Mer", seance: "FULLBODY_B_READAPT_S1", duree: 40, cardio: null },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null, stepsGoal: 6000 },
+        { jour: "Ven", seance: "FULLBODY_A_READAPT_S1", duree: 40, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: null, stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null }
+    ]},
+
+    // S20: 13-19 mai 2026 - Réadaptation Semaine 2 (65% charges)
+    { sem: 20, date: "13/05", phase: "Phase3_Readaptation", readaptWeek: 2, jours: [
+        { jour: "Lun", seance: "PUSH_READAPT_S2", duree: 45, cardio: null, notes: "65-70% charges" },
+        { jour: "Mar", seance: "PULL_READAPT_S2", duree: 45, cardio: null },
+        { jour: "Mer", seance: null, duree: 0, cardio: null, stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_READAPT_S2", duree: 45, cardio: null },
+        { jour: "Ven", seance: "UPPER_READAPT_S2", duree: 45, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: "LISS_25", notes: "Cardio léger 20-25min" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 8000 }
+    ]},
+
+    // S21: 20-25 mai 2026 - Réadaptation Semaine 3 (80-85% charges)
+    { sem: 21, date: "20/05", phase: "Phase3_Readaptation", readaptWeek: 3, jours: [
+        { jour: "Lun", seance: "PUSH_READAPT_S3", duree: 55, cardio: null, notes: "80-85% charges - Retour quasi-normal" },
+        { jour: "Mar", seance: "PULL_READAPT_S3", duree: 55, cardio: null },
+        { jour: "Mer", seance: null, duree: 0, cardio: null, stepsGoal: 10000 },
+        { jour: "Jeu", seance: "LEGS_READAPT_S3", duree: 55, cardio: null },
+        { jour: "Ven", seance: "UPPER_READAPT_S3", duree: 55, cardio: null },
+        { jour: "Sam", seance: null, duree: 0, cardio: "Endurance_Zone2", notes: "Cardio 30min zone 2" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 FIN RÉADAPTATION - Prêt pour sèche" }
     ]},
     
-    // S25: DELOAD mi-sèche
-    { sem: 25, date: "15/06", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_A_Deload", duree: 50, cardio: "LISS_35", notes: "⚡ DELOAD mi-sèche" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "LISS_40" },
-        { jour: "Mer", seance: "PULL_A_Deload", duree: 50, cardio: "LISS_30" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_40" },
-        { jour: "Ven", seance: "LEGS_A_Deload", duree: 50, cardio: null },
-        { jour: "Sam", seance: null, duree: 0, cardio: "Endurance_40" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - Bilan mi-sèche" }
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PHASE 4 - SÈCHE INTENSIVE (Semaines 22-26) - 26 mai → 30 juin 2026
+    // Push/Pull/Legs/Upper/Lower + Cardio 2x/sem + Abdos 3x/sem + Steps 10-12k/jour
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // S22: 26 mai - 1 juin 2026
+    { sem: 22, date: "26/05", phase: "Phase4_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_SECHE", duree: 65, cardio: null, stepsGoal: 8000, notes: "🔥 DÉBUT SÈCHE INTENSIVE" },
+        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000, notes: "Endurance 45min + Abdos fin séance" },
+        { jour: "Mer", seance: "LEGS_SECHE", duree: 70, cardio: null, stepsGoal: 8000 },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null, stepsGoal: 12000, notes: "Rest actif - Marche" },
+        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000, notes: "Abdos fin séance" },
+        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000, notes: "HIIT 25min + Abdos séance dédiée 15-20min" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée + Photos - Balade" }
     ]},
-    
-    // S26-S30: Sprint final
-    { sem: 26, date: "22/06", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_40", notes: "🚀 SPRINT FINAL" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "Course_12km", notes: "Cardio obligatoire" },
-        { jour: "Mer", seance: "PULL_A", duree: 75, cardio: "LISS_35" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
-        { jour: "Ven", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Sam", seance: "PUSH_B", duree: 60, cardio: "Endurance_50" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S23: 2-8 juin 2026
+    { sem: 23, date: "02/06", phase: "Phase4_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_SECHE", duree: 65, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000 },
+        { jour: "Mer", seance: "LEGS_SECHE", duree: 70, cardio: null, stepsGoal: 8000 },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null, stepsGoal: 12000, notes: "Rest actif" },
+        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 27, date: "29/06", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PULL_B", duree: 60, cardio: "LISS_40" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
-        { jour: "Mer", seance: "PUSH_A", duree: 70, cardio: "LISS_35" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_30", notes: "Cardio obligatoire" },
-        { jour: "Ven", seance: "PULL_A", duree: 75, cardio: null },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_45" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S24: 9-15 juin 2026
+    { sem: 24, date: "09/06", phase: "Phase4_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_SECHE", duree: 65, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000 },
+        { jour: "Mer", seance: "LEGS_SECHE", duree: 70, cardio: null, stepsGoal: 8000 },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null, stepsGoal: 12000 },
+        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 28, date: "06/07", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_B", duree: 60, cardio: "LISS_45" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "Course_12km", notes: "Cardio obligatoire" },
-        { jour: "Mer", seance: "PULL_B", duree: 60, cardio: "LISS_35" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
-        { jour: "Ven", seance: "PUSH_A", duree: 70, cardio: null },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_50" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S25: 16-22 juin 2026
+    { sem: 25, date: "16/06", phase: "Phase4_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_SECHE", duree: 65, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000 },
+        { jour: "Mer", seance: "LEGS_SECHE", duree: 70, cardio: null, stepsGoal: 8000 },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null, stepsGoal: 12000 },
+        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée + Photos" }
     ]},
-    { sem: 29, date: "13/07", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PULL_A", duree: 75, cardio: "LISS_40" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km", notes: "Cardio obligatoire" },
-        { jour: "Mer", seance: "PUSH_A", duree: 70, cardio: "LISS_35" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_25", notes: "Cardio obligatoire" },
-        { jour: "Ven", seance: "PULL_B", duree: 60, cardio: null },
-        { jour: "Sam", seance: "LEGS_A", duree: 75, cardio: "Endurance_45" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+
+    // S26: 23-30 juin 2026 (FIN SÈCHE)
+    { sem: 26, date: "23/06", phase: "Phase4_Seche", jours: [
+        { jour: "Lun", seance: "PUSH_SECHE", duree: 65, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000 },
+        { jour: "Mer", seance: "LEGS_SECHE", duree: 70, cardio: null, stepsGoal: 8000 },
+        { jour: "Jeu", seance: null, duree: 0, cardio: null, stepsGoal: 12000 },
+        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 FIN SÈCHE - Photos + Mesures finales" }
     ]},
-    { sem: 30, date: "20/07", phase: "Phase3_Seche", jours: [
-        { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: "LISS_40", notes: "🏁 DERNIÈRE SEMAINE INTENSE" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "Course_15km", notes: "Cardio final long" },
-        { jour: "Mer", seance: "PULL_A", duree: 75, cardio: "LISS_35" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "HIIT_30", notes: "Cardio obligatoire" },
-        { jour: "Ven", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Sam", seance: "FULL_BODY", duree: 60, cardio: "Endurance_45" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos - BILAN FINAL" }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PHASE 5 - MAINTIEN SEC (Semaines 27-44) - 1 juillet → 31 octobre 2026
+    // Push/Pull/Legs/Upper/Lower ou Rest + 1-2 cardio/sem + 8-10k pas/jour
+    // Objectif: Rester massif et sec, calories maintenance
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    // S27: 29 juin - 5 juillet 2026
+    { sem: 27, date: "29/06", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000, notes: "💎 DÉBUT MAINTIEN" },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000, notes: "Cardio 30-40min" },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000, notes: "Cardio optionnel" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée" }
     ]},
-    
-    // S31: Semaine de maintien
-    { sem: 31, date: "27/07", phase: "Maintien", jours: [
-        { jour: "Lun", seance: "FULL_BODY", duree: 60, cardio: "LISS_35", notes: "💎 MAINTIEN" },
-        { jour: "Mar", seance: null, duree: 0, cardio: "Course_10km_Opt" },
-        { jour: "Mer", seance: "FULL_BODY", duree: 60, cardio: "LISS_30" },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "LISS_35" },
-        { jour: "Ven", seance: "FULL_BODY", duree: 60, cardio: null },
-        { jour: "Sam", seance: null, duree: 0, cardio: "Endurance_40_Opt" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "🏆 FIN PROGRAMME" }
+
+    // S28-S44: Semaines de maintien (pattern répétitif)
+    // Génération dynamique possible, mais voici les semaines clés
+
+    // S28: 6-12 juillet 2026
+    { sem: 28, date: "06/07", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S32: 3-9 août 2026 (mi-maintien)
+    { sem: 32, date: "03/08", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000, notes: "📸 Bilan mi-maintien" },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S40: 28 sept - 4 oct 2026
+    { sem: 40, date: "28/09", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S44: 26 oct - 1 nov 2026 (FIN PROGRAMME)
+    { sem: 44, date: "26/10", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000, notes: "🏁 DERNIÈRE SEMAINE" },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: null, stepsGoal: 8000, notes: "🏆 FIN PROGRAMME - Photos + Mesures finales" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "🎉 OBJECTIF ATTEINT" }
     ]}
 ];
 
-// Dates clés du programme (1er janvier → 31 juillet 2026)
+// Dates clés du programme (6 janvier → 31 octobre 2026)
 const KEY_DATES = {
-    "2026-01-01": { label: "🚀 DÉBUT PROGRAMME", type: "start" },
-    "2026-02-09": { label: "⚡ DELOAD S7", type: "deload" },
-    "2026-03-30": { label: "⚡ DELOAD fin Phase 1", type: "deload" },
-    "2026-04-05": { label: "📸 FIN PHASE 1", type: "milestone" },
-    "2026-04-06": { label: "🔄 DÉBUT PHASE 2", type: "start" },
-    "2026-05-11": { label: "⚡ DELOAD fin Phase 2", type: "deload" },
-    "2026-05-17": { label: "📸 FIN PHASE 2", type: "milestone" },
-    "2026-05-18": { label: "🔥 DÉBUT SÈCHE", type: "start" },
-    "2026-06-15": { label: "⚡ DELOAD mi-sèche", type: "deload" },
-    "2026-06-21": { label: "📸 Bilan mi-sèche", type: "milestone" },
-    "2026-06-22": { label: "🚀 SPRINT FINAL", type: "special" },
-    "2026-07-20": { label: "🏁 DERNIÈRE SEMAINE", type: "special" },
-    "2026-07-26": { label: "🏆 BILAN FINAL", type: "goal" }
+    "2026-01-06": { label: "🚀 DÉBUT PROGRAMME - Phase 1 Masse", type: "start" },
+    "2026-02-17": { label: "⚡ DELOAD S7", type: "deload" },
+    "2026-04-02": { label: "📸 FIN PHASE 1 - Masse terminée", type: "milestone" },
+    "2026-04-03": { label: "🦷 GREFFE DENTAIRE - Début repos médical", type: "medical" },
+    "2026-05-05": { label: "📸 FIN REPOS MÉDICAL", type: "milestone" },
+    "2026-05-06": { label: "🔄 DÉBUT RÉADAPTATION", type: "start" },
+    "2026-05-25": { label: "📸 FIN RÉADAPTATION - Prêt pour sèche", type: "milestone" },
+    "2026-05-26": { label: "🔥 DÉBUT SÈCHE INTENSIVE", type: "start" },
+    "2026-06-30": { label: "📸 FIN SÈCHE - Objectif SEC atteint", type: "milestone" },
+    "2026-07-01": { label: "💎 DÉBUT MAINTIEN", type: "start" },
+    "2026-08-03": { label: "📸 Bilan mi-maintien", type: "milestone" },
+    "2026-10-31": { label: "🏆 FIN PROGRAMME - Objectif final", type: "goal" }
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2927,63 +3216,99 @@ const getWeekNumber = (d) => {
         return Math.max(1, Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) + 1);
     } catch (e) { return 1; }
 };
+
 const getCalendarForDate = (dateStr) => {
     try {
         const date = new Date(dateStr);
         const dayOfWeek = date.getDay(); // 0=Dim, 1=Lun, 2=Mar, etc.
-        
+
         // Mapper jour de la semaine vers index dans le tableau jours (0=Lun, 1=Mar, ..., 6=Dim)
         const jourIndex = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
         const joursNames = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
-        
-        // Calculer le numéro de semaine du programme (1-27)
+
+        // Calculer le numéro de semaine du programme (1-44)
         const start = new Date(PHASE_1_START);
         start.setHours(0, 0, 0, 0);
         const diff = date - start;
-        const weekNumber = Math.max(1, Math.min(27, Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) + 1));
-        
+        const weekNumber = Math.max(1, Math.min(44, Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) + 1));
+
         // Récupérer la semaine correspondante dans CALENDAR_27_WEEKS
         const weekData = CALENDAR_27_WEEKS.find(w => w.sem === weekNumber);
-        
+
+        // Vérifier si on est en repos médical
+        const inMedicalRest = isInMedicalRest(dateStr);
+
         if (!weekData) {
             // Fallback si semaine non trouvée (avant le début ou après la fin du programme)
-            return { 
-                type: "Repos", 
-                seance: null, 
-                duree: 0, 
-                cardio: null, 
+            return {
+                type: "Repos",
+                seance: null,
+                duree: 0,
+                cardio: null,
                 cardioOpt: null,
                 notes: weekNumber < 1 ? "Programme non commencé" : "Programme terminé",
-                dateStr, 
-                dateObj: date, 
+                dateStr,
+                dateObj: date,
                 dayName: date.toLocaleDateString('fr-FR', {weekday:'long'}),
                 weekNumber,
-                phase: null
+                phase: null,
+                blocked: false,
+                stepsGoal: null,
+                abdos: null,
+                cardioObligatoire: false,
+                readaptWeek: null
             };
         }
-        
+
+        // Si semaine bloquée (repos médical), retourner repos forcé
+        if (weekData.blocked || inMedicalRest) {
+            return {
+                type: "Repos médical",
+                seance: null,
+                duree: 0,
+                cardio: null,
+                cardioOpt: null,
+                notes: "🦷 Repos obligatoire - Greffe dentaire",
+                dateStr,
+                dateObj: date,
+                dayName: date.toLocaleDateString('fr-FR', {weekday:'long'}),
+                weekNumber,
+                phase: weekData.phase,
+                blocked: true,
+                stepsGoal: null,
+                abdos: null,
+                cardioObligatoire: false,
+                readaptWeek: null
+            };
+        }
+
         // Récupérer le jour correspondant
         const jourData = weekData.jours.find(j => j.jour === joursNames[jourIndex]);
-        
+
         if (!jourData) {
-            return { 
-                type: "Repos", 
-                seance: null, 
-                duree: 0, 
-                cardio: null, 
+            return {
+                type: "Repos",
+                seance: null,
+                duree: 0,
+                cardio: null,
                 cardioOpt: null,
-                dateStr, 
-                dateObj: date, 
+                dateStr,
+                dateObj: date,
                 dayName: date.toLocaleDateString('fr-FR', {weekday:'long'}),
                 weekNumber,
-                phase: weekData.phase
+                phase: weekData.phase,
+                blocked: false,
+                stepsGoal: weekData.stepsGoal || null,
+                abdos: null,
+                cardioObligatoire: weekData.cardioObligatoire || false,
+                readaptWeek: weekData.readaptWeek || null
             };
         }
-        
+
         // Déterminer si le cardio est optionnel ou obligatoire
         const cardioValue = jourData.cardio;
         const isCardioOptional = cardioValue && cardioValue.includes('_Opt');
-        
+
         return {
             type: jourData.seance ? "Training" : "Repos",
             seance: jourData.seance || null,
@@ -2996,22 +3321,32 @@ const getCalendarForDate = (dateStr) => {
             dateObj: date,
             dayName: date.toLocaleDateString('fr-FR', {weekday:'long'}),
             weekNumber,
-            phase: weekData.phase
+            phase: weekData.phase,
+            blocked: false,
+            stepsGoal: weekData.stepsGoal || null,
+            abdos: jourData.abdos || null,
+            cardioObligatoire: weekData.cardioObligatoire || false,
+            readaptWeek: weekData.readaptWeek || null
         };
-        
+
     } catch (e) {
         console.error('Erreur getCalendarForDate:', e);
-        return { 
-            type: "Repos", 
-            seance: null, 
-            duree: 0, 
-            cardio: null, 
+        return {
+            type: "Repos",
+            seance: null,
+            duree: 0,
+            cardio: null,
             cardioOpt: null,
-            dateStr, 
-            dateObj: new Date(), 
+            dateStr,
+            dateObj: new Date(),
             dayName: "Erreur",
             weekNumber: 1,
-            phase: null
+            phase: null,
+            blocked: false,
+            stepsGoal: null,
+            abdos: null,
+            cardioObligatoire: false,
+            readaptWeek: null
         };
     }
 };
@@ -4675,18 +5010,20 @@ const FitnessModule = ({ userId }) => {
 // ═══════════════════════════════════════════════════════════════════════════════
 // SECOND BRAIN DASHBOARD - STYLE WHOOP
 // ═══════════════════════════════════════════════════════════════════════════════
-const SecondBrainDashboard = ({ 
-    todayData, startWorkout, addLog, todayCheckin, updateCheckin, 
-    workoutLogs, whoopData, setWhoopData, dailyCheckins, 
-    supplementLogs, setSupplementLogs, aiNotes, addAiNote, userId 
+const SecondBrainDashboard = ({
+    todayData, startWorkout, addLog, todayCheckin, updateCheckin,
+    workoutLogs, whoopData, setWhoopData, dailyCheckins,
+    supplementLogs, setSupplementLogs, aiNotes, addAiNote, userId
 }) => {
     const [showQuickMuscu, setShowQuickMuscu] = useState(false);
     const [showQuickCardio, setShowQuickCardio] = useState(false);
-    const [cardioForm, setCardioForm] = useState({ type: 'course', duration: '', calories: '' });
+    const [cardioForm, setCardioForm] = useState({ type: 'course', duration: '', calories: '', distance: '' });
     const [showAiQuestion, setShowAiQuestion] = useState(null);
     const [questionAnswer, setQuestionAnswer] = useState('');
     const [form, setForm] = useState({ duration: '', calories: '' });
     const [biometrics] = useLocalStorage(`titan_biometrics_${userId}`, {});
+    const [stepsLogs, setStepsLogs] = useLocalStorage(`titan_steps_${userId}`, {});
+    const [stepsInput, setStepsInput] = useState('');
     
     const todayStr = new Date().toISOString().split('T')[0];
     
@@ -4744,7 +5081,40 @@ const SecondBrainDashboard = ({
         setShowQuickMuscu(false);
         setForm({ duration: '', calories: '' });
     };
-    
+
+    // Save steps
+    const saveSteps = (steps) => {
+        const stepsValue = parseInt(steps);
+        if (!isNaN(stepsValue) && stepsValue >= 0) {
+            setStepsLogs(prev => ({
+                ...prev,
+                [todayStr]: { steps: stepsValue, timestamp: new Date().toISOString() }
+            }));
+            setStepsInput('');
+        }
+    };
+
+    // Get today's steps
+    const todaySteps = stepsLogs[todayStr]?.steps || 0;
+    const stepsProgress = todayData.stepsGoal ? Math.min(100, (todaySteps / todayData.stepsGoal) * 100) : 0;
+
+    // Check weekly mandatory cardio (Phase 1 - Masse requires 1x/week)
+    const currentPhase = getCurrentPhase(todayStr);
+    const needsWeeklyCardio = currentPhase === 'masse'; // Phase 1 requires 1 cardio/week
+    const weeklyCardioGoal = needsWeeklyCardio ? 1 : 0;
+
+    // Count cardio done this week
+    const weekCardioDone = useMemo(() => {
+        return weekLogs.filter(l => l.type === 'Cardio').length;
+    }, [weekLogs]);
+
+    const weeklyCardioDone = weekCardioDone >= weeklyCardioGoal;
+
+    // Days remaining in week (to show urgency)
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0=Dim, 1=Lun...
+    const daysLeftInWeek = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+
     const submitQuestionAnswer = () => {
         if (showAiQuestion && questionAnswer) {
             addAiNote({
@@ -4815,8 +5185,8 @@ const SecondBrainDashboard = ({
                 </div>
             </div>
             
-            {/* TODAY'S WORKOUT - MUSCU */}
-            {todayData.seance && (
+            {/* TODAY'S WORKOUT - MUSCU (pas si bloqué) */}
+            {todayData.seance && !todayData.blocked && (
                 <div className="p-4 rounded-xl border border-blue-500/30 bg-blue-500/5 overflow-hidden">
                     <div className="flex items-center justify-between mb-3">
                         <div className="min-w-0 flex-1">
@@ -4859,8 +5229,8 @@ const SecondBrainDashboard = ({
                 </div>
             )}
             
-            {/* TODAY'S CARDIO - Obligatoire OU optionnel */}
-            {(todayData.cardio || todayData.cardioOpt) && (
+            {/* TODAY'S CARDIO - Obligatoire OU optionnel (pas si bloqué) */}
+            {(todayData.cardio || todayData.cardioOpt) && !todayData.blocked && (
                 <div className={`p-4 rounded-xl border overflow-hidden ${todayData.cardioOpt && !todayData.cardio ? 'border-orange-500/20 border-dashed bg-orange-500/[0.03]' : 'border-orange-500/30 bg-orange-500/5'}`}>
                     {(() => {
                         const cardioAlreadyDone = workoutLogs.some(log => log.date === todayStr && log.type === 'Cardio');
@@ -4909,9 +5279,193 @@ const SecondBrainDashboard = ({
                     })()}
                 </div>
             )}
-            
-            {/* Jour de repos */}
-            {!todayData.seance && (!todayData.cardio || todayData.cardio === 'Non') && (
+
+            {/* CARDIO HEBDOMADAIRE OBLIGATOIRE - Rappel Phase 1 */}
+            {needsWeeklyCardio && !weeklyCardioDone && !todayData.blocked && !todayData.cardio && (
+                <div className={`p-4 rounded-xl border ${daysLeftInWeek <= 2 ? 'border-red-500/30 bg-red-500/5' : 'border-yellow-500/30 bg-yellow-500/5'}`}>
+                    <div className="flex items-center justify-between mb-2">
+                        <div>
+                            <div className={`text-xs font-bold ${daysLeftInWeek <= 2 ? 'text-red-400' : 'text-yellow-400'}`}>
+                                ⚠️ CARDIO HEBDO À FAIRE
+                            </div>
+                            <div className="text-sm font-bold text-white">
+                                Phase Masse - 1x/semaine obligatoire
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <div className={`text-2xl font-black ${daysLeftInWeek <= 2 ? 'text-red-400' : 'text-yellow-400'}`}>
+                                {weekCardioDone}/{weeklyCardioGoal}
+                            </div>
+                        </div>
+                    </div>
+                    <div className="text-xs text-gray-400">
+                        {daysLeftInWeek === 0 ? (
+                            <span className="text-red-400 font-bold">⚠️ Dernier jour pour le faire !</span>
+                        ) : daysLeftInWeek === 1 ? (
+                            <span className="text-orange-400">Plus que demain pour rattraper</span>
+                        ) : (
+                            <span>Encore {daysLeftInWeek} jours pour le faire cette semaine</span>
+                        )}
+                    </div>
+                    <button
+                        onClick={() => setShowQuickCardio(true)}
+                        className={`mt-3 w-full py-2 font-bold rounded-xl text-sm ${daysLeftInWeek <= 2 ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'}`}
+                    >
+                        📍 Enregistrer cardio maintenant
+                    </button>
+                </div>
+            )}
+
+            {/* CARDIO HEBDOMADAIRE VALIDÉ */}
+            {needsWeeklyCardio && weeklyCardioDone && !todayData.blocked && !todayData.cardio && (
+                <div className="p-3 rounded-xl border border-green-500/20 bg-green-500/5">
+                    <div className="flex items-center gap-3">
+                        <div className="text-xl">✅</div>
+                        <div>
+                            <div className="text-sm font-bold text-green-400">Cardio hebdo validé</div>
+                            <div className="text-xs text-gray-500">{weekCardioDone} séance{weekCardioDone > 1 ? 's' : ''} cette semaine</div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* STEPS TRACKING - Affiché si objectif pas défini */}
+            {todayData.stepsGoal && !todayData.blocked && (
+                <div className="p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/5">
+                    <div className="flex items-center justify-between mb-3">
+                        <div>
+                            <div className="text-xs text-emerald-400 font-bold">👟 OBJECTIF PAS</div>
+                            <div className="text-lg font-bold text-white">{todayData.stepsGoal.toLocaleString()} pas</div>
+                        </div>
+                        <div className="text-right">
+                            <div className="text-2xl font-black text-emerald-400">{todaySteps.toLocaleString()}</div>
+                            <div className="text-xs text-gray-500">{Math.round(stepsProgress)}%</div>
+                        </div>
+                    </div>
+
+                    {/* Barre de progression */}
+                    <div className="h-3 bg-gray-800 rounded-full overflow-hidden mb-3">
+                        <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                                stepsProgress >= 100 ? 'bg-emerald-500' : stepsProgress >= 75 ? 'bg-emerald-400' : stepsProgress >= 50 ? 'bg-yellow-500' : 'bg-orange-500'
+                            }`}
+                            style={{ width: `${Math.min(100, stepsProgress)}%` }}
+                        />
+                    </div>
+
+                    {/* Input pour saisir les pas */}
+                    <div className="flex gap-2">
+                        <input
+                            type="number"
+                            placeholder="Entrer vos pas..."
+                            value={stepsInput}
+                            onChange={e => setStepsInput(e.target.value)}
+                            className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-gray-500"
+                        />
+                        <button
+                            onClick={() => saveSteps(stepsInput)}
+                            className="px-4 py-2 bg-emerald-500/20 text-emerald-400 font-bold rounded-lg text-sm hover:bg-emerald-500/30 transition-all"
+                        >
+                            ✓
+                        </button>
+                    </div>
+
+                    {stepsProgress >= 100 && (
+                        <div className="mt-3 text-center text-sm text-emerald-400 font-medium">
+                            🎉 Objectif atteint !
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ABDOS - Circuit court ou séance dédiée */}
+            {todayData.abdos && !todayData.blocked && (
+                (() => {
+                    const isDedie = todayData.abdos === 'ABDOS_DEDIE';
+                    const abdosAlreadyDone = workoutLogs.some(log => log.date === todayStr && log.session === todayData.abdos);
+                    const abdosExercises = EXERCISES_DB[todayData.abdos] || [];
+
+                    return (
+                        <div className={`p-4 rounded-xl border overflow-hidden ${isDedie ? 'border-purple-500/30 bg-purple-500/5' : 'border-pink-500/20 border-dashed bg-pink-500/[0.03]'}`}>
+                            <div className="flex items-center justify-between mb-3">
+                                <div>
+                                    <div className={`text-xs font-bold ${isDedie ? 'text-purple-400' : 'text-pink-400'}`}>
+                                        {isDedie ? '🔥 ABDOS SÉANCE DÉDIÉE' : '💪 ABDOS FIN DE SÉANCE'}
+                                    </div>
+                                    <div className="text-lg font-bold text-white">
+                                        {isDedie ? '15-20 min' : '5-10 min'}
+                                    </div>
+                                </div>
+                                {abdosAlreadyDone ? (
+                                    <div className="px-4 py-2 bg-green-500/20 text-green-400 font-bold rounded-xl text-sm">
+                                        ✓ Fait
+                                    </div>
+                                ) : (
+                                    <button
+                                        onClick={() => {
+                                            addLog({
+                                                date: todayStr,
+                                                session: todayData.abdos,
+                                                type: 'Abdos',
+                                                duration: isDedie ? 18 : 8,
+                                                calories: isDedie ? 80 : 40,
+                                                status: 'completed',
+                                                timestamp: new Date().toISOString()
+                                            });
+                                        }}
+                                        className={`px-4 py-2 font-bold rounded-xl text-sm hover:opacity-80 transition-all ${isDedie ? 'bg-purple-500/20 text-purple-400' : 'bg-pink-500/20 text-pink-400'}`}
+                                    >
+                                        ✓ Valider
+                                    </button>
+                                )}
+                            </div>
+
+                            {/* Liste des exercices */}
+                            <div className="space-y-1.5">
+                                {abdosExercises.slice(0, isDedie ? 5 : 4).map((ex, i) => (
+                                    <div key={i} className="flex justify-between text-xs py-1 border-b border-white/5">
+                                        <span className="text-gray-300">{ex.name}</span>
+                                        <span className="text-gray-500">{ex.sets}x{ex.reps}</span>
+                                    </div>
+                                ))}
+                                {abdosExercises.length > (isDedie ? 5 : 4) && (
+                                    <div className="text-xs text-gray-600 text-center pt-1">
+                                        +{abdosExercises.length - (isDedie ? 5 : 4)} exercices
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="mt-3 text-xs text-gray-500">
+                                {isDedie ? 'Séance complète le samedi - Focus core' : 'À faire après ta séance muscu'}
+                            </div>
+                        </div>
+                    );
+                })()
+            )}
+
+            {/* Repos médical bloqué */}
+            {todayData.blocked && (
+                <div className="p-6 rounded-xl border border-red-500/30 bg-red-500/5 text-center">
+                    <div className="text-3xl mb-2">🦷</div>
+                    <div className="text-lg font-bold text-red-400">Repos médical obligatoire</div>
+                    <div className="text-sm text-gray-400 mt-1">Greffe dentaire - Pas d'entraînement</div>
+                    <div className="text-xs text-gray-500 mt-3">
+                        Phase 2 • Repos jusqu'au 5 mai 2026
+                    </div>
+                    <div className="mt-4 p-3 rounded-lg bg-white/5 text-xs text-gray-400 text-left">
+                        <div className="font-medium text-white mb-2">📋 Consignes période repos :</div>
+                        <ul className="space-y-1 list-disc list-inside">
+                            <li>Éviter tout effort physique intense</li>
+                            <li>Alimentation adaptée (pas de mastication dure)</li>
+                            <li>Sommeil et récupération maximale</li>
+                            <li>Marche légère autorisée si besoin</li>
+                        </ul>
+                    </div>
+                </div>
+            )}
+
+            {/* Jour de repos normal */}
+            {!todayData.seance && !todayData.blocked && (!todayData.cardio || todayData.cardio === 'Non') && (
                 <div className="p-6 rounded-xl border border-white/10 bg-white/[0.02] text-center">
                     <div className="text-2xl mb-2">😴</div>
                     <div className="text-lg font-bold text-white">Jour de repos</div>
@@ -4972,6 +5526,21 @@ const SecondBrainDashboard = ({
                             </select>
                         </div>
                         
+                        {/* Distance */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                                Distance (km)
+                            </label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                placeholder="Ex: 5.2"
+                                value={cardioForm.distance}
+                                onChange={e => setCardioForm(f => ({...f, distance: e.target.value}))}
+                                className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500"
+                            />
+                        </div>
+
                         {/* Durée */}
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-400 mb-2">
@@ -4985,7 +5554,25 @@ const SecondBrainDashboard = ({
                                 className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500"
                             />
                         </div>
-                        
+
+                        {/* Allure calculée */}
+                        {cardioForm.distance && cardioForm.duration && parseFloat(cardioForm.distance) > 0 && (
+                            <div className="mb-4 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
+                                <div className="text-xs text-cyan-400 font-medium">⏱️ Allure moyenne</div>
+                                <div className="text-lg font-bold text-white">
+                                    {(() => {
+                                        const pace = parseFloat(cardioForm.duration) / parseFloat(cardioForm.distance);
+                                        const mins = Math.floor(pace);
+                                        const secs = Math.round((pace - mins) * 60);
+                                        return `${mins}:${secs.toString().padStart(2, '0')} /km`;
+                                    })()}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                    Vitesse: {(parseFloat(cardioForm.distance) / (parseFloat(cardioForm.duration) / 60)).toFixed(1)} km/h
+                                </div>
+                            </div>
+                        )}
+
                         {/* Calories */}
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-400 mb-2">
@@ -5002,29 +5589,34 @@ const SecondBrainDashboard = ({
                         
                         {/* Boutons */}
                         <div className="flex gap-3">
-                            <button 
+                            <button
                                 onClick={() => {
                                     setShowQuickCardio(false);
-                                    setCardioForm({ type: 'course', duration: '', calories: '' });
+                                    setCardioForm({ type: 'course', duration: '', calories: '', distance: '' });
                                 }}
                                 className="flex-1 py-3 bg-gray-800 text-white font-bold rounded-xl hover:bg-gray-700"
                             >
                                 Annuler
                             </button>
-                            <button 
+                            <button
                                 onClick={() => {
-                                    addLog({ 
-                                        date: todayStr, 
-                                        session: 'CARDIO', 
+                                    const distance = parseFloat(cardioForm.distance) || 0;
+                                    const duration = parseInt(cardioForm.duration) || 30;
+                                    const pace = distance > 0 ? duration / distance : null;
+                                    addLog({
+                                        date: todayStr,
+                                        session: 'CARDIO',
                                         cardioType: cardioForm.type || 'course',
-                                        type: 'Cardio', 
-                                        duration: parseInt(cardioForm.duration) || 30,
+                                        type: 'Cardio',
+                                        duration: duration,
+                                        distance: distance,
+                                        pace: pace,
                                         calories: parseInt(cardioForm.calories) || 200,
-                                        status: 'completed', 
-                                        timestamp: new Date().toISOString() 
+                                        status: 'completed',
+                                        timestamp: new Date().toISOString()
                                     });
                                     setShowQuickCardio(false);
-                                    setCardioForm({ type: 'course', duration: '', calories: '' });
+                                    setCardioForm({ type: 'course', duration: '', calories: '', distance: '' });
                                 }}
                                 className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl"
                             >
@@ -5156,11 +5748,109 @@ const FitnessProgress = ({ workoutLogs }) => {
                     })}
                 </div>
             )}
+
+            {/* CARDIO PROGRESS SECTION */}
+            <div className="mt-8">
+                <h2 className="text-xl font-bold mb-4">🏃 Progression Cardio</h2>
+                {(() => {
+                    const cardioLogs = workoutLogs.filter(l => l.type === 'Cardio').sort((a, b) => new Date(a.date) - new Date(b.date));
+
+                    if (cardioLogs.length === 0) {
+                        return (
+                            <div className="p-8 text-center text-gray-500">
+                                <div className="text-4xl mb-4">🏃</div>
+                                <p>Aucune séance cardio enregistrée</p>
+                                <p className="text-xs mt-2">Les données apparaîtront après tes séances</p>
+                            </div>
+                        );
+                    }
+
+                    // Stats globales
+                    const totalDistance = cardioLogs.reduce((sum, l) => sum + (l.distance || 0), 0);
+                    const totalDuration = cardioLogs.reduce((sum, l) => sum + (l.duration || 0), 0);
+                    const totalCalories = cardioLogs.reduce((sum, l) => sum + (l.calories || 0), 0);
+                    const avgPace = totalDistance > 0 ? totalDuration / totalDistance : 0;
+
+                    // Dernières 5 séances pour le graphique
+                    const last5 = cardioLogs.slice(-5);
+                    const maxDist = Math.max(...last5.map(l => l.distance || 0), 1);
+
+                    return (
+                        <div className="space-y-4">
+                            {/* Stats globales */}
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20">
+                                    <div className="text-xs text-cyan-400">Distance totale</div>
+                                    <div className="text-xl font-black text-white">{totalDistance.toFixed(1)} km</div>
+                                </div>
+                                <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
+                                    <div className="text-xs text-orange-400">Temps total</div>
+                                    <div className="text-xl font-black text-white">{Math.round(totalDuration)} min</div>
+                                </div>
+                                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20">
+                                    <div className="text-xs text-red-400">Calories</div>
+                                    <div className="text-xl font-black text-white">{totalCalories}</div>
+                                </div>
+                                <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                                    <div className="text-xs text-purple-400">Allure moy.</div>
+                                    <div className="text-xl font-black text-white">
+                                        {avgPace > 0 ? `${Math.floor(avgPace)}:${Math.round((avgPace % 1) * 60).toString().padStart(2, '0')}` : '--'}/km
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Mini graphique des distances */}
+                            {last5.length > 1 && last5.some(l => l.distance > 0) && (
+                                <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                                    <div className="text-xs text-gray-400 mb-3">5 dernières séances - Distance</div>
+                                    <div className="flex items-end justify-between h-24 gap-2">
+                                        {last5.map((l, i) => {
+                                            const height = l.distance > 0 ? (l.distance / maxDist) * 100 : 5;
+                                            return (
+                                                <div key={i} className="flex-1 flex flex-col items-center">
+                                                    <div
+                                                        className="w-full bg-gradient-to-t from-cyan-500 to-cyan-400 rounded-t transition-all"
+                                                        style={{ height: `${height}%`, minHeight: '4px' }}
+                                                    />
+                                                    <div className="text-[10px] text-gray-500 mt-1">{l.distance ? `${l.distance}km` : '-'}</div>
+                                                    <div className="text-[8px] text-gray-600">{new Date(l.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Historique récent */}
+                            <div className="space-y-2">
+                                <div className="text-xs text-gray-400">Historique récent</div>
+                                {cardioLogs.slice(-5).reverse().map((l, i) => (
+                                    <div key={i} className="flex justify-between items-center text-xs p-2 rounded-lg bg-white/5">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-gray-500">{new Date(l.date).toLocaleDateString('fr-FR')}</span>
+                                            <span className="text-white capitalize">{l.cardioType || 'cardio'}</span>
+                                        </div>
+                                        <div className="flex items-center gap-3 text-gray-400">
+                                            {l.distance > 0 && <span className="text-cyan-400">{l.distance}km</span>}
+                                            <span>{l.duration}min</span>
+                                            {l.pace > 0 && (
+                                                <span className="text-purple-400">
+                                                    {Math.floor(l.pace)}:{Math.round((l.pace % 1) * 60).toString().padStart(2, '0')}/km
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    );
+                })()}
+            </div>
         </div>
     );
 };
 
-// Programme complet 27 semaines avec sync jour
+// Programme complet 44 semaines avec sync jour
 const FitnessProgramme = ({ workoutLogs }) => {
     const [selectedPhase, setSelectedPhase] = useState('all');
     const [expandedWeek, setExpandedWeek] = useState(null);
@@ -5192,15 +5882,19 @@ const FitnessProgramme = ({ workoutLogs }) => {
     
     const getPhaseColor = (phase) => {
         if (phase === 'Phase1_Masse') return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-        if (phase === 'Phase2_Transition') return 'bg-purple-500/20 text-purple-400 border-purple-500/30';
-        if (phase === 'Phase3_Seche') return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+        if (phase === 'Phase2_ReposMedical') return 'bg-red-500/20 text-red-400 border-red-500/30';
+        if (phase === 'Phase3_Readaptation') return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+        if (phase === 'Phase4_Seche') return 'bg-orange-500/20 text-orange-400 border-orange-500/30';
+        if (phase === 'Phase5_Maintien') return 'bg-green-500/20 text-green-400 border-green-500/30';
         return 'bg-gray-500/20 text-gray-400';
     };
-    
+
     const getPhaseName = (phase) => {
         if (phase === 'Phase1_Masse') return 'Phase 1 - Masse';
-        if (phase === 'Phase2_Transition') return 'Phase 2 - Transition';
-        if (phase === 'Phase3_Seche') return 'Phase 3 - Sèche';
+        if (phase === 'Phase2_ReposMedical') return 'Phase 2 - Repos Médical';
+        if (phase === 'Phase3_Readaptation') return 'Phase 3 - Réadaptation';
+        if (phase === 'Phase4_Seche') return 'Phase 4 - Sèche';
+        if (phase === 'Phase5_Maintien') return 'Phase 5 - Maintien';
         return phase;
     };
     
@@ -5213,13 +5907,13 @@ const FitnessProgramme = ({ workoutLogs }) => {
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold">Programme 27 semaines</h2>
+                <h2 className="text-xl font-bold">Programme 44 semaines</h2>
                 <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-lg">Sem. {currentWeek}</span>
             </div>
-            
+
             {/* Filtres phases */}
             <div className="flex gap-2 overflow-x-auto pb-2" style={{scrollbarWidth: 'none'}}>
-                {['all', 'Phase1_Masse', 'Phase2_Transition', 'Phase3_Seche'].map(phase => (
+                {['all', 'Phase1_Masse', 'Phase2_ReposMedical', 'Phase3_Readaptation', 'Phase4_Seche', 'Phase5_Maintien'].map(phase => (
                     <button
                         key={phase}
                         onClick={() => setSelectedPhase(phase)}
@@ -5262,9 +5956,10 @@ const FitnessProgramme = ({ workoutLogs }) => {
                                     </span>
                                     <span className="text-xs text-gray-500">{week.date}</span>
                                     <span className={`text-xs px-2 py-0.5 rounded border ${getPhaseColor(week.phase)}`}>
-                                        {week.phase.replace('Phase1_', 'P1 ').replace('Phase2_', 'P2 ').replace('Phase3_', 'P3 ')}
+                                        {week.phase.replace('Phase1_', 'P1 ').replace('Phase2_', 'P2 ').replace('Phase3_', 'P3 ').replace('Phase4_', 'P4 ').replace('Phase5_', 'P5 ')}
                                     </span>
-                                    {isCurrentWeek && <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">EN COURS</span>}
+                                    {week.blocked && <span className="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded">🦷 BLOQUÉ</span>}
+                                    {isCurrentWeek && !week.blocked && <span className="text-xs bg-green-500/20 text-green-400 px-2 py-0.5 rounded">EN COURS</span>}
                                 </div>
                                 <ChevronRight 
                                     size={16} 
@@ -7638,8 +8333,27 @@ const Dashboard = ({ setView, userId }) => {
         councilReport: null,
         morningBriefing: null
     });
+    const analysisRunRef = useRef(false);
+    const analysisDataRef = useRef('');
 
     useEffect(() => {
+        // Créer une signature des données pour éviter les re-runs inutiles
+        const dataSignature = JSON.stringify({
+            checkinsCount: Object.keys(dailyCheckins || {}).length,
+            workoutsCount: (workoutLogs || []).length,
+            biometricsCount: Object.keys(biometrics || {}).length,
+            tasksCount: (tasks || []).length,
+            transactionsCount: (transactions || []).length
+        });
+
+        // Skip si déjà en cours ou si les données n'ont pas changé
+        if (analysisRunRef.current || dataSignature === analysisDataRef.current) {
+            return;
+        }
+
+        analysisDataRef.current = dataSignature;
+        analysisRunRef.current = true;
+
         const runAnalysis = async () => {
             try {
                 const result = await analyzeAllData({
@@ -7660,9 +8374,11 @@ const Dashboard = ({ setView, userId }) => {
                     councilReport: null,
                     morningBriefing: null
                 });
+            } finally {
+                analysisRunRef.current = false;
             }
         };
-        
+
         runAnalysis();
     }, [dailyCheckins, workoutLogs, biometrics, whoopData, supplementLogs, tasks, transactions]);
     
