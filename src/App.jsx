@@ -5911,21 +5911,25 @@ const FitnessProgramme = ({ workoutLogs }) => {
                 <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-lg">Sem. {currentWeek}</span>
             </div>
 
-            {/* Filtres phases */}
-            <div className="flex gap-2 overflow-x-auto pb-2" style={{scrollbarWidth: 'none'}}>
-                {['all', 'Phase1_Masse', 'Phase2_ReposMedical', 'Phase3_Readaptation', 'Phase4_Seche', 'Phase5_Maintien'].map(phase => (
-                    <button
-                        key={phase}
-                        onClick={() => setSelectedPhase(phase)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                            selectedPhase === phase 
-                                ? 'bg-white/10 text-white' 
-                                : 'bg-white/5 text-gray-500 hover:bg-white/10'
-                        }`}
-                    >
-                        {phase === 'all' ? 'Toutes' : getPhaseName(phase)}
-                    </button>
-                ))}
+            {/* Filtres phases - scrollable horizontalement */}
+            <div className="relative">
+                <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4" style={{scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch'}}>
+                    {['all', 'Phase1_Masse', 'Phase2_ReposMedical', 'Phase3_Readaptation', 'Phase4_Seche', 'Phase5_Maintien'].map(phase => (
+                        <button
+                            key={phase}
+                            onClick={() => setSelectedPhase(phase)}
+                            className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
+                                selectedPhase === phase
+                                    ? 'bg-white/10 text-white'
+                                    : 'bg-white/5 text-gray-500 hover:bg-white/10'
+                            }`}
+                        >
+                            {phase === 'all' ? 'Toutes' : getPhaseName(phase)}
+                        </button>
+                    ))}
+                </div>
+                {/* Indicateur de scroll */}
+                <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-[#050508] to-transparent pointer-events-none md:hidden" />
             </div>
             
             {/* Liste des semaines */}
@@ -6459,7 +6463,7 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
     const restTimeDefault = getRestTime(cur);
 
     return (
-        <div className="flex flex-col min-h-[60vh] pb-4 animate-fade-in">
+        <div className="flex flex-col min-h-[60vh] pb-20 md:pb-4 animate-fade-in">
             {/* Header */}
             <div className="flex justify-between items-center mb-3">
                 <button onClick={onExit} className="p-2 hover:bg-white/10 rounded-xl"><ArrowLeft className="text-gray-400" size={20}/></button>
@@ -6533,15 +6537,19 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
                 </div>
             </Card>
             
-            {/* Navigation - avec padding pour mobile safe area */}
-            <div className="flex gap-2 mt-auto pt-4">
-                {idx > 0 && <Button onClick={() => setIdx(idx - 1)} variant="secondary" className="flex-1 py-3">← Précédent</Button>}
-                {idx < exercises.length - 1 ? (
-                    <Button onClick={() => setIdx(idx + 1)} variant="primary" className="flex-1 py-3">Suivant →</Button>
-                ) : (
-                    <Button onClick={() => setFinishMode(true)} variant="success" className="flex-1 py-3">✓ Terminer</Button>
-                )}
+            {/* Navigation - fixé en bas sur mobile pour toujours être visible */}
+            <div className="fixed md:relative bottom-16 md:bottom-auto left-0 right-0 md:left-auto md:right-auto bg-[#050508] md:bg-transparent p-4 md:p-0 md:pt-4 border-t border-white/10 md:border-0 z-30">
+                <div className="flex gap-2 max-w-4xl mx-auto">
+                    {idx > 0 && <Button onClick={() => setIdx(idx - 1)} variant="secondary" className="flex-1 py-3">← Précédent</Button>}
+                    {idx < exercises.length - 1 ? (
+                        <Button onClick={() => setIdx(idx + 1)} variant="primary" className="flex-1 py-3">Suivant →</Button>
+                    ) : (
+                        <Button onClick={() => setFinishMode(true)} variant="success" className="flex-1 py-3">✓ Terminer</Button>
+                    )}
+                </div>
             </div>
+            {/* Spacer pour mobile pour éviter que le contenu soit caché */}
+            <div className="h-20 md:h-0" />
         </div>
     );
 };
