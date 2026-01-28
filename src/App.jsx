@@ -4954,29 +4954,17 @@ const FitnessModule = ({ userId }) => {
     return (
         <div className="space-y-4">
             {view !== 'logger' && (
-                <div className="relative">
-                    <div 
-                        className="flex space-x-2 overflow-x-auto pb-2 pr-4" 
-                        style={{
-                            scrollbarWidth: 'none',
-                            WebkitOverflowScrolling: 'touch',
-                            msOverflowStyle: 'none'
-                        }}
-                    >
-                        {tabs.map(tab => (
-                            <button 
-                                key={tab.id} 
-                                onClick={() => setView(tab.id)} 
-                                className={`flex-shrink-0 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1 sm:gap-1.5 ${view === tab.id ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
-                            >
-                                <span>{tab.icon}</span>
-                                <span className="uppercase hidden sm:inline">{tab.label}</span>
-                                <span className="uppercase sm:hidden">{tab.shortLabel}</span>
-                            </button>
-                        ))}
-                    </div>
-                    {/* Indicateur scroll - plus discret */}
-                    <div className="absolute right-0 top-0 bottom-2 w-6 bg-gradient-to-l from-[#050508] to-transparent pointer-events-none sm:hidden opacity-80" />
+                <div className="flex flex-wrap gap-2">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setView(tab.id)}
+                            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${view === tab.id ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg' : 'bg-white/5 text-gray-400 hover:bg-white/10'}`}
+                        >
+                            <span>{tab.icon}</span>
+                            <span className="uppercase">{tab.shortLabel}</span>
+                        </button>
+                    ))}
                 </div>
             )}
             
@@ -5911,25 +5899,21 @@ const FitnessProgramme = ({ workoutLogs }) => {
                 <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-lg">Sem. {currentWeek}</span>
             </div>
 
-            {/* Filtres phases - scrollable horizontalement */}
-            <div className="relative">
-                <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4" style={{scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch'}}>
-                    {['all', 'Phase1_Masse', 'Phase2_ReposMedical', 'Phase3_Readaptation', 'Phase4_Seche', 'Phase5_Maintien'].map(phase => (
-                        <button
-                            key={phase}
-                            onClick={() => setSelectedPhase(phase)}
-                            className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all ${
-                                selectedPhase === phase
-                                    ? 'bg-white/10 text-white'
-                                    : 'bg-white/5 text-gray-500 hover:bg-white/10'
-                            }`}
-                        >
-                            {phase === 'all' ? 'Toutes' : getPhaseName(phase)}
-                        </button>
-                    ))}
-                </div>
-                {/* Indicateur de scroll */}
-                <div className="absolute right-0 top-0 bottom-2 w-8 bg-gradient-to-l from-[#050508] to-transparent pointer-events-none md:hidden" />
+            {/* Filtres phases - wrap sur mobile */}
+            <div className="flex flex-wrap gap-2">
+                {['all', 'Phase1_Masse', 'Phase2_ReposMedical', 'Phase3_Readaptation', 'Phase4_Seche', 'Phase5_Maintien'].map(phase => (
+                    <button
+                        key={phase}
+                        onClick={() => setSelectedPhase(phase)}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            selectedPhase === phase
+                                ? 'bg-blue-500/30 text-blue-400 border border-blue-500/50'
+                                : 'bg-white/5 text-gray-500 hover:bg-white/10'
+                        }`}
+                    >
+                        {phase === 'all' ? 'Toutes' : getPhaseName(phase).replace('Phase ', 'P')}
+                    </button>
+                ))}
             </div>
             
             {/* Liste des semaines */}
