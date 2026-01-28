@@ -6447,12 +6447,12 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
     const restTimeDefault = getRestTime(cur);
 
     return (
-        <div className="flex flex-col min-h-[60vh] pb-20 md:pb-4 animate-fade-in">
+        <div className="flex flex-col min-h-[60vh] pb-20 md:pb-4 animate-fade-in overflow-x-hidden">
             {/* Header */}
             <div className="flex justify-between items-center mb-3">
-                <button onClick={onExit} className="p-2 hover:bg-white/10 rounded-xl"><ArrowLeft className="text-gray-400" size={20}/></button>
-                <span className="font-bold text-white text-lg">{sessionCode}</span>
-                <Badge color="cyan">{idx + 1}/{exercises.length}</Badge>
+                <button onClick={onExit} className="p-2 hover:bg-white/10 rounded-xl flex-shrink-0"><ArrowLeft className="text-gray-400" size={20}/></button>
+                <span className="font-bold text-white text-lg truncate px-2">{sessionCode}</span>
+                <Badge color="cyan" className="flex-shrink-0">{idx + 1}/{exercises.length}</Badge>
             </div>
             
             {/* Progress bar */}
@@ -6472,44 +6472,43 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
             )}
             
             {/* Exercise card */}
-            <Card className="p-4 flex-1 mb-4">
+            <Card className="p-4 flex-1 mb-4 overflow-hidden">
                 <div className="flex justify-between items-start mb-3">
                     <div className="flex-1 min-w-0">
                         <h2 className="text-lg font-bold text-white truncate">{cur?.name}</h2>
                         <p className="text-gray-500 text-sm">{cur?.sets} séries × {cur?.reps}</p>
                     </div>
-                    <div className="flex items-center gap-2 ml-2">
-                        <button 
+                    <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                        <button
                             onClick={startRest}
                             className="p-2 bg-orange-500/20 hover:bg-orange-500/30 rounded-xl transition-all"
                             title={`Repos ${Math.floor(restTimeDefault/60)}:${(restTimeDefault%60).toString().padStart(2,'0')}`}
                         >
                             <Timer className="text-orange-400" size={20}/>
                         </button>
-                        <Dumbbell className="text-cyan-500/50" size={28}/>
                     </div>
                 </div>
-                
+
                 {/* Sets */}
                 <div className="space-y-2">
                     {curLogs.map((s, i) => (
                         <div key={i} className="flex items-center gap-2">
-                            <span className="text-gray-500 text-xs w-6 text-center font-mono">#{i + 1}</span>
-                            <input 
-                                type="number" 
+                            <span className="text-gray-500 text-xs w-5 text-center font-mono flex-shrink-0">#{i + 1}</span>
+                            <input
+                                type="number"
                                 inputMode="decimal"
-                                placeholder="kg" 
-                                className="flex-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white font-bold text-center focus:border-cyan-500 outline-none min-w-0" 
-                                value={s?.weight || ''} 
-                                onChange={e => update(cur.id, i, 'weight', e.target.value)} 
+                                placeholder="kg"
+                                className="w-0 flex-1 bg-white/5 border border-white/10 rounded-xl p-2.5 text-white font-bold text-center focus:border-cyan-500 outline-none"
+                                value={s?.weight || ''}
+                                onChange={e => update(cur.id, i, 'weight', e.target.value)}
                             />
-                            <input 
-                                type="number" 
+                            <input
+                                type="number"
                                 inputMode="numeric"
-                                placeholder="reps" 
-                                className="flex-1 bg-white/5 border border-white/10 rounded-xl p-3 text-white font-bold text-center focus:border-cyan-500 outline-none min-w-0" 
-                                value={s?.reps || ''} 
-                                onChange={e => update(cur.id, i, 'reps', e.target.value)} 
+                                placeholder="reps"
+                                className="w-0 flex-1 bg-white/5 border border-white/10 rounded-xl p-2.5 text-white font-bold text-center focus:border-cyan-500 outline-none"
+                                value={s?.reps || ''}
+                                onChange={e => update(cur.id, i, 'reps', e.target.value)}
                             />
                         </div>
                     ))}
