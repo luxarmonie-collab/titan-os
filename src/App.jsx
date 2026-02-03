@@ -8852,7 +8852,7 @@ const Dashboard = ({ setView, userId }) => {
     };
     
     const submitQuestionAnswer = () => {
-        if (aiAnalysis.questions.length > 0 && questionAnswer) {
+        if (aiAnalysis?.questions?.length > 0 && questionAnswer) {
             addAiNote({
                 questionId: aiAnalysis.questions[0].id || aiAnalysis.questions[0].type,
                 question: aiAnalysis.questions[0].question,
@@ -9079,8 +9079,8 @@ const Dashboard = ({ setView, userId }) => {
             {/* ═══════════════════════════════════════════════════════════════════════ */}
             {/* TITAN AI COUNCIL - RAPPORT SYSTÈME */}
             {/* ═══════════════════════════════════════════════════════════════════════ */}
-            
-            {aiAnalysis.councilReport && (
+
+            {aiAnalysis?.councilReport && (
                 <>
                     {/* ÉTAT DU SYSTÈME */}
                     <div className={`p-4 rounded-xl border-2 ${
@@ -9125,7 +9125,7 @@ const Dashboard = ({ setView, userId }) => {
 
                         {/* Résumé condensé toujours visible */}
                         <div className="mt-2 text-[10px] text-gray-500">
-                            Basé sur: {todayCheckin?.energy ? `Énergie (${todayCheckin.energy}/5)` : 'Énergie (?)'} • {todayCheckin?.mood ? `Humeur (${todayCheckin.mood}/5)` : 'Humeur (?)'} • Tâches ({Math.round((tasks?.filter(t => t.completed).length / Math.max(1, tasks?.length || 1)) * 100)}%){aiAnalysis.councilReport.whoopData?.recovery !== null && ` • Whoop (${aiAnalysis.councilReport.whoopData.recovery}%)`}
+                            Basé sur: {todayCheckin?.energy ? `Énergie (${todayCheckin.energy}/5)` : 'Énergie (?)'} • {todayCheckin?.mood ? `Humeur (${todayCheckin.mood}/5)` : 'Humeur (?)'} • Tâches ({Math.round((tasks?.filter(t => t.completed).length / Math.max(1, tasks?.length || 1)) * 100)}%){aiAnalysis.councilReport?.whoopData?.recovery != null && ` • Whoop (${aiAnalysis.councilReport.whoopData.recovery}%)`}
                         </div>
 
                         {/* Détails du calcul */}
@@ -9134,7 +9134,7 @@ const Dashboard = ({ setView, userId }) => {
                                 <div className="text-xs font-bold text-cyan-400 mb-2">🔬 CALCUL DU FLOW SCORE</div>
                                 <div className="space-y-2 text-xs">
                                     {/* Whoop Recovery */}
-                                    {aiAnalysis.councilReport.whoopData.recovery !== null && (
+                                    {aiAnalysis.councilReport?.whoopData?.recovery != null && (
                                         <div className="flex justify-between">
                                             <span className="text-gray-400">Whoop Recovery (35%)</span>
                                             <span className="text-white font-mono">
