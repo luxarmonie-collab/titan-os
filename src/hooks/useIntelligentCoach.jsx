@@ -241,19 +241,30 @@ export function useIntelligentCoach(userId, allData) {
         }
     }, [state, allData, memory]);
 
+    // État pour le feedback visuel
+    const [saveStatus, setSaveStatus] = useState(null); // 'saving' | 'saved' | 'error' | null
+
     // ═══ Actions du soir ═══
     const submitEveningReview = useCallback(async () => {
         if (!eveningReview) return;
 
+        // Vérifier qu'on a des réponses avant de sauvegarder
+        const hasAnswers = answers && Object.keys(answers).length > 0;
+        if (!hasAnswers) {
+            console.warn('⚠️ Bilan soir: aucune réponse à sauvegarder');
+        }
+
         setLoading(true);
+        setSaveStatus('saving');
+
         try {
             const todayMemory = memory.find(m => m.date === todayStr);
-            
+
             // Essayer de processer avec IntelligentCoach
             let reviewResult = null;
             try {
                 reviewResult = await IntelligentCoach.processEveningReview(
-                    answers, 
+                    answers,
                     todayMemory?.prescription || prescription,
                     state,
                     memory
@@ -269,17 +280,38 @@ export function useIntelligentCoach(userId, allData) {
                 };
             }
 
-            // Essayer de sauvegarder dans Supabase (optionnel - ne bloque pas si ça échoue)
+            // S'assurer que reviewResult contient des données
+            if (!reviewResult || Object.keys(reviewResult).length === 0) {
+                reviewResult = {
+                    date: todayStr,
+                    answers: answers,
+                    completed: true,
+                    timestamp: new Date().toISOString()
+                };
+            }
+
+            // Sauvegarder dans Supabase
+            let saveSuccess = false;
             try {
-                await supabase.from('coach_memory').upsert({
+                const { error: upsertError } = await supabase.from('coach_memory').upsert({
                     user_id: userId,
                     date: todayStr,
                     outcomes: reviewResult,
+                    evening_answers: answers, // Sauvegarder aussi les réponses brutes
                     updated_at: new Date().toISOString()
                 }, { onConflict: 'user_id,date' });
 
+                if (upsertError) {
+                    console.error('❌ Supabase upsert error:', upsertError);
+                    setSaveStatus('error');
+                } else {
+                    console.log('✅ Bilan de fin de journée enregistré avec succès');
+                    saveSuccess = true;
+                    setSaveStatus('saved');
+                }
+
                 // Sauvegarder l'insight si généré
-                if (reviewResult?.insight) {
+                if (saveSuccess && reviewResult?.insight) {
                     await supabase.from('coach_insights').insert({
                         user_id: userId,
                         date: todayStr,
@@ -288,7 +320,8 @@ export function useIntelligentCoach(userId, allData) {
                     });
                 }
             } catch (supabaseError) {
-                console.warn('Supabase save failed (non-blocking):', supabaseError);
+                console.error('❌ Supabase save failed:', supabaseError);
+                setSaveStatus('error');
                 // Continue quand même - l'enregistrement local compte
             }
 
@@ -298,20 +331,24 @@ export function useIntelligentCoach(userId, allData) {
                 await new Promise(resolve => setTimeout(resolve, 800));
                 setStep('weekly_summary');
             } else {
-                // Petit délai pour voir le feedback "Enregistré"
-                await new Promise(resolve => setTimeout(resolve, 1200));
+                // Petit délai pour voir le feedback "Enregistré ✅"
+                await new Promise(resolve => setTimeout(resolve, 1500));
                 setStep('done');
             }
-            
+
             // Reset answers pour la prochaine fois
             setAnswers({});
-            
+
         } catch (e) {
-            console.error('Failed to submit evening review:', e);
+            console.error('❌ Failed to submit evening review:', e);
+            setSaveStatus('error');
             // Même en cas d'erreur, on ferme le formulaire pour ne pas bloquer l'utilisateur
+            await new Promise(resolve => setTimeout(resolve, 1500));
             setStep('done');
         } finally {
             setLoading(false);
+            // Reset le status après un délai
+            setTimeout(() => setSaveStatus(null), 3000);
         }
     }, [eveningReview, answers, prescription, state, memory, userId, todayStr, weeklySummary]);
 
@@ -352,6 +389,7 @@ export function useIntelligentCoach(userId, allData) {
         step,
         answers,
         coachingMode,
+        saveStatus, // Feedback visuel pour la sauvegarde
 
         // Actions matin
         startEnquiry,

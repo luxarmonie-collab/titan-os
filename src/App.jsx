@@ -1285,6 +1285,39 @@ const CALENDAR_27_WEEKS = [
         { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
     ]},
 
+    // S29: 13-19 juillet 2026
+    { sem: 29, date: "13/07", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S30: 20-26 juillet 2026
+    { sem: 30, date: "20/07", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée mensuelle" }
+    ]},
+
+    // S31: 27 juillet - 2 août 2026
+    { sem: 31, date: "27/07", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
     // S32: 3-9 août 2026 (mi-maintien)
     { sem: 32, date: "03/08", phase: "Phase5_Maintien", jours: [
         { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000, notes: "📸 Bilan mi-maintien" },
@@ -1296,6 +1329,83 @@ const CALENDAR_27_WEEKS = [
         { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
     ]},
 
+    // S33: 10-16 août 2026
+    { sem: 33, date: "10/08", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S34: 17-23 août 2026
+    { sem: 34, date: "17/08", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S35: 24-30 août 2026
+    { sem: 35, date: "24/08", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée mensuelle" }
+    ]},
+
+    // S36: 31 août - 6 septembre 2026
+    { sem: 36, date: "31/08", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S37: 7-13 septembre 2026
+    { sem: 37, date: "07/09", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S38: 14-20 septembre 2026
+    { sem: 38, date: "14/09", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S39: 21-27 septembre 2026
+    { sem: 39, date: "21/09", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée mensuelle" }
+    ]},
+
     // S40: 28 sept - 4 oct 2026
     { sem: 40, date: "28/09", phase: "Phase5_Maintien", jours: [
         { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
@@ -1305,6 +1415,39 @@ const CALENDAR_27_WEEKS = [
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
         { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
         { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S41: 5-11 octobre 2026
+    { sem: 41, date: "05/10", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S42: 12-18 octobre 2026
+    { sem: 42, date: "12/10", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+    ]},
+
+    // S43: 19-25 octobre 2026
+    { sem: 43, date: "19/10", phase: "Phase5_Maintien", jours: [
+        { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
+        { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
+        { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée mensuelle - Avant-dernière semaine" }
     ]},
 
     // S44: 26 oct - 1 nov 2026 (FIN PROGRAMME)
@@ -1455,7 +1598,8 @@ const SUPPLEMENTS_ROUTINE = {
     matin: [
         { id: 'zinc', name: 'Zinc', emoji: '💊' },
         { id: 'curcuma', name: 'Curcuma', emoji: '🟡' },
-        { id: 'maca', name: 'Maca', emoji: '🌿' }
+        { id: 'maca', name: 'Maca', emoji: '🌿' },
+        { id: 'cheveux', name: 'Comprimé cheveux', emoji: '💇' }
     ],
     midi: [
         { id: 'hydratis', name: 'Hydratis', emoji: '💧', condition: 'Jour de course' }
@@ -1468,7 +1612,8 @@ const SUPPLEMENTS_ROUTINE = {
     soir: [
         { id: 'magnesium', name: 'Magnésium', emoji: '🧘' },
         { id: 'omega3', name: 'Oméga 3', emoji: '🐟' },
-        { id: 'ashwagandha', name: 'Ashwagandha', emoji: '🌙' }
+        { id: 'ashwagandha', name: 'Ashwagandha', emoji: '🌙' },
+        { id: 'minoxidil', name: 'Minoxidil', emoji: '💈' }
     ]
 };
 
@@ -1610,11 +1755,19 @@ const TitanAICouncil = {
                 avgByDay[day] = dayStats[day].reduce((a, b) => a + b, 0) / dayStats[day].length;
             }
         });
-        
+
+        // Si moins de 4 jours avec données suffisantes, pas assez de data pour comparer
         const sortedDays = Object.entries(avgByDay).sort((a, b) => b[1] - a[1]);
+        if (sortedDays.length < 4) {
+            return { bestDays: [], worstDays: [], avgByDay, insufficientData: true };
+        }
+
         const bestDays = sortedDays.slice(0, 2).map(([day]) => dayNames[parseInt(day)]);
-        const worstDays = sortedDays.slice(-2).map(([day]) => dayNames[parseInt(day)]);
-        
+        // Filtrer worstDays pour exclure les bestDays (évite le chevauchement)
+        const worstDays = sortedDays.slice(-2)
+            .filter(([day]) => !bestDays.includes(dayNames[parseInt(day)]))
+            .map(([day]) => dayNames[parseInt(day)]);
+
         return { bestDays, worstDays, avgByDay };
     },
     
@@ -1932,10 +2085,29 @@ const TitanAICouncil = {
         }
         
         // PRÉDICTION OBJECTIFS HEBDO FITNESS - Calcul intelligent
-        const weekWorkouts = workoutLogs?.filter(w => last7Days.includes(w.date)).length || 0;
-        const targetWorkouts = 6; // Objectif hebdo
+        // Utiliser la semaine calendaire (Lundi-Dimanche) plutôt que rolling 7 days
         const today = new Date();
         const dayOfWeek = today.getDay(); // 0 = Dimanche, 1 = Lundi, etc.
+
+        // Calculer le début de la semaine (lundi)
+        const weekStart = new Date(today);
+        const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Dimanche = 6 jours depuis lundi
+        weekStart.setDate(weekStart.getDate() - daysFromMonday);
+        weekStart.setHours(0, 0, 0, 0);
+
+        // Filtrer les workouts de cette semaine calendaire (lun-dim) - inclure muscu ET cardio
+        const thisWeekWorkouts = workoutLogs?.filter(w => {
+            if (!w.date || w.status === 'in_progress') return false; // Exclure les séances non terminées
+            const wDate = new Date(w.date);
+            return wDate >= weekStart && wDate <= today;
+        }) || [];
+
+        // Compter séances muscu et cardio séparément
+        const muscuCount = thisWeekWorkouts.filter(w => w.type === 'Muscu' || w.session).length;
+        const cardioCount = thisWeekWorkouts.filter(w => w.type === 'Cardio').length;
+        const weekWorkouts = muscuCount + cardioCount;
+
+        const targetWorkouts = 6; // Objectif hebdo (5 muscu + 1-2 cardio selon phase)
         const daysLeftInWeek = dayOfWeek === 0 ? 0 : 7 - dayOfWeek; // Jours restants jusqu'à dimanche
         const workoutsNeeded = Math.max(0, targetWorkouts - weekWorkouts);
         
@@ -3935,14 +4107,94 @@ const useSupabaseWorkoutsSimple = (userId) => {
         setData(newData);
         await syncToCloud(newData);
     };
-    
+
+    const updateWorkout = async (id, updates) => {
+        const newData = data.map(l => l.id === id ? { ...l, ...updates } : l);
+        setData(newData);
+        await syncToCloud(newData);
+    };
+
     const removeWorkout = async (id) => {
         const newData = data.filter(l => l.id !== id);
         setData(newData);
         await syncToCloud(newData);
     };
-    
-    return [data, setData, addWorkout, removeWorkout];
+
+    // Trouver une séance in_progress pour aujourd'hui
+    const getInProgressSession = () => {
+        const todayStr = new Date().toISOString().split('T')[0];
+        return data.find(l => l.date === todayStr && l.status === 'in_progress');
+    };
+
+    return [data, setData, addWorkout, removeWorkout, updateWorkout, getInProgressSession];
+};
+
+// Hook pour sync Steps avec Supabase
+const useSupabaseSteps = (userId) => {
+    const [data, setData] = useLocalStorage(`titan_steps_${userId}`, {});
+
+    // Charger depuis Supabase au montage
+    useEffect(() => {
+        const loadFromCloud = async () => {
+            try {
+                const { data: rows, error } = await supabase
+                    .from('steps')
+                    .select('*')
+                    .eq('user_id', userId)
+                    .order('date', { ascending: false })
+                    .limit(60); // 60 derniers jours
+
+                if (!error && rows) {
+                    // Convertir en objet { date: { steps, timestamp } }
+                    const stepsObj = {};
+                    rows.forEach(row => {
+                        stepsObj[row.date] = {
+                            steps: row.steps,
+                            timestamp: row.created_at
+                        };
+                    });
+                    // Merger avec local (local prend priorité pour aujourd'hui)
+                    setData(prev => ({ ...stepsObj, ...prev }));
+                }
+            } catch (e) {
+                console.log('Supabase load steps:', e);
+            }
+        };
+        loadFromCloud();
+    }, [userId]);
+
+    // Sauvegarder vers Supabase
+    const saveSteps = async (date, steps) => {
+        const stepsValue = parseInt(steps);
+        if (isNaN(stepsValue) || stepsValue < 0) return;
+
+        const newEntry = { steps: stepsValue, timestamp: new Date().toISOString() };
+        setData(prev => ({ ...prev, [date]: newEntry }));
+
+        // Sync vers Supabase
+        try {
+            await supabase.from('steps').upsert({
+                user_id: userId,
+                date: date,
+                steps: stepsValue,
+                created_at: new Date().toISOString()
+            }, { onConflict: 'user_id,date' });
+        } catch (e) {
+            console.log('Supabase save steps error:', e);
+        }
+    };
+
+    // Objectifs de pas par phase
+    const getStepsGoal = (phase) => {
+        switch (phase) {
+            case 'masse': return 7000; // 6-8k
+            case 'seche': return 11000; // 10-12k
+            case 'maintien': return 10000;
+            default: return 8000;
+        }
+    };
+
+    return [data, saveSteps, getStepsGoal];
 };
 
 // Hook pour sync Whoop metrics
@@ -4486,6 +4738,53 @@ const WhoopWidget = ({ userId }) => {
         );
     }
 
+    // Vérifier si on a des données réelles (pas juste des zéros)
+    const hasRealData = data && (
+        (data.recovery?.score && data.recovery.score > 0) ||
+        (data.strain?.score && data.strain.score > 0) ||
+        (data.sleep?.hours && data.sleep.hours > 0)
+    );
+
+    // État vide - aucune donnée
+    if (!hasRealData && !isEditing) {
+        return (
+            <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-800">
+                <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-xl font-bold text-white">💚 Whoop Metrics</h3>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-500/20 text-gray-400 font-medium">
+                        Non connecté
+                    </span>
+                </div>
+
+                {error && (
+                    <div className="mb-4 p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-400">
+                        ⚠️ {error}
+                    </div>
+                )}
+
+                <div className="text-center py-6">
+                    <div className="text-4xl mb-3">📊</div>
+                    <p className="text-gray-400 mb-4">Aucune donnée Whoop</p>
+                    <p className="text-xs text-gray-500 mb-4">
+                        Connectez votre Whoop ou entrez vos données manuellement pour un suivi optimal de votre récupération.
+                    </p>
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-lg hover:opacity-90 transition-opacity"
+                    >
+                        ✏️ Entrer manuellement
+                    </button>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-gray-800">
+                    <p className="text-xs text-gray-500 text-center">
+                        💡 Données attendues : Recovery (%), HRV, Strain, Sommeil
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-800">
             <div className="flex items-center justify-between mb-4">
@@ -4505,35 +4804,35 @@ const WhoopWidget = ({ userId }) => {
                     ✏️
                 </button>
             </div>
-            
+
             {error && (
                 <div className="mb-4 p-2 rounded-lg bg-red-500/10 border border-red-500/30 text-xs text-red-400">
-                    {error}
+                    ⚠️ {error}
                 </div>
             )}
 
             <div className="grid grid-cols-3 gap-4">
                 <div className="text-center">
                     <div className="text-3xl font-bold mb-2" style={{ color: getRecoveryColor(formData.recovery) }}>
-                        {formData.recovery}%
+                        {formData.recovery > 0 ? `${formData.recovery}%` : '--'}
                     </div>
                     <div className="text-sm text-gray-400">Recovery</div>
                 </div>
                 <div className="text-center">
-                    <div className="text-3xl font-bold text-blue-400 mb-2">{formData.hrv}</div>
+                    <div className="text-3xl font-bold text-blue-400 mb-2">{formData.hrv > 0 ? formData.hrv : '--'}</div>
                     <div className="text-sm text-gray-400">HRV (ms)</div>
                 </div>
                 <div className="text-center">
-                    <div className="text-3xl font-bold text-purple-400 mb-2">{formData.strain.toFixed(1)}</div>
+                    <div className="text-3xl font-bold text-purple-400 mb-2">{formData.strain > 0 ? formData.strain.toFixed(1) : '--'}</div>
                     <div className="text-sm text-gray-400">Strain</div>
                 </div>
             </div>
 
             <div className="mt-4 pt-4 border-t border-gray-800 text-center">
-                <div className="text-sm text-gray-400">RHR: <span className="text-white font-semibold">{formData.rhr} bpm</span></div>
-                <div className="text-sm text-gray-400 mt-1">Sommeil: <span className="text-white font-semibold">{formData.sleep}h</span></div>
+                <div className="text-sm text-gray-400">RHR: <span className="text-white font-semibold">{formData.rhr > 0 ? `${formData.rhr} bpm` : '--'}</span></div>
+                <div className="text-sm text-gray-400 mt-1">Sommeil: <span className="text-white font-semibold">{formData.sleep > 0 ? `${formData.sleep}h` : '--'}</span></div>
             </div>
-            
+
             {syncing && (
                 <div className="mt-4 text-center text-sm text-blue-400">
                     🔄 Synchronisation...
@@ -4914,7 +5213,7 @@ const Badge = ({ children, color = "cyan", size = "md" }) => {
 const FitnessModule = ({ userId }) => {
     const [view, setView] = useState('dashboard');
     const [activeSession, setActiveSession] = useState(null);
-    const [workoutLogs, setWorkoutLogs, addWorkoutLog, removeWorkoutLog] = useSupabaseWorkoutsSimple(userId);
+    const [workoutLogs, setWorkoutLogs, addWorkoutLog, removeWorkoutLog, updateWorkoutLog, getInProgressSession] = useSupabaseWorkoutsSimple(userId);
     const [dailyCheckins, setDailyCheckins] = useLocalStorage(`titan_checkins_${userId}`, []);
     const [whoopData, setWhoopData] = useLocalStorage(`titan_whoop_${userId}`, null);
     const [supplementLogs, setSupplementLogs] = useLocalStorage(`titan_supplements_${userId}`, {});
@@ -4969,9 +5268,9 @@ const FitnessModule = ({ userId }) => {
             )}
             
             {view === 'dashboard' && (
-                <SecondBrainDashboard 
-                    todayData={todayData} 
-                    startWorkout={startWorkout} 
+                <SecondBrainDashboard
+                    todayData={todayData}
+                    startWorkout={startWorkout}
                     addLog={addLog}
                     todayCheckin={todayCheckin}
                     updateCheckin={updateCheckin}
@@ -4984,13 +5283,15 @@ const FitnessModule = ({ userId }) => {
                     aiNotes={aiNotes}
                     addAiNote={addAiNote}
                     userId={userId}
+                    getInProgressSession={getInProgressSession}
+                    removeLog={removeLog}
                 />
             )}
             {view === 'programme' && <FitnessProgramme workoutLogs={workoutLogs} />}
             {view === 'planning' && <FitnessCalendar onSelectDay={startWorkout} workoutLogs={workoutLogs} addLog={addLog} removeLog={removeLog} />}
             {view === 'progress' && <FitnessProgress workoutLogs={workoutLogs} />}
             {view === 'biometrics' && <FitnessBiometrics userId={userId} />}
-            {view === 'logger' && activeSession && <WorkoutLogger sessionCode={activeSession} onExit={handleExitLogger} onFinishSession={handleExitLogger} addLog={addLog} />}
+            {view === 'logger' && activeSession && <WorkoutLogger sessionCode={activeSession} onExit={handleExitLogger} onFinishSession={handleExitLogger} addLog={addLog} updateLog={updateWorkoutLog} workoutLogs={workoutLogs} getInProgressSession={getInProgressSession} />}
         </div>
     );
 };
@@ -5001,7 +5302,8 @@ const FitnessModule = ({ userId }) => {
 const SecondBrainDashboard = ({
     todayData, startWorkout, addLog, todayCheckin, updateCheckin,
     workoutLogs, whoopData, setWhoopData, dailyCheckins,
-    supplementLogs, setSupplementLogs, aiNotes, addAiNote, userId
+    supplementLogs, setSupplementLogs, aiNotes, addAiNote, userId,
+    getInProgressSession, removeLog
 }) => {
     const [showQuickMuscu, setShowQuickMuscu] = useState(false);
     const [showQuickCardio, setShowQuickCardio] = useState(false);
@@ -5010,7 +5312,7 @@ const SecondBrainDashboard = ({
     const [questionAnswer, setQuestionAnswer] = useState('');
     const [form, setForm] = useState({ duration: '', calories: '' });
     const [biometrics] = useLocalStorage(`titan_biometrics_${userId}`, {});
-    const [stepsLogs, setStepsLogs] = useLocalStorage(`titan_steps_${userId}`, {});
+    const [stepsLogs, saveStepsToSupabase, getStepsGoalByPhase] = useSupabaseSteps(userId);
     const [stepsInput, setStepsInput] = useState('');
     
     const todayStr = new Date().toISOString().split('T')[0];
@@ -5070,16 +5372,10 @@ const SecondBrainDashboard = ({
         setForm({ duration: '', calories: '' });
     };
 
-    // Save steps
-    const saveSteps = (steps) => {
-        const stepsValue = parseInt(steps);
-        if (!isNaN(stepsValue) && stepsValue >= 0) {
-            setStepsLogs(prev => ({
-                ...prev,
-                [todayStr]: { steps: stepsValue, timestamp: new Date().toISOString() }
-            }));
-            setStepsInput('');
-        }
+    // Save steps (utilise le hook Supabase)
+    const saveSteps = async (steps) => {
+        await saveStepsToSupabase(todayStr, steps);
+        setStepsInput('');
     };
 
     // Get today's steps
@@ -5155,8 +5451,48 @@ const SecondBrainDashboard = ({
         );
     };
 
+    // Détecter séance en cours non terminée
+    const inProgressSession = getInProgressSession?.();
+
+    const handleAbandonSession = () => {
+        if (inProgressSession && removeLog) {
+            removeLog(inProgressSession.id);
+        }
+    };
+
+    const handleContinueSession = () => {
+        if (inProgressSession) {
+            startWorkout(inProgressSession.session);
+        }
+    };
+
     return (
         <div className="space-y-4">
+            {/* BANDEAU SÉANCE NON TERMINÉE */}
+            {inProgressSession && (
+                <Card className="p-4 bg-gradient-to-r from-amber-500/20 to-orange-500/20 border-amber-500/30">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-amber-500/30 flex items-center justify-center">
+                                <span className="text-lg">⚠️</span>
+                            </div>
+                            <div>
+                                <div className="font-bold text-white">Séance non terminée</div>
+                                <div className="text-sm text-gray-400">{inProgressSession.session} - commencée aujourd'hui</div>
+                            </div>
+                        </div>
+                        <div className="flex gap-2 w-full sm:w-auto">
+                            <Button onClick={handleContinueSession} variant="warning" className="flex-1 sm:flex-initial">
+                                Continuer
+                            </Button>
+                            <Button onClick={handleAbandonSession} variant="ghost" className="flex-1 sm:flex-initial text-gray-400">
+                                Abandonner
+                            </Button>
+                        </div>
+                    </div>
+                </Card>
+            )}
+
             {/* WEEKLY STATS */}
             <div className="grid grid-cols-3 gap-2">
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center">
@@ -6345,7 +6681,7 @@ const FitnessPerf = ({ workoutLogs }) => {
     );
 };
 
-const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
+const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog, updateLog, workoutLogs, getInProgressSession }) => {
     const exercises = EXERCISES_DB[sessionCode] || [];
     const [logs, setLogs] = useState({});
     const [idx, setIdx] = useState(0);
@@ -6353,19 +6689,86 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
     const [final, setFinal] = useState({ duration: '', calories: '' });
     const [restTimer, setRestTimer] = useState(null);
     const [restSeconds, setRestSeconds] = useState(0);
+    const [sessionId, setSessionId] = useState(null);
+    const [autoSaveStatus, setAutoSaveStatus] = useState(null); // 'saving' | 'saved' | null
 
     // Temps de repos par défaut selon l'exercice (en secondes)
     const getRestTime = (exercise) => {
-        if (exercise?.name?.toLowerCase().includes('compound') || exercise?.sets >= 4) return 180; // 3 min pour gros mouvements
-        if (exercise?.reps?.includes('6-8') || exercise?.reps?.includes('4-6')) return 150; // 2:30 pour force
-        return 90; // 1:30 par défaut
+        // 1. Utiliser le champ repos de l'exercice s'il existe
+        if (exercise?.repos) return exercise.repos;
+
+        // 2. Détection exercices composés lourds (180s - 3min)
+        const compoundHeavy = ['squat', 'deadlift', 'soulevé de terre', 'développé couché', 'bench press'];
+        const nameLower = exercise?.name?.toLowerCase() || '';
+        if (compoundHeavy.some(ex => nameLower.includes(ex))) return 180;
+
+        // 3. Exercices composés moyens (150s - 2:30)
+        const compoundMedium = ['rowing', 'leg press', 'presse', 'dips', 'tractions', 'développé militaire', 'fentes'];
+        if (compoundMedium.some(ex => nameLower.includes(ex))) return 150;
+
+        // 4. Force (reps basses)
+        if (exercise?.reps?.includes('6-8') || exercise?.reps?.includes('4-6')) return 150;
+
+        // 5. Abdos (45-60s)
+        const absExercises = ['crunch', 'planche', 'abdo', 'gainage', 'relevé'];
+        if (absExercises.some(ex => nameLower.includes(ex))) return 45;
+
+        // 6. Isolation par défaut (90s)
+        return 90;
     };
 
+    // Initialisation - charger séance in_progress ou créer nouvelle
     useEffect(() => {
-        const init = {};
-        exercises.forEach(e => { init[e.id] = Array(e.sets).fill(null).map(() => ({weight: '', reps: ''})); });
-        setLogs(init);
+        const inProgress = getInProgressSession?.();
+        if (inProgress && inProgress.session === sessionCode) {
+            // Reprendre la séance en cours
+            setLogs(inProgress.logs || {});
+            setSessionId(inProgress.id);
+            setIdx(inProgress.lastExerciseIdx || 0);
+        } else {
+            // Nouvelle séance
+            const init = {};
+            exercises.forEach(e => { init[e.id] = Array(e.sets).fill(null).map(() => ({weight: '', reps: ''})); });
+            setLogs(init);
+            // Créer une nouvelle séance in_progress
+            const newId = Date.now().toString();
+            setSessionId(newId);
+            addLog({
+                id: newId,
+                date: new Date().toISOString().split('T')[0],
+                session: sessionCode,
+                logs: init,
+                status: 'in_progress',
+                type: 'Muscu',
+                timestamp: new Date().toISOString(),
+                lastExerciseIdx: 0
+            });
+        }
     }, [sessionCode]);
+
+    // Auto-save avec debounce (2 secondes)
+    useEffect(() => {
+        if (!sessionId) return;
+
+        const hasData = Object.values(logs).some(sets =>
+            sets.some(s => s.weight || s.reps)
+        );
+
+        if (!hasData) return;
+
+        setAutoSaveStatus('saving');
+        const timer = setTimeout(() => {
+            updateLog?.(sessionId, {
+                logs,
+                lastExerciseIdx: idx,
+                updatedAt: new Date().toISOString()
+            });
+            setAutoSaveStatus('saved');
+            setTimeout(() => setAutoSaveStatus(null), 2000);
+        }, 2000);
+
+        return () => clearTimeout(timer);
+    }, [logs, idx, sessionId]);
 
     // Timer de repos
     useEffect(() => {
@@ -6413,17 +6816,30 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
             };
         }).filter(Boolean);
 
-        addLog({
-            date: new Date().toISOString().split('T')[0],
-            session: sessionCode,
-            exercises: exercisesArray,
-            logs,
-            duration: final.duration,
-            calories: final.calories,
-            status: 'completed',
-            type: 'Muscu',
-            timestamp: new Date().toISOString()
-        });
+        // Mettre à jour la séance existante avec status completed
+        if (sessionId && updateLog) {
+            updateLog(sessionId, {
+                exercises: exercisesArray,
+                logs,
+                duration: final.duration,
+                calories: final.calories,
+                status: 'completed',
+                completedAt: new Date().toISOString()
+            });
+        } else {
+            // Fallback: ajouter comme nouvelle séance
+            addLog({
+                date: new Date().toISOString().split('T')[0],
+                session: sessionCode,
+                exercises: exercisesArray,
+                logs,
+                duration: final.duration,
+                calories: final.calories,
+                status: 'completed',
+                type: 'Muscu',
+                timestamp: new Date().toISOString()
+            });
+        }
         onFinishSession?.();
     };
 
@@ -6446,12 +6862,48 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
     const curLogs = logs[cur?.id] || [];
     const restTimeDefault = getRestTime(cur);
 
+    // Récupérer l'historique de la dernière fois pour cet exercice
+    const getLastExerciseHistory = (exerciseName) => {
+        if (!workoutLogs || workoutLogs.length === 0) return null;
+
+        // Chercher dans les logs complétés (status = completed)
+        const completedLogs = workoutLogs
+            .filter(l => l.status === 'completed' && l.logs)
+            .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        for (const workout of completedLogs) {
+            // Chercher l'exercice par ID ou par nom
+            const exerciseLog = workout.logs?.[cur?.id];
+            if (exerciseLog) {
+                const validSets = exerciseLog.filter(s => s.weight && s.reps);
+                if (validSets.length > 0) {
+                    const bestSet = validSets.reduce((best, s) =>
+                        parseFloat(s.weight) > parseFloat(best.weight) ? s : best
+                    , validSets[0]);
+                    return {
+                        date: workout.date,
+                        weight: bestSet.weight,
+                        reps: bestSet.reps,
+                        sets: validSets.length
+                    };
+                }
+            }
+        }
+        return null;
+    };
+
+    const lastHistory = getLastExerciseHistory(cur?.name);
+
     return (
-        <div className="flex flex-col min-h-[60vh] pb-20 md:pb-4 animate-fade-in overflow-x-hidden">
+        <div className="flex flex-col min-h-[60vh] pb-20 md:pb-4 animate-fade-in overflow-x-hidden w-full min-w-0">
             {/* Header */}
             <div className="flex justify-between items-center mb-3">
                 <button onClick={onExit} className="p-2 hover:bg-white/10 rounded-xl flex-shrink-0"><ArrowLeft className="text-gray-400" size={20}/></button>
-                <span className="font-bold text-white text-lg truncate px-2">{sessionCode}</span>
+                <div className="flex items-center gap-2 truncate px-2">
+                    <span className="font-bold text-white text-lg truncate">{sessionCode}</span>
+                    {autoSaveStatus === 'saving' && <span className="text-xs text-yellow-400 animate-pulse">💾</span>}
+                    {autoSaveStatus === 'saved' && <span className="text-xs text-green-400">✓</span>}
+                </div>
                 <Badge color="cyan" className="flex-shrink-0">{idx + 1}/{exercises.length}</Badge>
             </div>
             
@@ -6472,11 +6924,19 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
             )}
             
             {/* Exercise card */}
-            <Card className="p-4 flex-1 mb-4 overflow-hidden">
+            <Card className="p-4 flex-1 mb-4 overflow-hidden min-w-0 w-full">
                 <div className="flex justify-between items-start mb-3">
                     <div className="flex-1 min-w-0">
                         <h2 className="text-lg font-bold text-white truncate">{cur?.name}</h2>
                         <p className="text-gray-500 text-sm">{cur?.sets} séries × {cur?.reps}</p>
+                        {/* Historique dernière séance */}
+                        {lastHistory ? (
+                            <p className="text-xs text-cyan-400 mt-1">
+                                📊 Dernière fois ({new Date(lastHistory.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}): {lastHistory.weight}kg × {lastHistory.reps} reps
+                            </p>
+                        ) : (
+                            <p className="text-xs text-gray-600 mt-1">✨ Première fois</p>
+                        )}
                     </div>
                     <div className="flex items-center gap-2 ml-2 flex-shrink-0">
                         <button
@@ -6489,16 +6949,16 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
                     </div>
                 </div>
 
-                {/* Sets */}
-                <div className="space-y-2">
+                {/* Sets - scrollable horizontalement si nécessaire sur petit écran */}
+                <div className="space-y-2 overflow-x-auto min-w-0">
                     {curLogs.map((s, i) => (
-                        <div key={i} className="flex items-center gap-2">
+                        <div key={i} className="flex items-center gap-2 min-w-0">
                             <span className="text-gray-500 text-xs w-5 text-center font-mono flex-shrink-0">#{i + 1}</span>
                             <input
                                 type="number"
                                 inputMode="decimal"
                                 placeholder="kg"
-                                className="w-0 flex-1 bg-white/5 border border-white/10 rounded-xl p-2.5 text-white font-bold text-center focus:border-cyan-500 outline-none"
+                                className="w-0 flex-1 min-w-[70px] bg-white/5 border border-white/10 rounded-xl p-2.5 text-white font-bold text-center focus:border-cyan-500 outline-none"
                                 value={s?.weight || ''}
                                 onChange={e => update(cur.id, i, 'weight', e.target.value)}
                             />
@@ -6506,7 +6966,7 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog }) => {
                                 type="number"
                                 inputMode="numeric"
                                 placeholder="reps"
-                                className="w-0 flex-1 bg-white/5 border border-white/10 rounded-xl p-2.5 text-white font-bold text-center focus:border-cyan-500 outline-none"
+                                className="w-0 flex-1 min-w-[70px] bg-white/5 border border-white/10 rounded-xl p-2.5 text-white font-bold text-center focus:border-cyan-500 outline-none"
                                 value={s?.reps || ''}
                                 onChange={e => update(cur.id, i, 'reps', e.target.value)}
                             />
@@ -8277,7 +8737,7 @@ const Dashboard = ({ setView, userId }) => {
     const [showAiQuestion, setShowAiQuestion] = useState(false);
     const [questionAnswer, setQuestionAnswer] = useState('');
     const [aiNotes, setAiNotes] = useLocalStorage(`titan_ai_notes_${userId}`, []);
-    const [showFlowDetails, setShowFlowDetails] = useState(false);
+    const [showFlowDetails, setShowFlowDetails] = useState(true);
     const [meals] = useLocalStorage(`titan_meals_${userId}`, []);
     
     // Morning Coach States (ancien système - conservé pour compatibilité)
@@ -8662,9 +9122,14 @@ const Dashboard = ({ setView, userId }) => {
                                 'bg-gradient-to-r from-orange-500 to-yellow-400'
                             }`} style={{ width: `${aiAnalysis.councilReport.flowScore}%` }}/>
                         </div>
-                        
+
+                        {/* Résumé condensé toujours visible */}
+                        <div className="mt-2 text-[10px] text-gray-500">
+                            Basé sur: {todayCheckin?.energy ? `Énergie (${todayCheckin.energy}/5)` : 'Énergie (?)'} • {todayCheckin?.mood ? `Humeur (${todayCheckin.mood}/5)` : 'Humeur (?)'} • Tâches ({Math.round((tasks?.filter(t => t.completed).length / Math.max(1, tasks?.length || 1)) * 100)}%){aiAnalysis.councilReport.whoopData?.recovery !== null && ` • Whoop (${aiAnalysis.councilReport.whoopData.recovery}%)`}
+                        </div>
+
                         {/* Détails du calcul */}
-                        {showFlowDetails && aiAnalysis.councilReport.whoopData && (
+                        {showFlowDetails && (
                             <div className="mt-3 p-3 rounded-lg bg-white/5 border border-white/10">
                                 <div className="text-xs font-bold text-cyan-400 mb-2">🔬 CALCUL DU FLOW SCORE</div>
                                 <div className="space-y-2 text-xs">
