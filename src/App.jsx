@@ -484,11 +484,26 @@ const getWeeklyCardioGoal = (phase) => {
 };
 
 const CARDIO_DETAILS = {
+    // Types principaux du programme
+    "Endurance_Zone2": {
+        title: "Endurance Fondamentale",
+        desc: "Course ou marche lente en zone 2 - rester capable de parler",
+        duration: "20-25 min",
+        intensity: "60-70% FCmax (Zone 2)",
+        options: ["🏃 Footing lent", "🚴 Vélo doux", "🚣 Rameur cool"]
+    },
+    "Marche_Tapis": {
+        title: "Marche Tapis Incliné",
+        desc: "Tapis incliné 8-12% à 5-6 km/h",
+        duration: "20-30 min",
+        intensity: "55-65% FCmax",
+        options: ["🚶 Marche inclinée 8%", "🚶 Marche inclinée 10%", "🚶 Marche inclinée 12%"]
+    },
     // LISS (Low Intensity Steady State) - Zone 2
-    "LISS": { 
-        title: "LISS - Marche/Vélo", 
-        desc: "Tapis incliné 8-10% à 6km/h OU Vélo elliptique OU Marche rapide extérieur", 
-        duration: "25-30 min", 
+    "LISS": {
+        title: "LISS - Marche/Vélo",
+        desc: "Tapis incliné 8-10% à 6km/h OU Vélo elliptique OU Marche rapide extérieur",
+        duration: "25-30 min",
         intensity: "60-70% FCmax (Zone 2)",
         options: ["🚶 Marche inclinée tapis", "🚴 Vélo elliptique", "🏃 Marche rapide extérieur", "🚣 Rameur faible intensité"]
     },
@@ -987,10 +1002,10 @@ const CALENDAR_27_WEEKS = [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null, notes: "🚀 DÉBUT PROGRAMME" },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
         { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio obligatoire (jour flexible)" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio 1/2 - Endurance fondamentale" },
         { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
         { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+        { jour: "Dim", seance: null, duree: 0, cardio: "Marche_Tapis", cardioObligatoire: true, notes: "📸 Pesée + Cardio 2/2 - Marche tapis incliné" }
     ]},
 
     // S2: 13-19 janvier 2026
@@ -998,20 +1013,20 @@ const CALENDAR_27_WEEKS = [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
         { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio obligatoire" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Marche_Tapis", cardioObligatoire: true, notes: "Cardio 1/2 - Marche tapis incliné" },
         { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
         { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+        { jour: "Dim", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "📸 Pesée + Cardio 2/2 - Endurance fondamentale" }
     ]},
     // S3: 20-26 janvier 2026
     { sem: 3, date: "20/01", phase: "Phase1_Masse", jours: [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
         { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio obligatoire" },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio 1/2 - Endurance fondamentale" },
         { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
         { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée + Photos" }
+        { jour: "Dim", seance: null, duree: 0, cardio: "Marche_Tapis", cardioObligatoire: true, notes: "Cardio 2/2 - Marche tapis incliné" }
     ]},
 
     // S4: 27 jan - 2 fév 2026
@@ -1019,10 +1034,10 @@ const CALENDAR_27_WEEKS = [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
         { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Marche_Tapis", cardioObligatoire: true, notes: "Cardio 1/2 - Marche tapis incliné" },
         { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
         { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Pesée - Bilan S4" }
+        { jour: "Dim", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "📸 Pesée - Cardio 2/2 - Bilan S4" }
     ]},
 
     // S5: 3-9 février 2026
@@ -1030,10 +1045,10 @@ const CALENDAR_27_WEEKS = [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
         { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio 1/2 - Endurance fondamentale" },
         { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
         { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null }
+        { jour: "Dim", seance: null, duree: 0, cardio: "Marche_Tapis", cardioObligatoire: true, notes: "Cardio 2/2 - Marche tapis incliné" }
     ]},
 
     // S6: 10-16 février 2026
@@ -1041,10 +1056,10 @@ const CALENDAR_27_WEEKS = [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
         { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Marche_Tapis", cardioObligatoire: true, notes: "Cardio 1/2 - Marche tapis incliné" },
         { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
         { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null }
+        { jour: "Dim", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio 2/2 - Endurance fondamentale" }
     ]},
 
     // S7: 17-23 février 2026 - DELOAD
@@ -1063,10 +1078,10 @@ const CALENDAR_27_WEEKS = [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null, notes: "Reprise post-deload" },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
         { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio 1/2 - Endurance fondamentale" },
         { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
         { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null }
+        { jour: "Dim", seance: null, duree: 0, cardio: "Marche_Tapis", cardioObligatoire: true, notes: "Cardio 2/2 - Marche tapis incliné" }
     ]},
 
     // S9: 3-9 mars 2026
@@ -1074,10 +1089,10 @@ const CALENDAR_27_WEEKS = [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
         { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Marche_Tapis", cardioObligatoire: true, notes: "Cardio 1/2 - Marche tapis incliné" },
         { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
         { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null }
+        { jour: "Dim", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio 2/2 - Endurance fondamentale" }
     ]},
 
     // S10: 10-16 mars 2026
@@ -1085,10 +1100,10 @@ const CALENDAR_27_WEEKS = [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
         { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio 1/2 - Endurance fondamentale" },
         { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
         { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null }
+        { jour: "Dim", seance: null, duree: 0, cardio: "Marche_Tapis", cardioObligatoire: true, notes: "Cardio 2/2 - Marche tapis incliné" }
     ]},
 
     // S11: 17-23 mars 2026
@@ -1096,10 +1111,10 @@ const CALENDAR_27_WEEKS = [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
         { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Marche_Tapis", cardioObligatoire: true, notes: "Cardio 1/2 - Marche tapis incliné" },
         { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
         { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null }
+        { jour: "Dim", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio 2/2 - Endurance fondamentale" }
     ]},
 
     // S12: 24-30 mars 2026
@@ -1107,10 +1122,10 @@ const CALENDAR_27_WEEKS = [
         { jour: "Lun", seance: "PUSH_A", duree: 70, cardio: null },
         { jour: "Mar", seance: "PULL_A", duree: 75, cardio: null },
         { jour: "Mer", seance: "LEGS_A", duree: 75, cardio: null },
-        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", cardioObligatoire: true, notes: "Cardio 1/2 - Endurance fondamentale" },
         { jour: "Ven", seance: "PUSH_B", duree: 65, cardio: null },
         { jour: "Sam", seance: "PULL_B", duree: 65, cardio: null },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, notes: "📸 Bilan S12" }
+        { jour: "Dim", seance: null, duree: 0, cardio: "Marche_Tapis", cardioObligatoire: true, notes: "📸 Bilan S12 + Cardio 2/2" }
     ]},
 
     // S13: 31 mars - 2 avril 2026 (FIN PHASE 1)
@@ -1227,58 +1242,58 @@ const CALENDAR_27_WEEKS = [
     // Push/Pull/Legs/Upper/Lower + Cardio 2x/sem + Abdos 3x/sem + Steps 10-12k/jour
     // ═══════════════════════════════════════════════════════════════════════════
 
-    // S22: 26 mai - 1 juin 2026
+    // S22: 26 mai - 1 juin 2026 — 4 cardio/semaine en sèche
     { sem: 22, date: "26/05", phase: "Phase4_Seche", jours: [
         { jour: "Lun", seance: "PUSH_SECHE", duree: 65, cardio: null, stepsGoal: 8000, notes: "🔥 DÉBUT SÈCHE INTENSIVE" },
-        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000, notes: "Endurance 45min + Abdos fin séance" },
+        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000, notes: "Cardio 1/4 - EF 45min + Abdos" },
         { jour: "Mer", seance: "LEGS_SECHE", duree: 70, cardio: null, stepsGoal: 8000 },
-        { jour: "Jeu", seance: null, duree: 0, cardio: null, stepsGoal: 12000, notes: "Rest actif - Marche" },
-        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000, notes: "Abdos fin séance" },
-        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000, notes: "HIIT 25min + Abdos séance dédiée 15-20min" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée + Photos - Balade" }
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Marche_Tapis", stepsGoal: 12000, notes: "Cardio 2/4 - Marche tapis 10-12k pas" },
+        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 8000, notes: "Cardio 3/4 - EF 25min + Abdos" },
+        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000, notes: "Cardio 4/4 - HIIT 25min + Abdos dédiés" },
+        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée + Photos - Repos actif" }
     ]},
 
     // S23: 2-8 juin 2026
     { sem: 23, date: "02/06", phase: "Phase4_Seche", jours: [
         { jour: "Lun", seance: "PUSH_SECHE", duree: 65, cardio: null, stepsGoal: 8000 },
-        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000 },
+        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Marche_Tapis", abdos: "ABDOS_COURT", stepsGoal: 10000, notes: "Cardio 1/4 - Marche tapis" },
         { jour: "Mer", seance: "LEGS_SECHE", duree: 70, cardio: null, stepsGoal: 8000 },
-        { jour: "Jeu", seance: null, duree: 0, cardio: null, stepsGoal: 12000, notes: "Rest actif" },
-        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000 },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 12000, notes: "Cardio 2/4 - EF 30-45min" },
+        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 8000, notes: "Cardio 3/4 - EF 25min" },
+        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000, notes: "Cardio 4/4 - HIIT 25min" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée + Photos" }
     ]},
 
     // S24: 9-15 juin 2026
     { sem: 24, date: "09/06", phase: "Phase4_Seche", jours: [
         { jour: "Lun", seance: "PUSH_SECHE", duree: 65, cardio: null, stepsGoal: 8000 },
-        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000 },
+        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000, notes: "Cardio 1/4 - EF 45min" },
         { jour: "Mer", seance: "LEGS_SECHE", duree: 70, cardio: null, stepsGoal: 8000 },
-        { jour: "Jeu", seance: null, duree: 0, cardio: null, stepsGoal: 12000 },
-        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000 },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Marche_Tapis", stepsGoal: 12000, notes: "Cardio 2/4 - Marche tapis" },
+        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 8000, notes: "Cardio 3/4 - EF 25min" },
+        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000, notes: "Cardio 4/4 - Fractionné 25min" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée + Photos" }
     ]},
 
     // S25: 16-22 juin 2026
     { sem: 25, date: "16/06", phase: "Phase4_Seche", jours: [
         { jour: "Lun", seance: "PUSH_SECHE", duree: 65, cardio: null, stepsGoal: 8000 },
-        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000 },
+        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Marche_Tapis", abdos: "ABDOS_COURT", stepsGoal: 10000, notes: "Cardio 1/4 - Marche tapis" },
         { jour: "Mer", seance: "LEGS_SECHE", duree: 70, cardio: null, stepsGoal: 8000 },
-        { jour: "Jeu", seance: null, duree: 0, cardio: null, stepsGoal: 12000 },
-        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000 },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 12000, notes: "Cardio 2/4 - EF 30-45min" },
+        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 8000, notes: "Cardio 3/4 - EF 25min" },
+        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000, notes: "Cardio 4/4 - HIIT 25min" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée + Photos" }
     ]},
 
     // S26: 23-30 juin 2026 (FIN SÈCHE)
     { sem: 26, date: "23/06", phase: "Phase4_Seche", jours: [
         { jour: "Lun", seance: "PUSH_SECHE", duree: 65, cardio: null, stepsGoal: 8000 },
-        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000 },
+        { jour: "Mar", seance: "PULL_SECHE", duree: 70, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 10000, notes: "Cardio 1/4 - EF 45min" },
         { jour: "Mer", seance: "LEGS_SECHE", duree: 70, cardio: null, stepsGoal: 8000 },
-        { jour: "Jeu", seance: null, duree: 0, cardio: null, stepsGoal: 12000 },
-        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000 },
+        { jour: "Jeu", seance: null, duree: 0, cardio: "Marche_Tapis", stepsGoal: 12000, notes: "Cardio 2/4 - Marche tapis" },
+        { jour: "Ven", seance: "UPPER_SECHE", duree: 65, cardio: "Endurance_Zone2", abdos: "ABDOS_COURT", stepsGoal: 8000, notes: "Cardio 3/4 - EF 25min" },
+        { jour: "Sam", seance: "LOWER_SECHE", duree: 65, cardio: "HIIT_25", abdos: "ABDOS_DEDIE", stepsGoal: 8000, notes: "Cardio 4/4 - Fractionné 25min" },
         { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 FIN SÈCHE - Photos + Mesures finales" }
     ]},
 
@@ -5370,8 +5385,8 @@ const SecondBrainDashboard = ({
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
     const weekLogs = workoutLogs.filter(log => new Date(log.date) >= weekStart && log.status !== 'in_progress');
-    const muscuCount = weekLogs.filter(l => l.type === 'Muscu').length;
-    const cardioCount = weekLogs.filter(l => l.type === 'Cardio').length;
+    const muscuCount = weekLogs.filter(l => l.type === 'Muscu' || (l.session && l.session !== 'CARDIO' && l.type !== 'Cardio')).length;
+    const cardioCount = weekLogs.filter(l => l.type === 'Cardio' || l.session === 'CARDIO').length;
     
     // Pesée
     const getLastWeighIn = () => {
@@ -5418,7 +5433,7 @@ const SecondBrainDashboard = ({
 
     // Count cardio done this week
     const weekCardioDone = useMemo(() => {
-        return weekLogs.filter(l => l.type === 'Cardio').length;
+        return weekLogs.filter(l => l.type === 'Cardio' || l.session === 'CARDIO').length;
     }, [weekLogs]);
 
     const weeklyCardioDone = weekCardioDone >= weeklyCardioGoal;
@@ -6553,14 +6568,14 @@ const FitnessCalendar = ({ onSelectDay, workoutLogs, addLog, removeLog }) => {
             removeLog(muscuLog.id || muscuLog.timestamp);
         } else {
             // Add quick log
-            addLog({ 
-                date: d.dateStr, 
-                session: d.seance, 
-                type: 'Musculation', 
-                duration: 60, 
-                calories: 350, 
-                status: 'completed', 
-                timestamp: new Date().toISOString() 
+            addLog({
+                date: d.dateStr,
+                session: d.seance,
+                type: 'Muscu',
+                duration: 60,
+                calories: 350,
+                status: 'completed',
+                timestamp: new Date().toISOString()
             });
         }
     };
