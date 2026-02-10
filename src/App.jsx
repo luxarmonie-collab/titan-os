@@ -1307,11 +1307,11 @@ const CALENDAR_27_WEEKS = [
     { sem: 27, date: "29/06", phase: "Phase5_Maintien", jours: [
         { jour: "Lun", seance: "PUSH_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000, notes: "💎 DÉBUT MAINTIEN" },
         { jour: "Mar", seance: "PULL_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
-        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000, notes: "Cardio 30-40min" },
+        { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000, notes: "Cardio 1/3" },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000, notes: "Cardio optionnel" },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée" }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "📸 Pesée + Cardio 3/3 optionnel" }
     ]},
 
     // S28-S44: Semaines de maintien (pattern répétitif)
@@ -1324,8 +1324,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S29: 13-19 juillet 2026
@@ -1335,8 +1335,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S30: 20-26 juillet 2026
@@ -1346,8 +1346,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée mensuelle" }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "📸 Pesée mensuelle - Cardio 3/3 optionnel" }
     ]},
 
     // S31: 27 juillet - 2 août 2026
@@ -1357,8 +1357,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S32: 3-9 août 2026 (mi-maintien)
@@ -1368,8 +1368,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S33: 10-16 août 2026
@@ -1379,8 +1379,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S34: 17-23 août 2026
@@ -1390,8 +1390,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S35: 24-30 août 2026
@@ -1401,8 +1401,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée mensuelle" }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "📸 Pesée mensuelle - Cardio 3/3 optionnel" }
     ]},
 
     // S36: 31 août - 6 septembre 2026
@@ -1412,8 +1412,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S37: 7-13 septembre 2026
@@ -1423,8 +1423,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S38: 14-20 septembre 2026
@@ -1434,8 +1434,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S39: 21-27 septembre 2026
@@ -1445,8 +1445,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée mensuelle" }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "📸 Pesée mensuelle - Cardio 3/3 optionnel" }
     ]},
 
     // S40: 28 sept - 4 oct 2026
@@ -1456,8 +1456,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S41: 5-11 octobre 2026
@@ -1467,8 +1467,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S42: 12-18 octobre 2026
@@ -1478,8 +1478,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000 }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "Cardio 3/3 optionnel - Plaisir" }
     ]},
 
     // S43: 19-25 octobre 2026
@@ -1489,8 +1489,8 @@ const CALENDAR_27_WEEKS = [
         { jour: "Mer", seance: null, duree: 0, cardio: "Endurance_Zone2", stepsGoal: 8000 },
         { jour: "Jeu", seance: "LEGS_MAINTIEN", duree: 60, cardio: null, stepsGoal: 8000 },
         { jour: "Ven", seance: "UPPER_MAINTIEN", duree: 60, cardio: null, abdos: "ABDOS_COURT", stepsGoal: 8000 },
-        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "LISS_30_Opt", stepsGoal: 8000 },
-        { jour: "Dim", seance: null, duree: 0, cardio: null, stepsGoal: 10000, notes: "📸 Pesée mensuelle - Avant-dernière semaine" }
+        { jour: "Sam", seance: "LOWER_MAINTIEN", duree: 55, cardio: "Marche_Tapis", stepsGoal: 8000, notes: "Cardio 2/3 - Marche tapis" },
+        { jour: "Dim", seance: null, duree: 0, cardioOpt: "Endurance_Zone2", stepsGoal: 10000, notes: "📸 Pesée mensuelle - Avant-dernière semaine - Cardio 3/3 optionnel" }
     ]},
 
     // S44: 26 oct - 1 nov 2026 (FIN PROGRAMME)
