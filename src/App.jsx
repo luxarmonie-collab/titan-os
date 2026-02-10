@@ -455,6 +455,34 @@ const getCurrentPhase = (dateStr) => {
     return date < new Date(PHASE_DATES.masse.start) ? 'pre_programme' : 'post_programme';
 };
 
+// Estimation des calories brûlées pour les séances sans saisie manuelle
+const estimateCalories = (log) => {
+    if (log.calories && parseInt(log.calories) > 0) return parseInt(log.calories);
+    const duration = parseInt(log.duration) || 45;
+    if (log.type === 'Cardio') {
+        const cardioType = log.cardioType || 'course';
+        if (['fractionne', 'cote', 'street_workout'].includes(cardioType)) return Math.round(duration * 10);
+        if (['piscine', 'natation'].includes(cardioType)) return Math.round(duration * 9);
+        if (['marche_tapis'].includes(cardioType)) return Math.round(duration * 5.5);
+        if (['velo', 'elliptique', 'rameur'].includes(cardioType)) return Math.round(duration * 7);
+        return Math.round(duration * 8); // course, endurance fondamentale
+    }
+    // Muscu: ~6-7 kcal/min en moyenne
+    return Math.round(duration * 6.5);
+};
+
+// Objectif cardio hebdomadaire par phase
+const getWeeklyCardioGoal = (phase) => {
+    switch (phase) {
+        case 'masse': return 2;        // Phase 1: 2 séances/semaine
+        case 'repos_medical': return 0; // Bloqué
+        case 'readaptation': return 2;  // Reprise douce
+        case 'seche': return 4;         // Phase sèche: 4 séances/semaine
+        case 'maintien': return 3;      // Maintien: 2-3 séances/semaine
+        default: return 0;
+    }
+};
+
 const CARDIO_DETAILS = {
     // LISS (Low Intensity Steady State) - Zone 2
     "LISS": { 
@@ -5272,6 +5300,7 @@ const FitnessModule = ({ userId }) => {
                     todayData={todayData}
                     startWorkout={startWorkout}
                     addLog={addLog}
+                    updateLog={updateWorkoutLog}
                     todayCheckin={todayCheckin}
                     updateCheckin={updateCheckin}
                     workoutLogs={workoutLogs}
@@ -5300,14 +5329,14 @@ const FitnessModule = ({ userId }) => {
 // SECOND BRAIN DASHBOARD - STYLE WHOOP
 // ═══════════════════════════════════════════════════════════════════════════════
 const SecondBrainDashboard = ({
-    todayData, startWorkout, addLog, todayCheckin, updateCheckin,
+    todayData, startWorkout, addLog, updateLog, todayCheckin, updateCheckin,
     workoutLogs, whoopData, setWhoopData, dailyCheckins,
     supplementLogs, setSupplementLogs, aiNotes, addAiNote, userId,
     getInProgressSession, removeLog
 }) => {
     const [showQuickMuscu, setShowQuickMuscu] = useState(false);
     const [showQuickCardio, setShowQuickCardio] = useState(false);
-    const [cardioForm, setCardioForm] = useState({ type: 'course', duration: '', calories: '', distance: '' });
+    const [cardioForm, setCardioForm] = useState({ type: 'endurance_fondamentale', duration: '', calories: '', distance: '', effort: 5, inclinaison: '', intervals: '' });
     const [showAiQuestion, setShowAiQuestion] = useState(null);
     const [questionAnswer, setQuestionAnswer] = useState('');
     const [form, setForm] = useState({ duration: '', calories: '' });
@@ -5340,7 +5369,7 @@ const SecondBrainDashboard = ({
     // Stats semaine
     const weekStart = new Date();
     weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
-    const weekLogs = workoutLogs.filter(log => new Date(log.date) >= weekStart);
+    const weekLogs = workoutLogs.filter(log => new Date(log.date) >= weekStart && log.status !== 'in_progress');
     const muscuCount = weekLogs.filter(l => l.type === 'Muscu').length;
     const cardioCount = weekLogs.filter(l => l.type === 'Cardio').length;
     
@@ -5382,10 +5411,10 @@ const SecondBrainDashboard = ({
     const todaySteps = stepsLogs[todayStr]?.steps || 0;
     const stepsProgress = todayData.stepsGoal ? Math.min(100, (todaySteps / todayData.stepsGoal) * 100) : 0;
 
-    // Check weekly mandatory cardio (Phase 1 - Masse requires 1x/week)
+    // Check weekly mandatory cardio (dynamique selon la phase)
     const currentPhase = getCurrentPhase(todayStr);
-    const needsWeeklyCardio = currentPhase === 'masse'; // Phase 1 requires 1 cardio/week
-    const weeklyCardioGoal = needsWeeklyCardio ? 1 : 0;
+    const weeklyCardioGoal = getWeeklyCardioGoal(currentPhase);
+    const needsWeeklyCardio = weeklyCardioGoal > 0;
 
     // Count cardio done this week
     const weekCardioDone = useMemo(() => {
@@ -5455,8 +5484,12 @@ const SecondBrainDashboard = ({
     const inProgressSession = getInProgressSession?.();
 
     const handleAbandonSession = () => {
-        if (inProgressSession && removeLog) {
-            removeLog(inProgressSession.id);
+        if (inProgressSession && updateLog) {
+            // Sauvegarder comme séance partielle au lieu de supprimer
+            updateLog(inProgressSession.id, {
+                status: 'partial',
+                abandonedAt: new Date().toISOString()
+            });
         }
     };
 
@@ -5500,8 +5533,8 @@ const SecondBrainDashboard = ({
                     <div className="text-[10px] text-gray-500">MUSCU /6</div>
                 </div>
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center">
-                    <div className="text-2xl font-black text-white">{cardioCount}</div>
-                    <div className="text-[10px] text-gray-500">CARDIO /4</div>
+                    <div className={`text-2xl font-black ${weeklyCardioGoal > 0 && cardioCount >= weeklyCardioGoal ? 'text-green-400' : 'text-white'}`}>{cardioCount}</div>
+                    <div className="text-[10px] text-gray-500">CARDIO {weeklyCardioGoal > 0 ? `/${weeklyCardioGoal}` : ''}</div>
                 </div>
                 <div className="p-3 rounded-xl bg-white/[0.02] border border-white/5 text-center">
                     <div className="text-2xl font-black text-white">{lastWeighIn?.weight || '--'}</div>
@@ -5613,7 +5646,11 @@ const SecondBrainDashboard = ({
                                 ⚠️ CARDIO HEBDO À FAIRE
                             </div>
                             <div className="text-sm font-bold text-white">
-                                Phase Masse - 1x/semaine obligatoire
+                                {currentPhase === 'masse' && `Phase Masse - ${weeklyCardioGoal}x/semaine`}
+                                {currentPhase === 'seche' && `Phase Sèche - ${weeklyCardioGoal}x/semaine`}
+                                {currentPhase === 'maintien' && `Maintien - ${weeklyCardioGoal}x/semaine`}
+                                {currentPhase === 'readaptation' && `Réadaptation - ${weeklyCardioGoal}x/semaine`}
+                                {!['masse', 'seche', 'maintien', 'readaptation'].includes(currentPhase) && `${weeklyCardioGoal}x/semaine`}
                             </div>
                         </div>
                         <div className="text-right">
@@ -5824,48 +5861,45 @@ const SecondBrainDashboard = ({
                 </div>
             )}
             
-            {/* Quick Cardio Modal - Amélioré avec type */}
+            {/* Quick Cardio Modal - Tracking complet par type */}
             {showQuickCardio && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-gray-900 rounded-2xl border border-white/10 p-6 w-full max-w-md">
+                    <div className="bg-gray-900 rounded-2xl border border-white/10 p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
                         <h3 className="font-bold text-white mb-6 text-xl">✓ Détails de ta séance cardio</h3>
-                        
+
                         {/* Type de cardio */}
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-400 mb-2">
                                 Type de cardio
                             </label>
-                            <select 
-                                value={cardioForm.type || 'course'} 
+                            <select
+                                value={cardioForm.type || 'endurance_fondamentale'}
                                 onChange={e => setCardioForm(f => ({...f, type: e.target.value}))}
                                 className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white"
                             >
-                                <option value="course">🏃 Course / Footing</option>
-                                <option value="escaliers">🪜 Escaliers</option>
-                                <option value="velo">🚴 Vélo</option>
-                                <option value="natation">🏊 Natation</option>
-                                <option value="rameur">🚣 Rameur</option>
-                                <option value="elliptique">⚙️ Elliptique</option>
-                                <option value="autre">➕ Autre</option>
+                                <optgroup label="Base">
+                                    <option value="endurance_fondamentale">🏃 Endurance fondamentale</option>
+                                    <option value="marche_tapis">🚶 Marche tapis incliné</option>
+                                    <option value="course">🏃‍♂️ Course / Footing</option>
+                                </optgroup>
+                                <optgroup label="Machines">
+                                    <option value="velo">🚴 Vélo / Elliptique</option>
+                                    <option value="rameur">🚣 Rameur</option>
+                                </optgroup>
+                                <optgroup label="Compléments">
+                                    <option value="piscine">🏊 Piscine</option>
+                                    <option value="cote">⛰️ Côte</option>
+                                    <option value="fractionne">⚡ Fractionné</option>
+                                    <option value="street_workout">💪 Street workout cardio</option>
+                                </optgroup>
+                                <optgroup label="Autre">
+                                    <option value="escaliers">🪜 Escaliers</option>
+                                    <option value="autre">➕ Autre</option>
+                                </optgroup>
                             </select>
                         </div>
-                        
-                        {/* Distance */}
-                        <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-400 mb-2">
-                                Distance (km)
-                            </label>
-                            <input
-                                type="number"
-                                step="0.1"
-                                placeholder="Ex: 5.2"
-                                value={cardioForm.distance}
-                                onChange={e => setCardioForm(f => ({...f, distance: e.target.value}))}
-                                className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500"
-                            />
-                        </div>
 
-                        {/* Durée */}
+                        {/* Durée - toujours affiché */}
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-gray-400 mb-2">
                                 Durée (minutes)
@@ -5879,8 +5913,58 @@ const SecondBrainDashboard = ({
                             />
                         </div>
 
+                        {/* Distance - pour endurance, course, marche */}
+                        {['endurance_fondamentale', 'course', 'marche_tapis', 'cote'].includes(cardioForm.type) && (
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-400 mb-2">
+                                    {cardioForm.type === 'marche_tapis' ? 'Nombre de pas (ou distance km)' : 'Distance (km)'}
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.1"
+                                    placeholder={cardioForm.type === 'marche_tapis' ? 'Ex: 8000 pas ou 5.2 km' : 'Ex: 5.2'}
+                                    value={cardioForm.distance}
+                                    onChange={e => setCardioForm(f => ({...f, distance: e.target.value}))}
+                                    className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500"
+                                />
+                            </div>
+                        )}
+
+                        {/* Inclinaison - pour marche tapis */}
+                        {cardioForm.type === 'marche_tapis' && (
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-400 mb-2">
+                                    Inclinaison (%)
+                                </label>
+                                <input
+                                    type="number"
+                                    step="0.5"
+                                    placeholder="Ex: 10"
+                                    value={cardioForm.inclinaison}
+                                    onChange={e => setCardioForm(f => ({...f, inclinaison: e.target.value}))}
+                                    className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500"
+                                />
+                            </div>
+                        )}
+
+                        {/* Intervalles - pour fractionné, piscine, street workout */}
+                        {['fractionne', 'piscine', 'street_workout'].includes(cardioForm.type) && (
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-400 mb-2">
+                                    {cardioForm.type === 'piscine' ? 'Nombre de longueurs' : 'Nombre d\'intervalles'}
+                                </label>
+                                <input
+                                    type="number"
+                                    placeholder={cardioForm.type === 'piscine' ? 'Ex: 20' : 'Ex: 8'}
+                                    value={cardioForm.intervals}
+                                    onChange={e => setCardioForm(f => ({...f, intervals: e.target.value}))}
+                                    className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500"
+                                />
+                            </div>
+                        )}
+
                         {/* Allure calculée */}
-                        {cardioForm.distance && cardioForm.duration && parseFloat(cardioForm.distance) > 0 && (
+                        {cardioForm.distance && cardioForm.duration && parseFloat(cardioForm.distance) > 0 && parseFloat(cardioForm.distance) < 100 && (
                             <div className="mb-4 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl">
                                 <div className="text-xs text-cyan-400 font-medium">⏱️ Allure moyenne</div>
                                 <div className="text-lg font-bold text-white">
@@ -5897,10 +5981,34 @@ const SecondBrainDashboard = ({
                             </div>
                         )}
 
+                        {/* Sensation d'effort (1-10) - toujours affiché */}
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-400 mb-2">
+                                {['endurance_fondamentale', 'marche_tapis', 'velo', 'rameur'].includes(cardioForm.type)
+                                    ? 'Sensation de facilité (1=dur → 10=facile)'
+                                    : 'Difficulté perçue (1=facile → 10=max)'}
+                            </label>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="range"
+                                    min="1"
+                                    max="10"
+                                    value={cardioForm.effort || 5}
+                                    onChange={e => setCardioForm(f => ({...f, effort: parseInt(e.target.value)}))}
+                                    className="flex-1 accent-orange-500"
+                                />
+                                <span className={`text-lg font-black w-8 text-center ${
+                                    (cardioForm.effort || 5) <= 3 ? 'text-green-400' :
+                                    (cardioForm.effort || 5) <= 6 ? 'text-yellow-400' :
+                                    'text-red-400'
+                                }`}>{cardioForm.effort || 5}</span>
+                            </div>
+                        </div>
+
                         {/* Calories */}
                         <div className="mb-6">
                             <label className="block text-sm font-medium text-gray-400 mb-2">
-                                Calories brûlées
+                                Calories brûlées (optionnel)
                             </label>
                             <input
                                 type="number"
@@ -5910,13 +6018,13 @@ const SecondBrainDashboard = ({
                                 className="w-full p-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500"
                             />
                         </div>
-                        
+
                         {/* Boutons */}
                         <div className="flex gap-3">
                             <button
                                 onClick={() => {
                                     setShowQuickCardio(false);
-                                    setCardioForm({ type: 'course', duration: '', calories: '', distance: '' });
+                                    setCardioForm({ type: 'endurance_fondamentale', duration: '', calories: '', distance: '', effort: 5, inclinaison: '', intervals: '' });
                                 }}
                                 className="flex-1 py-3 bg-gray-800 text-white font-bold rounded-xl hover:bg-gray-700"
                             >
@@ -5926,21 +6034,32 @@ const SecondBrainDashboard = ({
                                 onClick={() => {
                                     const distance = parseFloat(cardioForm.distance) || 0;
                                     const duration = parseInt(cardioForm.duration) || 30;
-                                    const pace = distance > 0 ? duration / distance : null;
+                                    const pace = distance > 0 && distance < 100 ? duration / distance : null;
+                                    // Estimation calories si non renseigné
+                                    const estimatedCalories = parseInt(cardioForm.calories) || (() => {
+                                        const base = duration * 8; // ~8 kcal/min base
+                                        if (['fractionne', 'cote', 'street_workout'].includes(cardioForm.type)) return Math.round(base * 1.3);
+                                        if (['piscine'].includes(cardioForm.type)) return Math.round(base * 1.1);
+                                        if (['marche_tapis'].includes(cardioForm.type)) return Math.round(base * 0.7);
+                                        return Math.round(base);
+                                    })();
                                     addLog({
                                         date: todayStr,
                                         session: 'CARDIO',
-                                        cardioType: cardioForm.type || 'course',
+                                        cardioType: cardioForm.type || 'endurance_fondamentale',
                                         type: 'Cardio',
                                         duration: duration,
                                         distance: distance,
                                         pace: pace,
-                                        calories: parseInt(cardioForm.calories) || 200,
+                                        effort: cardioForm.effort || 5,
+                                        inclinaison: parseFloat(cardioForm.inclinaison) || null,
+                                        intervals: parseInt(cardioForm.intervals) || null,
+                                        calories: estimatedCalories,
                                         status: 'completed',
                                         timestamp: new Date().toISOString()
                                     });
                                     setShowQuickCardio(false);
-                                    setCardioForm({ type: 'course', duration: '', calories: '', distance: '' });
+                                    setCardioForm({ type: 'endurance_fondamentale', duration: '', calories: '', distance: '', effort: 5, inclinaison: '', intervals: '' });
                                 }}
                                 className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl"
                             >
@@ -6058,12 +6177,20 @@ const FitnessProgress = ({ workoutLogs }) => {
                                         </div>
                                         {/* Historique détaillé */}
                                         <div className="space-y-1 max-h-32 overflow-auto">
-                                            {data.slice(-5).reverse().map((d, i) => (
-                                                <div key={i} className="flex justify-between text-xs py-1 border-b border-white/5">
-                                                    <span className="text-gray-500">{new Date(d.date).toLocaleDateString('fr-FR')}</span>
-                                                    <span className="text-white font-medium">{d.weight}kg × {d.reps} reps</span>
-                                                </div>
-                                            ))}
+                                            {data.slice(-5).reverse().map((d, i) => {
+                                                // Trouver les calories de la séance complète
+                                                const sessionLog = workoutLogs.find(l => l.date === d.date && l.type === 'Muscu');
+                                                const cals = sessionLog ? estimateCalories(sessionLog) : null;
+                                                return (
+                                                    <div key={i} className="flex justify-between text-xs py-1 border-b border-white/5">
+                                                        <span className="text-gray-500">{new Date(d.date).toLocaleDateString('fr-FR')}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-white font-medium">{d.weight}kg × {d.reps} reps</span>
+                                                            {cals > 0 && <span className="text-red-400/70">{cals}kcal</span>}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}
@@ -6092,7 +6219,7 @@ const FitnessProgress = ({ workoutLogs }) => {
                     // Stats globales
                     const totalDistance = cardioLogs.reduce((sum, l) => sum + (l.distance || 0), 0);
                     const totalDuration = cardioLogs.reduce((sum, l) => sum + (l.duration || 0), 0);
-                    const totalCalories = cardioLogs.reduce((sum, l) => sum + (l.calories || 0), 0);
+                    const totalCalories = cardioLogs.reduce((sum, l) => sum + estimateCalories(l), 0);
                     const avgPace = totalDistance > 0 ? totalDuration / totalDistance : 0;
 
                     // Dernières 5 séances pour le graphique
@@ -6152,11 +6279,13 @@ const FitnessProgress = ({ workoutLogs }) => {
                                     <div key={i} className="flex justify-between items-center text-xs p-2 rounded-lg bg-white/5">
                                         <div className="flex items-center gap-2">
                                             <span className="text-gray-500">{new Date(l.date).toLocaleDateString('fr-FR')}</span>
-                                            <span className="text-white capitalize">{l.cardioType || 'cardio'}</span>
+                                            <span className="text-white capitalize">{l.cardioType?.replace('_', ' ') || 'cardio'}</span>
                                         </div>
                                         <div className="flex items-center gap-3 text-gray-400">
                                             {l.distance > 0 && <span className="text-cyan-400">{l.distance}km</span>}
                                             <span>{l.duration}min</span>
+                                            {l.effort && <span className="text-yellow-400">RPE {l.effort}</span>}
+                                            {l.calories > 0 && <span className="text-red-400">{l.calories}kcal</span>}
                                             {l.pace > 0 && (
                                                 <span className="text-purple-400">
                                                     {Math.floor(l.pace)}:{Math.round((l.pace % 1) * 60).toString().padStart(2, '0')}/km
@@ -6862,8 +6991,8 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog, updateLog
     const curLogs = logs[cur?.id] || [];
     const restTimeDefault = getRestTime(cur);
 
-    // Récupérer l'historique de la dernière fois pour cet exercice
-    const getLastExerciseHistory = (exerciseName) => {
+    // Récupérer l'historique de la dernière fois pour cet exercice (TOUTES les séries)
+    const getLastExerciseHistory = (exerciseId) => {
         if (!workoutLogs || workoutLogs.length === 0) return null;
 
         // Chercher dans les logs complétés (status = completed)
@@ -6872,19 +7001,13 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog, updateLog
             .sort((a, b) => new Date(b.date) - new Date(a.date));
 
         for (const workout of completedLogs) {
-            // Chercher l'exercice par ID ou par nom
-            const exerciseLog = workout.logs?.[cur?.id];
+            const exerciseLog = workout.logs?.[exerciseId];
             if (exerciseLog) {
                 const validSets = exerciseLog.filter(s => s.weight && s.reps);
                 if (validSets.length > 0) {
-                    const bestSet = validSets.reduce((best, s) =>
-                        parseFloat(s.weight) > parseFloat(best.weight) ? s : best
-                    , validSets[0]);
                     return {
                         date: workout.date,
-                        weight: bestSet.weight,
-                        reps: bestSet.reps,
-                        sets: validSets.length
+                        sets: exerciseLog // Toutes les séries (pour affichage par série)
                     };
                 }
             }
@@ -6892,7 +7015,7 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog, updateLog
         return null;
     };
 
-    const lastHistory = getLastExerciseHistory(cur?.name);
+    const lastHistory = getLastExerciseHistory(cur?.id);
 
     return (
         <div className="flex flex-col min-h-[60vh] pb-20 md:pb-4 animate-fade-in overflow-x-hidden w-full min-w-0">
@@ -6932,7 +7055,7 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog, updateLog
                         {/* Historique dernière séance */}
                         {lastHistory ? (
                             <p className="text-xs text-cyan-400 mt-1">
-                                📊 Dernière fois ({new Date(lastHistory.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}): {lastHistory.weight}kg × {lastHistory.reps} reps
+                                📊 Dernière séance : {new Date(lastHistory.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                             </p>
                         ) : (
                             <p className="text-xs text-gray-600 mt-1">✨ Première fois</p>
@@ -6949,29 +7072,39 @@ const WorkoutLogger = ({ sessionCode, onExit, onFinishSession, addLog, updateLog
                     </div>
                 </div>
 
-                {/* Sets - scrollable horizontalement si nécessaire sur petit écran */}
+                {/* Sets avec historique par série */}
                 <div className="space-y-2 overflow-x-auto min-w-0">
-                    {curLogs.map((s, i) => (
-                        <div key={i} className="flex items-center gap-2 min-w-0">
-                            <span className="text-gray-500 text-xs w-5 text-center font-mono flex-shrink-0">#{i + 1}</span>
-                            <input
-                                type="number"
-                                inputMode="decimal"
-                                placeholder="kg"
-                                className="w-0 flex-1 min-w-[70px] bg-white/5 border border-white/10 rounded-xl p-2.5 text-white font-bold text-center focus:border-cyan-500 outline-none"
-                                value={s?.weight || ''}
-                                onChange={e => update(cur.id, i, 'weight', e.target.value)}
-                            />
-                            <input
-                                type="number"
-                                inputMode="numeric"
-                                placeholder="reps"
-                                className="w-0 flex-1 min-w-[70px] bg-white/5 border border-white/10 rounded-xl p-2.5 text-white font-bold text-center focus:border-cyan-500 outline-none"
-                                value={s?.reps || ''}
-                                onChange={e => update(cur.id, i, 'reps', e.target.value)}
-                            />
-                        </div>
-                    ))}
+                    {curLogs.map((s, i) => {
+                        const lastSet = lastHistory?.sets?.[i];
+                        return (
+                            <div key={i} className="min-w-0">
+                                <div className="flex items-center gap-2 min-w-0">
+                                    <span className="text-gray-500 text-xs w-5 text-center font-mono flex-shrink-0">#{i + 1}</span>
+                                    <input
+                                        type="number"
+                                        inputMode="decimal"
+                                        placeholder={lastSet?.weight ? `${lastSet.weight}` : "kg"}
+                                        className="w-0 flex-1 min-w-[70px] bg-white/5 border border-white/10 rounded-xl p-2.5 text-white font-bold text-center focus:border-cyan-500 outline-none"
+                                        value={s?.weight || ''}
+                                        onChange={e => update(cur.id, i, 'weight', e.target.value)}
+                                    />
+                                    <input
+                                        type="number"
+                                        inputMode="numeric"
+                                        placeholder={lastSet?.reps ? `${lastSet.reps}` : "reps"}
+                                        className="w-0 flex-1 min-w-[70px] bg-white/5 border border-white/10 rounded-xl p-2.5 text-white font-bold text-center focus:border-cyan-500 outline-none"
+                                        value={s?.reps || ''}
+                                        onChange={e => update(cur.id, i, 'reps', e.target.value)}
+                                    />
+                                </div>
+                                {lastSet?.weight && lastSet?.reps && (
+                                    <div className="text-[10px] text-cyan-400/60 ml-7 mt-0.5">
+                                        Dernière fois : {lastSet.weight}kg × {lastSet.reps} reps
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    })}
                 </div>
                 
                 {/* Rest time info */}
