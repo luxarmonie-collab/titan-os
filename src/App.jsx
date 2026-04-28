@@ -430,7 +430,7 @@ const PHASE_1_START = new Date("2026-01-06"); // Lundi 6 janvier 2026
 // Dates clés des phases
 const PHASE_DATES = {
     masse: { start: "2026-01-06", end: "2026-04-02" },
-    repos_medical: { start: "2026-04-03", end: "2026-05-05" },
+    repos_medical: { start: "2026-04-03", end: "2026-04-27" },
     readaptation: { start: "2026-05-06", end: "2026-05-25" },
     seche: { start: "2026-05-26", end: "2026-06-30" },
     maintien: { start: "2026-07-01", end: "2026-10-31" }
@@ -1178,7 +1178,7 @@ const CALENDAR_27_WEEKS = [
     ]},
 
     // S17: 27 avril - 3 mai 2026
-    { sem: 17, date: "27/04", phase: "Phase2_ReposMedical", blocked: true, jours: [
+    { sem: 17, date: "27/04", phase: "Phase3_Readaptation", blocked: false, jours: [
         { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "🏥 REPOS MÉDICAL" },
         { jour: "Mar", seance: null, duree: 0, cardio: null },
         { jour: "Mer", seance: null, duree: 0, cardio: null },
@@ -1189,7 +1189,7 @@ const CALENDAR_27_WEEKS = [
     ]},
 
     // S18: 4-5 mai 2026 (FIN REPOS)
-    { sem: 18, date: "04/05", phase: "Phase2_ReposMedical", blocked: true, jours: [
+    { sem: 18, date: "04/05", phase: "Phase3_Readaptation", blocked: false, jours: [
         { jour: "Lun", seance: null, duree: 0, cardio: null, notes: "🏥 REPOS MÉDICAL - Dernière semaine" },
         { jour: "Mar", seance: null, duree: 0, cardio: null, notes: "📸 FIN REPOS MÉDICAL" },
         { jour: "Mer", seance: null, duree: 0, cardio: null },
